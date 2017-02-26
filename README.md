@@ -15,6 +15,8 @@ Execute the following command in the iobroker directory (e.g. /opt/iobroker)
 # iobroker upload broadlink
 ```
 
+Or simply install with the GitHub-Url via ioBroker Admin.
+
 #### Configuration
 Enter the IP address in the configuration (auto-discover list is possible but not implemented yet)
 
