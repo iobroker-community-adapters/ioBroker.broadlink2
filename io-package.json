@@ -19,7 +19,7 @@
         "enabled":                  true,
 		"extIcon":                  "https://raw.githubusercontent.com/hieblmedia/ioBroker.broadlink/master/admin/broadlink.png",
 		"keywords":                 ["broadlink", "vis", "GUI", "graphical", "scada"],
-        "readme":                   "https://github.com/ioBroker/ioBroker.broadlink/blob/master/README.md",
+        "readme":                   "https://github.com/hieblmedia/ioBroker.broadlink/blob/master/README.md",
 		"loglevel":                 "debug",
         "type":                     "common adapters",
         "restartAdapters":          ["vis"]
