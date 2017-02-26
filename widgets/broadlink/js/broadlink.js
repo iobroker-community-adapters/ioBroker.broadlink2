@@ -1,7 +1,7 @@
 /*
     ioBroker.broadlink Widget-Set
 
-    version: "0.5.0"
+    version: "0.0.1"
 
     Copyright 10.2015-2016 Reinhard Hiebl<reinhard@hieblmedia.com>
 
@@ -30,7 +30,7 @@ $.extend(true, systemDictionary, {
 
 // this code can be placed directly in broadlink.html
 vis.binds.broadlink = {
-    version: "0.5.0",
+    version: "0.1.0",
     showVersion: function () {
         if (vis.binds.broadlink.version) {
             console.log('Version broadlink: ' + vis.binds.broadlink.version);

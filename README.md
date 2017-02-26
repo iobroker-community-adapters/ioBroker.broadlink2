@@ -24,7 +24,7 @@ Enter the IP address in the configuration (auto-discover list is possible but no
 * In Objects of ioBroker you can find "broadlink.[n].enableLearningMode".
 * Set this object to true. (e.g. on RM3 mini the LED is light up)
 * Now press some button on your remote control within 30 seconds.
-* An new Object should now appear within the Object "broadlink.[0].IR_Signals".
+* An new Object should now appear within the Object "broadlink.[n].IR_Signals" with the name ">>> Learned, please describe"
 
 #### Known-Issues
 If you learn the same code multiple times IR code appears multiple times, because it has some random characters if the buffer is converted to HEX.
