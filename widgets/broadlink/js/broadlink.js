@@ -30,7 +30,7 @@ $.extend(true, systemDictionary, {
 
 // this code can be placed directly in broadlink.html
 vis.binds.broadlink = {
-    version: "0.1.0",
+    version: "0.0.1",
     showVersion: function () {
         if (vis.binds.broadlink.version) {
             console.log('Version broadlink: ' + vis.binds.broadlink.version);
