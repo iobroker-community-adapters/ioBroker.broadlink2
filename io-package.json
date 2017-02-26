@@ -1,0 +1,33 @@
+{
+    "common": {
+        "name":                     "broadlink",
+        "version":                  "0.5.0",
+	    "news": {
+			"0.0.1": {
+			  "en": "Initial version",
+			  "de": "Initiale Version"
+			}
+		},
+        "title": "IR Broadlink Adapter",
+        "desc":                     {
+				 "en": "ioBroker Broadlink Adapter",
+				 "de": "ioBroker Broadlink Adapter"
+		},
+        "platform":                 "Javascript/Node.js",
+        "mode":                     "daemon",
+        "icon":                     "broadlink.png",
+        "enabled":                  true,
+		"extIcon":                  "https://raw.githubusercontent.com/hieblmedia/ioBroker.broadlink/master/admin/broadlink.png",
+		"keywords":                 ["broadlink", "vis", "GUI", "graphical", "scada"],
+        "readme":                   "https://github.com/ioBroker/ioBroker.broadlink/blob/master/README.md",
+		"loglevel":                 "debug",
+        "type":                     "common adapters",
+        "restartAdapters":          ["vis"]
+    },
+    "native": {
+		"ip": ""
+    },
+    "objects": [
+
+    ]
+}
