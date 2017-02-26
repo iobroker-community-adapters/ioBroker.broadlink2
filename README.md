@@ -9,10 +9,11 @@ Adapter for Broadlink IR
 
 #### Installation
 Execute the following command in the iobroker directory (e.g. /opt/iobroker)  
-``
-npm install iobroker.broadlink
-iobroker upload broadlink
-``
+```
+# cd /opt/iobroker
+# npm install iobroker.broadlink
+# iobroker upload broadlink
+```
 
 #### Configuration
 Enter the IP address in the configuration (auto-discover list is possible but not implemented yet)
