@@ -31,5 +31,9 @@ If you learn the same code multiple times IR code appears multiple times, becaus
 Any suggestions to make this consistent are welcome.
 
 #### TODO
-Add Tests
+* Add Tests
+* Try encrypt/decrypt codes for more readability
+* Try switch object id and name for better readability
+* Rename IR_Signals to Codes or Commands and let allow all objects within be send signals to the device 
+
 
