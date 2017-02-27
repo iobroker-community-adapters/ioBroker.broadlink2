@@ -29,3 +29,7 @@ Enter the IP address in the configuration (auto-discover list is possible but no
 #### Known-Issues
 If you learn the same code multiple times IR code appears multiple times, because it has some random characters if the buffer is converted to HEX.
 Any suggestions to make this consistent are welcome.
+
+#### TODO
+Add Tests
+
