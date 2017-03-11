@@ -16,7 +16,7 @@
       "broadlink"
     ],
     "readme": "https://github.com/hieblmedia/ioBroker.broadlink/blob/master/README.md",
-    "loglevel": "debug",
+    "loglevel": "info",
     "type": "hardware"
   },
   "native": {
