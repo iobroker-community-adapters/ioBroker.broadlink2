@@ -8,63 +8,75 @@ var utils = require(__dirname + '/lib/utils'),
 
 adapter.on('unload', function (callback) {
 	try {
-		currentDevice.closeConnection();
-		currentDevice = null;
+		if (currentDevice) {
+			currentDevice.closeConnection();
+			currentDevice = null;
+		}
 		adapter.log.info('Closed connection/listener');
 		callback();
 	} catch (e) {
 		callback();
 	}
 }).on('objectChange', function (id, obj) {
-	// Warning, obj can be null if it was deleted
-	// adapter.log.info('objectChange ' + id + ' ' + JSON.stringify(obj));
+	//if (currentDevice) {
+		// Warning, obj can be null if it was deleted
+		// adapter.log.info('objectChange ' + id + ' ' + JSON.stringify(obj));
+	//}
 }).on('stateChange', function (id, state) {
-	// you can use the ack flag to detect if it is status (true) or command (false)
-	if (state && !state.ack) {
-		if (id === adapter.namespace + '.enableLearningMode') {
-			if (state.val) {
-				enterLeaningMode();
-			}
-		} else {
-			var objectIdCode = id.split('.').pop();
-			adapter.log.debug('Preparing to send: ' + objectIdCode);
-
-			if (isSignalCode(objectIdCode)) {
-				sendCode(objectIdCode);
+	if (currentDevice) {
+		// you can use the ack flag to detect if it is status (true) or command (false)
+		if (state && !state.ack) {
+			if (id === adapter.namespace + '.enableLearningMode') {
+				if (state.val) {
+					enterLeaningMode();
+				}
 			} else {
-				// If the object is not a signal code, check the name of the object
-				adapter.getObject(id, function (err, obj) {
-					if (err) {
-						adapter.log.error(err);
-					} else if (obj.common.name) {
-						if (isSignalCode(obj.common.name)) {
-							sendCode(obj.common.name)
+				var objectIdCode = id.split('.').pop();
+				adapter.log.debug('Preparing to send: ' + objectIdCode);
+
+				if (isSignalCode(objectIdCode)) {
+					sendCode(objectIdCode);
+				} else {
+					// If the object is not a signal code, check the name of the object
+					adapter.getObject(id, function (err, obj) {
+						if (err) {
+							adapter.log.error(err);
+						} else if (obj.common.name) {
+							if (isSignalCode(obj.common.name)) {
+								sendCode(obj.common.name)
+							}
 						}
-					}
-				});
+					});
+				}
 			}
 		}
 	}
 }).on('message', function (obj) {
-	//if (typeof obj == 'object' && obj.message) {
-	//	if (obj.command == 'send') {
-	//		// e.g. send email or pushover or whatever
-	//		console.log('send command');
-	//		// Send response in callback if required
-	//		if (obj.callback) adapter.sendTo(obj.from, obj.command, 'Message received', obj.callback);
+	//if (currentDevice) {
+	//	if (typeof obj == 'object' && obj.message) {
+	//		if (obj.command == 'send') {
+	//			// e.g. send email or pushover or whatever
+	//			console.log('send command');
+	//			// Send response in callback if required
+	//			if (obj.callback) adapter.sendTo(obj.from, obj.command, 'Message received', obj.callback);
+	//		}
 	//	}
 	//}
 }).on('ready', function () {
-	adapter.log.info('Discover UDP devices');
-	var connection = new broadlink();
-	connection.on("deviceReady", function (device) {
-		if (device.host.address == adapter.config.ip) {
-			currentDevice = device;
-			adapter.log.info('Device connected: ' + adapter.config.ip + ' (' + device.getType() + ')');
-			main();
-			return false;
-		}
-	}).discover();
+	if (adapter.config.ip) {
+		adapter.log.info('Discover UDP devices');
+		var connection = new broadlink();
+		connection.on("deviceReady", function (device) {
+			if (device.host.address == adapter.config.ip) {
+				currentDevice = device;
+				adapter.log.info('Device connected: ' + adapter.config.ip + ' (' + device.getType() + ')');
+				main();
+				return false;
+			}
+		}).discover();
+	} else {
+		adapter.log.warn('No IP-Address found. Please set in configuration.');
+	}
 });
 
 function sendCode(value) {
