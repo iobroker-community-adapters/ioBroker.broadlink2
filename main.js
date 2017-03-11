@@ -2,34 +2,46 @@
 var utils = require(__dirname + '/lib/utils'),
 	adapter = utils.adapter('broadlink'),
 	broadlink = require(__dirname + '/lib/broadlink'),
+	zlib = require('zlib'),
 	currentDevice;
 
-const NAMESPACE_IR = 'IR_Signals';
+const NAMESPACE_LEARNED_CHANNEL = 'learnedSignals';
 
 // is called when adapter shuts down - callback has to be called under any circumstances!
 adapter.on('unload', function (callback) {
 	try {
-		adapter.log.info('cleaned everything up...');
+		// adapter.log.info('cleaned everything up...');
 		callback();
 	} catch (e) {
 		callback();
 	}
 }).on('objectChange', function (id, obj) {
 	// Warning, obj can be null if it was deleted
-	adapter.log.info('objectChange ' + id + ' ' + JSON.stringify(obj));
+	// adapter.log.info('objectChange ' + id + ' ' + JSON.stringify(obj));
 }).on('stateChange', function (id, state) {
 	// you can use the ack flag to detect if it is status (true) or command (false)
 	if (state && !state.ack) {
-
-		// Send IR Signal
-		if (id.indexOf(adapter.namespace + '.' + NAMESPACE_IR) === 0) {
-			var rawId = getRawIrObjectId(id);
-			var buffer = new Buffer(rawId, 'hex');
-			currentDevice.sendData(buffer);
-			adapter.log.debug('sendData to ' + currentDevice.host.address + ', IR-HEX: ' + rawId);
-		} else if (id === adapter.namespace + '.enableLearningMode') {
+		if (id === adapter.namespace + '.enableLearningMode') {
 			if (state.val) {
 				enterLeaningMode();
+			}
+		} else {
+			var objectIdCode = id.split('.').pop();
+			adapter.log.debug('Preparing to send: ' + objectIdCode);
+
+			if (isSignalCode(objectIdCode)) {
+				sendCode(objectIdCode);
+			} else {
+				// If the object is not a signal code, check the name of the object
+				adapter.getObject(id, function (err, obj) {
+					if (err) {
+						adapter.log.error(err);
+					} else if (obj.common.name) {
+						if (isSignalCode(obj.common.name)) {
+							sendCode(obj.common.name)
+						}
+					}
+				});
 			}
 		}
 	}
@@ -57,10 +69,14 @@ adapter.on('unload', function (callback) {
 	}).discover();
 });
 
-function getRawIrObjectId(id) {
-	var newId = id.replace(adapter.namespace + '.' + NAMESPACE_IR + '.', '');
-	adapter.log.debug('Object ID converted to IR: ' + newId);
-	return newId;
+function sendCode(value) {
+	var buffer = new Buffer(value.substr(5), 'hex'); // substr(5) removes CODE_ from string
+	currentDevice.sendData(buffer);
+	adapter.log.debug('sendData to ' + currentDevice.host.address + ', Code: ' + value);
+}
+
+function isSignalCode(value) {
+	return value.length > 21 && value.substr(0, 5) == 'CODE_';
 }
 
 function enterLeaningMode() {
@@ -78,18 +94,18 @@ function enterLeaningMode() {
 
 	currentDevice.enterLearning();
 	currentDevice.on("rawData", function (data) {
-		var b = new Buffer(data);
-		var hex = b.toString('hex');
+		var hex = data.toString('hex');
 		adapter.log.info('Learned IR-HEX: ' + hex);
+
 		leaveLearningMode();
 
 		// Before create new object check one with the same id already exists
-		adapter.getObject(NAMESPACE_IR + '.' + hex, function (err, obj) {
+		adapter.getObject(NAMESPACE_LEARNED_CHANNEL + '.' + hex, function (err, obj) {
 			if (err) {
 				adapter.log.error(err);
 			} else {
 				if (!obj) {
-					adapter.setObject(NAMESPACE_IR + '.' + hex, {
+					adapter.setObject(NAMESPACE_LEARNED_CHANNEL + '.CODE_' + hex, {
 						type: 'state',
 						common: {
 							name: '>>> Learned, please describe',
@@ -100,7 +116,7 @@ function enterLeaningMode() {
 						},
 						native: {}
 					});
-					adapter.log.info('New IR-Code created in ' + NAMESPACE_IR);
+					adapter.log.info('New IR-Code created in ' + NAMESPACE_LEARNED_CHANNEL);
 				} else {
 					adapter.log.info('IR-Code already exists: ' + obj.common.name);
 				}
@@ -108,21 +124,21 @@ function enterLeaningMode() {
 		});
 	});
 
-	// Leave learning mode after 30 seconds
+	// Leave learning mode after 30 seconds, because the device itself has an built in timeout
 	setTimeout(leaveLearningMode, 30000);
 }
 
 function main() {
 	//adapter.log.info('Config IP-Address: ' + adapter.config.ip);
 
-	adapter.setObject(NAMESPACE_IR, {
+	adapter.setObject(NAMESPACE_LEARNED_CHANNEL, {
 		type: 'channel',
 		common: {
-			name: 'IR_Signals'
+			name: ''
 		},
 		native: {}
 	});
-	adapter.setObject(NAMESPACE_IR + '.000000', {
+	adapter.setObject(NAMESPACE_LEARNED_CHANNEL + '.000000', {
 		type: 'state',
 		common: {
 			name: '__DUMMY_SIGNAL__',
@@ -136,7 +152,7 @@ function main() {
 	adapter.setObject('enableLearningMode', {
 		type: 'state',
 		common: {
-			name: 'Enable learning mode',
+			name: 'Enable learning mode. Result saved in ' + NAMESPACE_LEARNED_CHANNEL,
 			type: 'boolean',
 			role: '',
 			read: false,
@@ -145,38 +161,6 @@ function main() {
 		native: {}
 	});
 
-	// in this broadlink all states changes inside the adapters namespace are subscribed
 	adapter.subscribeStates('*');
-
-
-	/**
-	 *   setState examples
-	 *
-	 *   you will notice that each setState will cause the stateChange event to fire (because of above subscribeStates cmd)
-	 *
-	 */
-
-	// the variable testVariable is set to true as command (ack=false)
-	//adapter.setState('testVariable', true);
-
-	// same thing, but the value is flagged "ack"
-	// ack should be always set to true if the value is received from or acknowledged from the target system
-	//adapter.setState('testVariable', {val: true, ack: true});
-
-	// same thing, but the state is deleted after 30s (getState will return null afterwards)
-	//adapter.setState('testVariable', {val: true, ack: true, expire: 30});
-
-
-	// examples for the checkPassword/checkGroup functions
-	//adapter.checkPassword('admin', 'iobroker', function (res) {
-	//    console.log('check user admin pw ioboker: ' + res);
-	//});
-
-	//adapter.checkGroup('admin', 'admin', function (res) {
-	//    console.log('check group user admin group admin: ' + res);
-	//});
-
-
 	adapter.setState('enableLearningMode', {val: false, ack: true});
-	//enterLeaningMode();
 }
