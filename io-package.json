@@ -1,11 +1,11 @@
 {
   "common": {
     "name": "broadlink",
-    "version": "0.0.2",
+    "version": "0.1.0",
     "title": "IR Broadlink Adapter",
     "desc": {
-      "en": "ioBroker Broadlink Adapter",
-      "de": "ioBroker Broadlink Adapter"
+      "en": "Broadlink Adapter for RM3 Mini/RM3 Pro to learn and send signals",
+      "de": "Broadlink Adapter für RM3 Mini/RM3 Pro zum lernen und senden von Signalen"
     },
     "platform": "Javascript/Node.js",
     "mode": "daemon",

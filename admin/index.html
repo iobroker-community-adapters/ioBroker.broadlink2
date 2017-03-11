@@ -1,33 +1,12 @@
 <html>
-
-<!-- these 4 files always have to be included -->
 <link rel="stylesheet" type="text/css" href="../../lib/css/themes/jquery-ui/redmond/jquery-ui.min.css" />
 <script type="text/javascript" src="../../lib/js/jquery-1.11.1.min.js"></script>
 <script type="text/javascript" src="../../socket.io/socket.io.js"></script>
 <script type="text/javascript" src="../../lib/js/jquery-ui-1.10.3.full.min.js"></script>
-
-
-<!-- optional: use jqGrid
-<link rel="stylesheet" type="text/css" href="../../lib/css/jqGrid/ui.jqgrid-4.5.4.css"/>
-<script type="text/javascript" src="../../lib/js/jqGrid/jquery.jqGrid-4.5.4.min.js"></script>
-<script type="text/javascript" src="../../lib/js/jqGrid/i18n/grid.locale-all.js"></script>
--->
-
-<!-- optional: use multiselect
-<link rel="stylesheet" type="text/css" href="../../lib/css/jquery.multiselect-1.13.css"/>
-<script type="text/javascript" src="../../lib/js/jquery.multiselect-1.13.min.js"></script>
--->
-
-<!-- these two file always have to be included -->
 <link rel="stylesheet" type="text/css" href="../../css/adapter.css" />
 <script type="text/javascript" src="../../js/translate.js"></script>
 <script type="text/javascript" src="../../js/adapter-settings.js"></script>
-
-
-<!-- you have to define 2 functions in the global scope: -->
 <script type="text/javascript">
-
-	// Dictionary (systemDictionary is global variable from adapter-settings.js)
 	systemDictionary = {
 		"Broadlink adapter settings": {"de": "Broadlink Adaber Einstellungen"},
 		"Settings": {"de": "Einstellungen"},
@@ -36,12 +15,8 @@
 			"de": "Beim Speichern von Einstellungen wird der Adapter sofort neu gestartet."
 		}
 	};
-
-	// the function loadSettings has to exist ...
 	function load(settings, onChange) {
-		// example: select elements with id=key and class=value and insert value
 		for (var key in settings) {
-			// example: select elements with id=key and class=value and insert value
 			var $el = $('#' + key + '.value');
 			if ($el.attr('type') == 'checkbox') {
 				$el.prop('checked', settings[key]).change(function () {
@@ -58,11 +33,7 @@
 		// Signal to admin, that no changes yet
 		onChange(false);
 	}
-
-	// ... and the function save has to exist.
-	// you have to make sure the callback is called with the settings object as first param!
 	function save(callback) {
-		// example: select elements with class=value and build settings object
 		var obj = {};
 		$('.value').each(function () {
 			var $this = $(this);

@@ -1,39 +1,27 @@
 ![Logo](admin/broadlink.png)
 # ioBroker.broadlink
-=================
+=============
 
-#### Description
+This is an ioBroker adapter for Broadlink RM3 Mini/RM3 Pro to lean and send signals.
 
-Adapter for Broadlink IR  
-**[only tested with RM3 Mini atm.]**
+## Configuration
+Enter the IP address in the configuration
 
-#### Installation
-Execute the following command in the iobroker directory (e.g. /opt/iobroker)  
-```
-# cd /opt/iobroker
-# npm install iobroker.broadlink
-# iobroker upload broadlink
-```
-
-Or simply install with the GitHub-Url via ioBroker Admin.
-
-#### Configuration
-Enter the IP address in the configuration (auto-discover list is possible but not implemented yet)
-
-#### How-To learn IR-Signals
+## How-To learn codes
 * In Objects of ioBroker you can find "broadlink.[n].enableLearningMode".
-* Set this object to true. (e.g. on RM3 mini the LED is light up)
+* Set this object to true. (e.g. on RM3 mini or Pro the LED is light up)
 * Now press some button on your remote control within 30 seconds.
-* An new Object should now appear within the Object "broadlink.[n].IR_Signals" with the name ">>> Learned, please describe"
+* An new Object should now appear within the Object "broadlink.[n].learnedSignals" with the name ">>> Learned, please describe"
 
-#### Known-Issues
-If you learn the same code multiple times IR code appears multiple times, because it has some random characters if the buffer is converted to HEX.
-Any suggestions to make this consistent are welcome.
+## How-To structure codes outside learnedSignals
+* You can create your state object everywhere in the instance to build your own channel and device structure.
+* All you need is the CODE_[n] from learnedSignals
+* You can use the signal code (CODE_12345...) as object id or in name. Depends on what you prefer.
 
-#### TODO
+![Simple object structure example](admin/structure_example.png)
+
+## Known-Issues
+If you learn the same signal multiple times the code can be different everytime. This can not be changed.
+
+## TODO
 * Add Tests
-* Try encrypt/decrypt codes for more readability
-* Try switch object id and name for better readability
-* Rename IR_Signals to Codes or Commands and let allow all objects within be send signals to the device 
-
-

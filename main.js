@@ -3,14 +3,14 @@ var utils = require(__dirname + '/lib/utils'),
 	adapter = utils.adapter('broadlink'),
 	broadlink = require(__dirname + '/lib/broadlink'),
 	zlib = require('zlib'),
+	namespaceChannelLearned = 'learnedSignals',
 	currentDevice;
 
-const NAMESPACE_LEARNED_CHANNEL = 'learnedSignals';
-
-// is called when adapter shuts down - callback has to be called under any circumstances!
 adapter.on('unload', function (callback) {
 	try {
-		// adapter.log.info('cleaned everything up...');
+		currentDevice.closeConnection();
+		currentDevice = null;
+		adapter.log.info('Closed connection/listener');
 		callback();
 	} catch (e) {
 		callback();
@@ -46,23 +46,21 @@ adapter.on('unload', function (callback) {
 		}
 	}
 }).on('message', function (obj) {
-	if (typeof obj == 'object' && obj.message) {
-		if (obj.command == 'send') {
-			// e.g. send email or pushover or whatever
-			//console.log('send command');
-
-			// Send response in callback if required
-			//if (obj.callback) adapter.sendTo(obj.from, obj.command, 'Message received', obj.callback);
-		}
-	}
+	//if (typeof obj == 'object' && obj.message) {
+	//	if (obj.command == 'send') {
+	//		// e.g. send email or pushover or whatever
+	//		console.log('send command');
+	//		// Send response in callback if required
+	//		if (obj.callback) adapter.sendTo(obj.from, obj.command, 'Message received', obj.callback);
+	//	}
+	//}
 }).on('ready', function () {
 	adapter.log.info('Discover UDP devices');
 	var connection = new broadlink();
-	// @TODO: check if works if connection is lost, e.g. the broadlink get off from power or net
 	connection.on("deviceReady", function (device) {
 		if (device.host.address == adapter.config.ip) {
 			currentDevice = device;
-			adapter.log.info('Device connected: ' + adapter.config.ip);
+			adapter.log.info('Device connected: ' + adapter.config.ip + ' (' + device.getType() + ')');
 			main();
 			return false;
 		}
@@ -95,17 +93,17 @@ function enterLeaningMode() {
 	currentDevice.enterLearning();
 	currentDevice.on("rawData", function (data) {
 		var hex = data.toString('hex');
-		adapter.log.info('Learned IR-HEX: ' + hex);
+		adapter.log.info('Learned Code (hex): ' + hex);
 
 		leaveLearningMode();
 
 		// Before create new object check one with the same id already exists
-		adapter.getObject(NAMESPACE_LEARNED_CHANNEL + '.' + hex, function (err, obj) {
+		adapter.getObject(namespaceChannelLearned + '.' + hex, function (err, obj) {
 			if (err) {
 				adapter.log.error(err);
 			} else {
 				if (!obj) {
-					adapter.setObject(NAMESPACE_LEARNED_CHANNEL + '.CODE_' + hex, {
+					adapter.setObject(namespaceChannelLearned + '.CODE_' + hex, {
 						type: 'state',
 						common: {
 							name: '>>> Learned, please describe',
@@ -116,7 +114,7 @@ function enterLeaningMode() {
 						},
 						native: {}
 					});
-					adapter.log.info('New IR-Code created in ' + NAMESPACE_LEARNED_CHANNEL);
+					adapter.log.info('New IR-Code created in ' + namespaceChannelLearned);
 				} else {
 					adapter.log.info('IR-Code already exists: ' + obj.common.name);
 				}
@@ -131,14 +129,14 @@ function enterLeaningMode() {
 function main() {
 	//adapter.log.info('Config IP-Address: ' + adapter.config.ip);
 
-	adapter.setObject(NAMESPACE_LEARNED_CHANNEL, {
+	adapter.setObject(namespaceChannelLearned, {
 		type: 'channel',
 		common: {
 			name: ''
 		},
 		native: {}
 	});
-	adapter.setObject(NAMESPACE_LEARNED_CHANNEL + '.000000', {
+	adapter.setObject(namespaceChannelLearned + '.000000', {
 		type: 'state',
 		common: {
 			name: '__DUMMY_SIGNAL__',
@@ -152,7 +150,7 @@ function main() {
 	adapter.setObject('enableLearningMode', {
 		type: 'state',
 		common: {
-			name: 'Enable learning mode. Result saved in ' + NAMESPACE_LEARNED_CHANNEL,
+			name: 'Enable learning mode (30s timeout). Result saved in ' + namespaceChannelLearned,
 			type: 'boolean',
 			role: '',
 			read: false,

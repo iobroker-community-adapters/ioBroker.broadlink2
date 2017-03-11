@@ -1,17 +1,11 @@
 {
   "name": "iobroker.broadlink",
-  "version": "0.0.2",
+  "version": "0.1.0",
   "description": "ioBroker Broadlink Adapter",
   "author": {
     "name": "Reinhard Hiebl",
     "email": "reinhard@hieblmedia.com"
   },
-  "contributors": [
-    {
-      "name": "Reinhard Hiebl",
-      "email": "reinhard@hieblmedia.com"
-    }
-  ],
   "homepage": "https://github.com/hieblmedia/ioBroker.broadlink",
   "license": "MIT",
   "keywords": [
