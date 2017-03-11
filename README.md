@@ -7,7 +7,10 @@ ioBroker.broadlink
 
 [![NPM](https://nodei.co/npm/iobroker.broadlink.png?downloads=true)](https://nodei.co/npm/iobroker.broadlink/)
 
-This is an ioBroker adapter for Broadlink RM3 Mini/RM3 Pro to lean and send signals.
+**Tests:** Linux/Mac: [![Travis-CI Build Status](https://travis-ci.org/hieblmedia/ioBroker.broadlink.svg?branch=master)](https://travis-ci.org/hieblmedia/ioBroker.broadlink)
+Windows: [![AppVeyor Build status](https://ci.appveyor.com/api/projects/status/pil6266rrtw6l5c0?svg=true)](https://ci.appveyor.com/project/hieblmedia/iobroker-broadlink)
+
+This is an ioBroker adapter for Broadlink RM3 Mini/RM3 Pro to learn and send signals.
 
 ## Configuration
 Enter the IP address in the configuration
@@ -27,6 +30,3 @@ Enter the IP address in the configuration
 
 ## Known-Issues
 If you learn the same signal multiple times the code can be different everytime. This can not be changed.
-
-## TODO
-* Add Tests
