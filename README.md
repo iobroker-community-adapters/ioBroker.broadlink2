@@ -1,6 +1,11 @@
-![Logo](admin/broadlink.png)
-# ioBroker.broadlink
-=============
+![Logo](admin/broadlink.png) 
+ioBroker.broadlink 
+==================
+
+[![NPM version](http://img.shields.io/npm/v/iobroker.broadlink.svg)](https://www.npmjs.com/package/iobroker.broadlink)
+[![Downloads](https://img.shields.io/npm/dm/iobroker.broadlink.svg)](https://www.npmjs.com/package/iobroker.broadlink)
+
+[![NPM](https://nodei.co/npm/iobroker.broadlink.png?downloads=true)](https://nodei.co/npm/iobroker.broadlink/)
 
 This is an ioBroker adapter for Broadlink RM3 Mini/RM3 Pro to lean and send signals.
 

@@ -20,7 +20,10 @@
     "type": "git",
     "url": "https://github.com/hieblmedia/ioBroker.broadlink"
   },
-  "dependencies": {  },
+  "engines": {
+    "node": ">=4.0"
+  },
+  "dependencies": {},
   "devDependencies": {
     "grunt": "^0.4.5",
     "grunt-replace": "^0.9.3",
