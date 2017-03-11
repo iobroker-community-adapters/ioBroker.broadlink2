@@ -21,7 +21,7 @@
     "url": "https://github.com/hieblmedia/ioBroker.broadlink"
   },
   "engines": {
-    "node": ">=4.0"
+    "node": ">=0.12.0"
   },
   "dependencies": {},
   "devDependencies": {
