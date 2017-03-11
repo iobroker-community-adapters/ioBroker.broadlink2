@@ -1,5 +1,5 @@
 ![Logo](admin/broadlink.png) 
-ioBroker.broadlink 
+ioBroker.broadlink  
 ==================
 
 [![NPM version](http://img.shields.io/npm/v/iobroker.broadlink.svg)](https://www.npmjs.com/package/iobroker.broadlink)
@@ -20,6 +20,9 @@ Enter the IP address in the configuration
 * Set this object to true. (e.g. on RM3 mini or Pro the LED is light up)
 * Now press some button on your remote control within 30 seconds.
 * An new Object should now appear within the Object "broadlink.[n].learnedSignals" with the name ">>> Learned, please describe"
+
+It is also possible to use the codes from [RM-Bridge](http://rm-bridge.fun2code.de/).  
+You just need to prepend "CODE_".
 
 ## How-To structure codes outside learnedSignals
 * You can create your state object everywhere in the instance to build your own channel and device structure.
