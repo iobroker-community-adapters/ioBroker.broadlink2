@@ -29,7 +29,7 @@ You just need to prepend "CODE_".
 * All you need is the CODE_[n] from learnedSignals
 * You can use the signal code (CODE_12345...) as object id or in name. Depends on what you prefer.
 
-![Simple object structure example](admin/structure_example.png)
+![Simple object structure example](doc/structure_example.png)
 
 ## Known-Issues
 If you learn the same signal multiple times the code can be different everytime. This can not be changed.
