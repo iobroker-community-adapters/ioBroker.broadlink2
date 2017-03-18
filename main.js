@@ -2,9 +2,10 @@
 var utils = require(__dirname + '/lib/utils'),
 	adapter = utils.adapter('broadlink'),
 	broadlink = require(__dirname + '/lib/broadlink'),
-	zlib = require('zlib'),
+	//zlib = require('zlib'),
 	namespaceChannelLearned = 'learnedSignals',
-	currentDevice;
+	currentDevice,
+    inObjectChange;
 
 adapter.on('unload', function (callback) {
 	try {
@@ -18,39 +19,99 @@ adapter.on('unload', function (callback) {
 		callback();
 	}
 }).on('objectChange', function (id, obj) {
-	//if (currentDevice) {
-		// Warning, obj can be null if it was deleted
-		// adapter.log.info('objectChange ' + id + ' ' + JSON.stringify(obj));
-	//}
+     if (!id || !obj) return;
+     if (obj.type === 'channel' || obj.type === 'device' && !inObjectChange) {
+         inObjectChange = true;
+         createLerningModeState (id, function () {
+             if (inObjectChange) inObjectChange--;
+         });
+     }
 }).on('stateChange', function (id, state) {
-	if (currentDevice) {
-		// you can use the ack flag to detect if it is status (true) or command (false)
-		if (state && !state.ack) {
-			if (id === adapter.namespace + '.enableLearningMode') {
-				if (state.val) {
-					enterLeaningMode();
-				}
-			} else {
-				var objectIdCode = id.split('.').pop();
-				adapter.log.debug('Preparing to send: ' + objectIdCode);
-
-				if (isSignalCode(objectIdCode)) {
-					sendCode(objectIdCode);
-				} else {
-					// If the object is not a signal code, check the name of the object
-					adapter.getObject(id, function (err, obj) {
-						if (err) {
-							adapter.log.error(err);
-						} else if (obj.common.name) {
-							if (isSignalCode(obj.common.name)) {
-								sendCode(obj.common.name)
-							}
-						}
-					});
-				}
-			}
-		}
-	}
+    if (!state || state.ack || id.indexOf (adapter.namespace) !== 0 || !currentDevice) return;
+    
+    var ar = id.split ('.');
+    var command = ar[ar.length - 1];
+    
+    switch (command) {
+        case 'enableLearningMode':
+        case 'createCode':
+            if (!state.val) break;
+            
+            var aktChannel = '', name = '';
+            if (typeof state.val === 'string') {
+                var nar = state.val.split ('.');
+                name = nar.pop ();
+                aktChannel = nar.join ('.');
+                aktChannel = aktChannel [0] === '.' ? aktChannel.substr (1) : namespaceChannelLearned + '.' + aktChannel;
+            } else {
+                for (var i = 2; i < ar.length - 1; i++) {
+                    aktChannel = aktChannel ? aktChannel + '.' + ar[i] : ar[i];
+                }
+            }
+            enterLeaningMode (aktChannel, name);
+            break;
+        case 'sendCode':
+            var code = state.val.replace(/^CODE_|^/, 'CODE_');
+            if (isSignalCode (code)) sendCode (code);
+            break;
+        default:
+            adapter.log.debug ('Preparing to send: ' + command);
+            
+            if (isSignalCode (command)) {
+                sendCode (command);
+            } else {
+                // If the object is not a signal code, check the name of the object
+                adapter.getObject (id, function (err, obj) {
+                    if (err) {
+                        adapter.log.error (err);
+                    } else if (obj.common.name) {
+                        if (isSignalCode (obj.common.name)) {
+                            sendCode (obj.common.name)
+                        }
+                    }
+                });
+            }
+    }
+    
+// }).on('stateChange', function (id, state) {
+// 	if (currentDevice) {
+// 		if (state && !state.ack && id.indexOf(adapter.namespace) === 0) {
+// 		    var ar = id.split('.');
+// 		    if (ar[ar.length-1] === 'enableLearningMode') {
+//                 if (state.val) {
+//                     var aktChannel = '', name = '';
+//                     for (var i=2; i<ar.length-1; i++) {
+//                         aktChannel = aktChannel ? aktChannel + '.' + ar[i] : ar[i];
+//                     }
+//                     if (typeof state.val === 'string') {
+//                         var nar = state.val.split('.');
+//                         name = nar.pop();
+//                         aktChannel = nar.join('.');
+//                         aktChannel = aktChannel [0] === '.' ? aktChannel.substr(1) : namespaceChannelLearned + '.' + aktChannel;
+//                     }
+//                     enterLeaningMode(aktChannel, name);
+//                 }
+// 			} else {
+// 				var objectIdCode = id.split('.').pop();
+// 				adapter.log.debug('Preparing to send: ' + objectIdCode);
+//
+// 				if (isSignalCode(objectIdCode)) {
+// 					sendCode(objectIdCode);
+// 				} else {
+// 					// If the object is not a signal code, check the name of the object
+// 					adapter.getObject(id, function (err, obj) {
+// 						if (err) {
+// 							adapter.log.error(err);
+// 						} else if (obj.common.name) {
+// 							if (isSignalCode(obj.common.name)) {
+// 								sendCode(obj.common.name)
+// 							}
+// 						}
+// 					});
+// 				}
+// 			}
+// 		}
+// 	}
 }).on('message', function (obj) {
 	//if (currentDevice) {
 	//	if (typeof obj == 'object' && obj.message) {
@@ -65,7 +126,7 @@ adapter.on('unload', function (callback) {
 }).on('ready', function () {
 	if (adapter.config.ip) {
 		adapter.log.info('Discover UDP devices');
-		var connection = new broadlink();
+		var connection = new broadlink(adapter.config.ip);
 		connection.on("deviceReady", function (device) {
 			if (device.host.address == adapter.config.ip) {
 				currentDevice = device;
@@ -89,7 +150,7 @@ function isSignalCode(value) {
 	return value.length > 21 && value.substr(0, 5) == 'CODE_';
 }
 
-function enterLeaningMode() {
+function enterLeaningMode(aktChannel, name) {
 	adapter.log.info('Enter learning mode - Wait 30 seconds for data before leaving...');
 	var timer = setInterval(function () {
 		adapter.log.debug("IR-Learning-Mode - check data...");
@@ -98,7 +159,7 @@ function enterLeaningMode() {
 
 	var leaveLearningMode = (function () {
 		clearInterval(timer);
-		adapter.setState('enableLearningMode', {val: false, ack: true});
+		adapter.setState((aktChannel ? aktChannel + '.' : '') + 'enableLearningMode', {val: false, ack: true});
 		adapter.log.info('Leaved learning mode');
 	});
 
@@ -109,16 +170,18 @@ function enterLeaningMode() {
 
 		leaveLearningMode();
 
+		var id = aktChannel ? aktChannel : namespaceChannelLearned;
+		id += '.CODE_' + hex;
 		// Before create new object check one with the same id already exists
-		adapter.getObject(namespaceChannelLearned + '.' + hex, function (err, obj) {
+		adapter.getObject(id, function (err, obj) {
 			if (err) {
 				adapter.log.error(err);
 			} else {
 				if (!obj) {
-					adapter.setObject(namespaceChannelLearned + '.CODE_' + hex, {
+					adapter.setObject(id, {
 						type: 'state',
 						common: {
-							name: '>>> Learned, please describe',
+							name: name ? name : '>>> Learned, please describe',
 							type: 'boolean',
 							role: '',
 							read: false,
@@ -138,13 +201,31 @@ function enterLeaningMode() {
 	setTimeout(leaveLearningMode, 30000);
 }
 
+function createLerningModeState (path, cb) {
+    var id = (path ? path + '.' : '') + 'enableLearningMode';
+    adapter.setObject(id, {
+        type: 'state',
+        common: {
+            name: 'Enable learning mode (30s timeout). Result saved in ' + namespaceChannelLearned,
+            type: 'boolean',
+            role: '',
+            read: false,
+            write: true
+        },
+        native: {}
+    }, function (err, obj) {
+        adapter.setState(id, {val: false, ack: true}, cb);
+    });
+    
+}
+
 function main() {
 	//adapter.log.info('Config IP-Address: ' + adapter.config.ip);
 
 	adapter.setObject(namespaceChannelLearned, {
 		type: 'channel',
 		common: {
-			name: ''
+			name: 'Learned Codes'
 		},
 		native: {}
 	});
@@ -159,18 +240,52 @@ function main() {
 		},
 		native: {}
 	});
-	adapter.setObject('enableLearningMode', {
-		type: 'state',
-		common: {
-			name: 'Enable learning mode (30s timeout). Result saved in ' + namespaceChannelLearned,
-			type: 'boolean',
-			role: '',
-			read: false,
-			write: true
-		},
-		native: {}
-	});
 
+    adapter.setObject('sendCode', {
+    	type: 'state',
+    	common: {
+    		name: 'Send a given code',
+    		type: 'string',
+    		role: '',
+    		read: true,
+    		write: true
+    	},
+    	native: {}
+    }, function(err, obj) {
+        if (err || !obj) return;
+        adapter.setState(obj.id, {val: '', ack: true});
+    });
+    adapter.setObject('createCode', {
+        type: 'state',
+        common: {
+            name: 'Create a code with name',
+            desc: 'Learing mode with a given Name and path. E.g.: Yamaha.On/Off',
+            type: 'string',
+            role: '',
+            read: true,
+            write: true
+        },
+        native: {}
+    }, function(err, obj) {
+        if (err || !obj) return;
+        adapter.setState(obj.id, {val: '', ack: true});
+    });
+	
+	
+	// adapter.setObject('enableLearningMode', {
+	// 	type: 'state',
+	// 	common: {
+	// 		name: 'Enable learning mode (30s timeout). Result saved in ' + namespaceChannelLearned,
+	// 		type: 'boolean',
+	// 		role: '',
+	// 		read: false,
+	// 		write: true
+	// 	},
+	// 	native: {}
+	// });
+    createLerningModeState();
+    
 	adapter.subscribeStates('*');
+    adapter.subscribeObjects('*');
 	adapter.setState('enableLearningMode', {val: false, ack: true});
 }
