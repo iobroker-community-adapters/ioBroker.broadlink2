@@ -151,54 +151,64 @@ function isSignalCode(value) {
 }
 
 function enterLeaningMode(aktChannel, name) {
-	adapter.log.info('Enter learning mode - Wait 30 seconds for data before leaving...');
-	var timer = setInterval(function () {
-		adapter.log.debug("IR-Learning-Mode - check data...");
-		currentDevice.checkData();
-	}, 1000);
-
-	var leaveLearningMode = (function () {
-		clearInterval(timer);
-		adapter.setState((aktChannel ? aktChannel + '.' : '') + 'enableLearningMode', {val: false, ack: true});
-		adapter.log.info('Leaved learning mode');
-	});
-
-	currentDevice.enterLearning();
-	currentDevice.on("rawData", function (data) {
-		var hex = data.toString('hex');
-		adapter.log.info('Learned Code (hex): ' + hex);
-
-		leaveLearningMode();
-
-		var id = aktChannel ? aktChannel : namespaceChannelLearned;
-		id += '.CODE_' + hex;
-		// Before create new object check one with the same id already exists
-		adapter.getObject(id, function (err, obj) {
-			if (err) {
-				adapter.log.error(err);
-			} else {
-				if (!obj) {
-					adapter.setObject(id, {
-						type: 'state',
-						common: {
-							name: name ? name : '>>> Learned, please describe',
-							type: 'boolean',
-							role: '',
-							read: false,
-							write: true
-						},
-						native: {}
-					});
-					adapter.log.info('New IR-Code created in ' + namespaceChannelLearned);
-				} else {
-					adapter.log.info('IR-Code already exists: ' + obj.common.name);
-				}
-			}
-		});
-	});
-
-	// Leave learning mode after 30 seconds, because the device itself has an built in timeout
-	setTimeout(leaveLearningMode, 30000);
+    var leaveTimer;
+    adapter.log.info('Enter learning mode - aktChannel=' + aktChannel + ' Wait 30 seconds for data before leaving...');
+    var timer = setInterval(function () {
+        adapter.log.debug("IR-Learning-Mode - check data...");
+        currentDevice.checkData();
+    }, 1000);
+    
+    var leaveLearningMode = (function () {
+        if (leaveTimer) {
+            //clearTimeout (leaveTimer);
+            leaveTimer = null;
+        }
+        clearInterval(timer);
+        adapter.setState((aktChannel ? aktChannel + '.' : '') + 'enableLearningMode', {val: false, ack: true});
+        adapter.log.info('Left learning mode - aktChannel=' + aktChannel);
+    });
+    
+    currentDevice.enterLearning();
+    
+    //currentDevice.on("rawData", function (data) {
+    
+    //currentDevice.emitter.removeAllListeners('rawData');  // also possible...
+    //currentDevice.emitter.on("rawData", function (data) { //
+    
+    currentDevice.emitter.once("rawData", function (data) {       // use currentDevice.emitter.once, not the copy currentDevice.on. Otherwise this event will be called as often you call currentDevice.on()
+        var hex = data.toString('hex');
+        adapter.log.info('Learned Code - aktChannel=' + aktChannel + ' (hex): ' + hex);
+        
+        leaveLearningMode();
+        
+        var id = aktChannel ? aktChannel : namespaceChannelLearned;
+        id += '.CODE_' + hex;
+        // Before create new object check one with the same id already exists
+        adapter.getObject(id, function (err, obj) {
+            if (err) {
+                adapter.log.error(err);
+            } else {
+                if (!obj) {
+                    adapter.setObject(id, {
+                        type: 'state',
+                        common: {
+                            name: name ? name : '>>> Learned, please describe',
+                            type: 'boolean',
+                            role: '',
+                            read: false,
+                            write: true
+                        },
+                        native: {}
+                    });
+                    adapter.log.info('New IR-Code created in ' + namespaceChannelLearned);
+                } else {
+                    adapter.log.info('IR-Code already exists: ' + obj.common.name);
+                }
+            }
+        });
+    });
+    // Leave learning mode after 30 seconds, because the device itself has an built in timeout
+    leaveTimer = setTimeout(leaveLearningMode, 30000);
 }
 
 function createLerningModeState (path, cb) {

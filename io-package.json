@@ -1,7 +1,7 @@
 {
   "common": {
     "name": "broadlink",
-    "version": "0.1.1",
+    "version": "0.1.2",
     "title": "Broadlink (RM3) Adapter",
     "desc": {
       "en": "Broadlink Adapter for RM3 Mini/RM3 Pro to learn and send signals",
