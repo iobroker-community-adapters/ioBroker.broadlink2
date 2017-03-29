@@ -142,6 +142,10 @@ adapter.on('unload', function (callback) {
 		var connection = new broadlink(adapter.config.ip);
 		connection.on("deviceReady", function (device) {
 			if (device.host.address == adapter.config.ip) {
+                device.checkTemperature();
+                device.emitter.on('temperature', function(temperature) {
+                    var i = temperature;
+                });
 				currentDevice = device;
 				adapter.log.info('Device connected: ' + adapter.config.ip + ' (' + device.getType() + ')');
 				main();
@@ -214,7 +218,7 @@ function enterLeaningMode(aktChannel, name) {
                         common: {
                             name: name ? name : defaultName,
                             type: 'boolean',
-                            role: '',
+                            role: 'button',
                             read: false,
                             write: true
                         },
@@ -282,9 +286,11 @@ function checkMigrateStates(objs, cb) {
             obj.native.code = obj.common.name;
             var ar = id.split ('.');
             obj.common.name = ar[ar.length - 1];
+            obj.common.role = 'button';
             adapter.setObject (id, obj);
         } else if (isSignalCode (idCode)) {
             obj.native.code = idCode.replace(reCODE, '');
+            obj.common.role = 'button';
             if (obj.common.name === defaultName) {
                 adapter.setObject(id, obj, doIt);
                 return;

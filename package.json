@@ -1,6 +1,12 @@
 {
   "name": "iobroker.broadlink",
-  "version": "0.1.2",
+  "version": "0.1.3",
+  "news": {
+    "0.1.3": {
+      "en": "Role changed to button",
+      "de": "Role geändert nach button"
+    }
+  },
   "description": "ioBroker Broadlink Adapter",
   "author": {
     "name": "Reinhard Hiebl",
@@ -42,3 +48,4 @@
   },
   "readmeFilename": "README.md"
 }
+
