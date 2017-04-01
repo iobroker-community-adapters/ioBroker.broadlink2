@@ -1,8 +1,18 @@
 {
   "common": {
     "name": "broadlink",
-    "version": "0.1.3",
-    "title": "IR Broadlink Adapter",
+    "version": "0.1.4",
+    "title": "Broadlink (RM3) Adapter",
+    "news": {
+      "0.1.4": {
+        "en": "Some tet changes",
+        "de": "Einige Textänderungen"
+      },
+      "0.1.3": {
+        "en": "Role changed to button",
+        "de": "Role geändert nach button"
+      }
+    },
     "desc": {
       "en": "Broadlink Adapter for RM3 Mini/RM3 Pro to learn and send signals",
       "de": "Broadlink Adapter für RM3 Mini/RM3 Pro zum lernen und senden von Signalen"
@@ -16,7 +26,7 @@
       "broadlink"
     ],
     "readme": "https://github.com/hieblmedia/ioBroker.broadlink/blob/master/README.md",
-    "loglevel": "debug",
+    "loglevel": "info",
     "type": "hardware"
   },
   "native": {
