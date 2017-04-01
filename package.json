@@ -1,6 +1,6 @@
 {
   "name": "iobroker.broadlink",
-  "version": "0.1.1",
+  "version": "0.1.4",
   "description": "ioBroker Broadlink Adapter",
   "author": {
     "name": "Reinhard Hiebl",
@@ -42,3 +42,4 @@
   },
   "readmeFilename": "README.md"
 }
+
