@@ -1,11 +1,11 @@
 {
   "common": {
-    "name": "broadlink",
+    "name": "broadlink2",
     "version": "0.1.4",
-    "title": "Broadlink (RM3) Adapter",
+    "title": "Broadlink (RM3,SP1,SP2,SP3,...) Adapter for multiple devices",
     "news": {
       "0.1.4": {
-        "en": "Some text changes",
+        "en": "I took origional code",
         "de": "Einige Textänderungen"
       },
       "0.1.3": {
@@ -14,18 +14,18 @@
       }
     },
     "desc": {
-      "en": "Broadlink Adapter for RM3 Mini/RM3 Pro to learn and send signals",
-      "de": "Broadlink Adapter für RM3 Mini/RM3 Pro zum lernen und senden von Signalen"
+      "en": "Broadlink Adapter for multiple BroadLink wireless devices (RM3,SP1,SP2,SP3,...)",
+      "de": "Broadlink Adapter für verschiedene Broadlink WLan-Geräte (RM3,SP1,SP2,SP3,...)"
     },
     "platform": "Javascript/Node.js",
     "mode": "daemon",
     "icon": "broadlink.png",
     "enabled": true,
-    "extIcon": "https://raw.githubusercontent.com/hieblmedia/ioBroker.broadlink/master/admin/broadlink.png",
+    "extIcon": "https://raw.githubusercontent.com/frankjoke/ioBroker.broadlink2/master/admin/broadlink.png",
     "keywords": [
       "broadlink"
     ],
-    "readme": "https://github.com/hieblmedia/ioBroker.broadlink/blob/master/README.md",
+    "readme": "https://github.com/frankjoke/ioBroker.broadlink2/blob/master/README.md",
     "loglevel": "info",
     "type": "hardware"
   },

@@ -1,6 +1,6 @@
 "use strict";
 var utils = require(__dirname + '/lib/utils'),
-	adapter = utils.adapter('broadlink'),
+	adapter = utils.adapter('broadlink2'),
 	broadlink = require(__dirname + '/lib/broadlink'),
 	//zlib = require('zlib'),
 	namespaceChannelLearned = 'learnedSignals',

@@ -1,24 +1,24 @@
 {
-  "name": "iobroker.broadlink",
+  "name": "iobroker.broadlink2",
   "version": "0.1.4",
-  "description": "ioBroker Broadlink Adapter",
-  "author": {
-    "name": "Reinhard Hiebl",
-    "email": "reinhard@hieblmedia.com"
-  },
-  "homepage": "https://github.com/hieblmedia/ioBroker.broadlink",
+  "description": "ioBroker Broadlink2 Adapter",
+  "author": "Frank Joke <frankjoke@hotmail.com>"
+  "contributors": [ "Reinhard Hiebl <reinhard@hieblmedia.com>" ],
+  "homepage": "https://github.com/frankjoke/ioBroker.broadlink2",
   "license": "MIT",
   "keywords": [
     "ioBroker",
     "broadlink",
-    "RM3 Mini",
-    "RM3 Pro",
+    "RM3",
+    "SP1",
+    "SP2",
+    "SP3",
     "Smart Home",
     "home automation"
   ],
   "repository": {
     "type": "git",
-    "url": "https://github.com/hieblmedia/ioBroker.broadlink"
+    "url": "https://github.com/frankjoke/ioBroker.broadlink2"
   },
   "engines": {
     "node": ">=0.12.0"
@@ -38,7 +38,7 @@
     "test": "node node_modules/mocha/bin/mocha"
   },
   "bugs": {
-    "url": "https://github.com/hieblmedia/ioBroker.broadlink/issues"
+    "url": "https://github.com/frankjoke/ioBroker.broadlink2/issues"
   },
   "readmeFilename": "README.md"
 }

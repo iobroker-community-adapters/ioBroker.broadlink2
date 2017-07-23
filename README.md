@@ -1,19 +1,19 @@
 ![Logo](admin/broadlink.png) 
-ioBroker.broadlink  
+ioBroker.broadlink2  
 ==================
 
-[![NPM version](http://img.shields.io/npm/v/iobroker.broadlink.svg)](https://www.npmjs.com/package/iobroker.broadlink)
-[![Downloads](https://img.shields.io/npm/dm/iobroker.broadlink.svg)](https://www.npmjs.com/package/iobroker.broadlink)
+[![NPM version](http://img.shields.io/npm/v/iobroker.broadlink2.svg)](https://www.npmjs.com/package/iobroker.broadlink2)
+[![Downloads](https://img.shields.io/npm/dm/iobroker.broadlink2.svg)](https://www.npmjs.com/package/iobroker.broadlink2)
 
-[![NPM](https://nodei.co/npm/iobroker.broadlink.png?downloads=true)](https://nodei.co/npm/iobroker.broadlink/)
+[![NPM](https://nodei.co/npm/iobroker.broadlink.png?downloads=true)](https://nodei.co/npm/iobroker.broadlink2/)
 
-**Tests:** Linux/Mac: [![Travis-CI Build Status](https://travis-ci.org/hieblmedia/ioBroker.broadlink.svg?branch=master)](https://travis-ci.org/hieblmedia/ioBroker.broadlink)
-Windows: [![AppVeyor Build status](https://ci.appveyor.com/api/projects/status/pil6266rrtw6l5c0?svg=true)](https://ci.appveyor.com/project/hieblmedia/iobroker-broadlink)
+**Tests:** Linux/Mac: [![Travis-CI Build Status](https://travis-ci.org/hieblmedia/ioBroker.broadlink2.svg?branch=master)](https://travis-ci.org/hieblmedia/ioBroker.broadlink2)
+Windows: [![AppVeyor Build status](https://ci.appveyor.com/api/projects/status/pil6266rrtw6l5c0?svg=true)](https://ci.appveyor.com/project/hieblmedia/iobroker-broadlink2)
 
-This is an ioBroker adapter for Broadlink RM3 Mini/RM3 Pro to learn and send signals.
+This is an ioBroker adapter for multiple  Broadlink devices like RM3, SP1, SP2, SP3,... .
 
 ## Configuration
-Enter the IP address in the configuration
+??Enter the IP address in the configuration
 
 ## How-To learn codes
 * In Objects of ioBroker you can find "broadlink.[n].enableLearningMode".
