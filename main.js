@@ -137,10 +137,11 @@ adapter.on('unload', function (callback) {
 	//	}
 	//}
 }).on('ready', function () {
-	if (adapter.config.ip) {
+//	if (adapter.config.ip) {
 		adapter.log.info('Discover UDP devices');
 		var connection = new broadlink(adapter.config.ip);
 		connection.on("deviceReady", function (device) {
+			adapter.log.info('Device dedected: ' + device.host.address + ' (' + device.getType() + ')');
 			if (device.host.address === adapter.config.ip) {
 				device.checkTemperature();
 				device.emitter.on('temperature', function (temperature) {
@@ -152,9 +153,9 @@ adapter.on('unload', function (callback) {
 				return false;
 			}
 		}).discover();
-	} else {
-		adapter.log.warn('No IP-Address found. Please set in configuration.');
-	}
+//	} else {
+//		adapter.log.warn('No IP-Address found. Please set in configuration.');
+//	}
 });
 
 function sendCode(value) {
