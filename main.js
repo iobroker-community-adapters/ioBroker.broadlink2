@@ -7,6 +7,54 @@ var utils = require(__dirname + '/lib/utils'),
 	currentDevice,
 	inObjectChange;
 
+const util = require('util');
+const exec = require('child_process').exec;
+const dns =       require('dns');
+
+function _O(obj, level) { return util.inspect(obj, false, level || 2, false).replace(/\n/g, ' '); }
+
+// function _J(str) { try { return JSON.parse(str); } catch (e) { return {'error':'JSON Parse Error of:'+str}}} 
+function _N(fun) { return setTimeout.apply(null, [fun, 0].concat(Array.prototype.slice.call(arguments, 1))); } // move fun to next schedule keeping arguments
+function _D(l, v) { adapter.log.debug(l); return v === undefined ? l : v; }
+function _I(l, v) { adapter.log.info(l); return v === undefined ? l : v; }
+function _W(l, v) { adapter.log.warn(l); return v === undefined ? l : v; }
+function _PR(v) { return Promise.resolve(v); } function _PE(v) { return Promise.reject(v); }
+
+
+const pExec = c2pP(exec);
+function wait(time,arg) { return new Promise(res => parseInt(time)>=0 ? setTimeout(res,parseInt(time), arg) : res(arg))}  // wait time (in ms) and then resolve promise with arg, returns a promise thich means the '.then()' will be executed after the delay
+
+function pSeries(obj,promfn,delay) {  // makes an call for each item 'of' obj to promfun(item) which need to return a promise. All Promises are executed therefore in sequence one after the other
+    var p = Promise.resolve();
+    const   nv = [], f = (k) => p = p.then(() => promfn(k).then(res => wait(delay || 0,nv.push(res))));
+    for(var item of obj) f(item);
+    return p.then(() => nv);
+}
+function pSeriesIn(obj,promfn,delay) {  // makes an call for each item 'in' obj to promfun(key,obj) which need to return a promise. All Promises are executed therefore in sequence one after the other
+    var p = Promise.resolve();
+    const   nv = [], f = k => p = p.then(() => promfn(k,obj).then(res => wait(delay || 0, nv.push(res))));
+    for(var item in obj) f(item);
+    return p.then(() => nv);
+}
+function c2pP(f) {// turns a callback(err,data) function into a promise 
+    return function () {
+        const args = Array.prototype.slice.call(arguments);
+        return new Promise((res, rej) => {
+            args.push((err, result) => (err && rej(err)) || res(result));
+            f.apply(this, args);
+        });
+    };
+}
+function c1pP(f) {  // turns a callback(data) function into a promise
+    return function () {
+        const args = Array.prototype.slice.call(arguments);
+        return new Promise((res, rej) => {
+            args.push((result) => res(result));
+            f.apply(this, args);
+        });
+    };
+}
+
 var reCODE = /^CODE_|^/;
 var reIsCODE = /^CODE_[a-f0-9]{16}/;
 var codes = {};
@@ -51,7 +99,7 @@ adapter.on('unload', function (callback) {
 				var nar = state.val.split('.');
 				name = nar.pop();
 				aktChannel = nar.join('.');
-				aktChannel = aktChannel [0] === '.' ? aktChannel.substr(1) : namespaceChannelLearned + '.' + aktChannel;
+				aktChannel = aktChannel[0] === '.' ? aktChannel.substr(1) : namespaceChannelLearned + '.' + aktChannel;
 			} else {
 				for (var i = 2; i < ar.length - 1; i++) {
 					aktChannel = aktChannel ? aktChannel + '.' + ar[i] : ar[i];
@@ -86,45 +134,45 @@ adapter.on('unload', function (callback) {
 		// }
 	}
 
-// }).on('stateChange', function (id, state) {
-// 	if (currentDevice) {
-// 		if (state && !state.ack && id.indexOf(adapter.namespace) === 0) {
-// 		    var ar = id.split('.');
-// 		    if (ar[ar.length-1] === 'enableLearningMode') {
-//                 if (state.val) {
-//                     var aktChannel = '', name = '';
-//                     for (var i=2; i<ar.length-1; i++) {
-//                         aktChannel = aktChannel ? aktChannel + '.' + ar[i] : ar[i];
-//                     }
-//                     if (typeof state.val === 'string') {
-//                         var nar = state.val.split('.');
-//                         name = nar.pop();
-//                         aktChannel = nar.join('.');
-//                         aktChannel = aktChannel [0] === '.' ? aktChannel.substr(1) : namespaceChannelLearned + '.' + aktChannel;
-//                     }
-//                     enterLeaningMode(aktChannel, name);
-//                 }
-// 			} else {
-// 				var objectIdCode = id.split('.').pop();
-// 				adapter.log.debug('Preparing to send: ' + objectIdCode);
-//
-// 				if (isSignalCode(objectIdCode)) {
-// 					sendCode(objectIdCode);
-// 				} else {
-// 					// If the object is not a signal code, check the name of the object
-// 					adapter.getObject(id, function (err, obj) {
-// 						if (err) {
-// 							adapter.log.error(err);
-// 						} else if (obj.common.name) {
-// 							if (isSignalCode(obj.common.name)) {
-// 								sendCode(obj.common.name)
-// 							}
-// 						}
-// 					});
-// 				}
-// 			}
-// 		}
-// 	}
+	// }).on('stateChange', function (id, state) {
+	// 	if (currentDevice) {
+	// 		if (state && !state.ack && id.indexOf(adapter.namespace) === 0) {
+	// 		    var ar = id.split('.');
+	// 		    if (ar[ar.length-1] === 'enableLearningMode') {
+	//                 if (state.val) {
+	//                     var aktChannel = '', name = '';
+	//                     for (var i=2; i<ar.length-1; i++) {
+	//                         aktChannel = aktChannel ? aktChannel + '.' + ar[i] : ar[i];
+	//                     }
+	//                     if (typeof state.val === 'string') {
+	//                         var nar = state.val.split('.');
+	//                         name = nar.pop();
+	//                         aktChannel = nar.join('.');
+	//                         aktChannel = aktChannel [0] === '.' ? aktChannel.substr(1) : namespaceChannelLearned + '.' + aktChannel;
+	//                     }
+	//                     enterLeaningMode(aktChannel, name);
+	//                 }
+	// 			} else {
+	// 				var objectIdCode = id.split('.').pop();
+	// 				adapter.log.debug('Preparing to send: ' + objectIdCode);
+	//
+	// 				if (isSignalCode(objectIdCode)) {
+	// 					sendCode(objectIdCode);
+	// 				} else {
+	// 					// If the object is not a signal code, check the name of the object
+	// 					adapter.getObject(id, function (err, obj) {
+	// 						if (err) {
+	// 							adapter.log.error(err);
+	// 						} else if (obj.common.name) {
+	// 							if (isSignalCode(obj.common.name)) {
+	// 								sendCode(obj.common.name)
+	// 							}
+	// 						}
+	// 					});
+	// 				}
+	// 			}
+	// 		}
+	// 	}
 }).on('message', function (obj) {
 	//if (currentDevice) {
 	//	if (typeof obj == 'object' && obj.message) {
@@ -137,25 +185,26 @@ adapter.on('unload', function (callback) {
 	//	}
 	//}
 }).on('ready', function () {
-//	if (adapter.config.ip) {
-		adapter.log.info('Discover UDP devices');
-		var connection = new broadlink(adapter.config.ip);
-		connection.on("deviceReady", function (device) {
-			adapter.log.info('Device dedected: ' + device.host.address + ' (' + device.getType() + ')');
-			if (device.host.address === adapter.config.ip) {
-				device.checkTemperature();
-				device.emitter.on('temperature', function (temperature) {
-					var i = temperature;
-				});
-				currentDevice = device;
-				adapter.log.info('Device connected: ' + adapter.config.ip + ' (' + device.getType() + ')');
-				main();
-				return false;
-			}
-		}).discover();
-//	} else {
-//		adapter.log.warn('No IP-Address found. Please set in configuration.');
-//	}
+	//	if (adapter.config.ip) {
+	adapter.log.info('Discover UDP devices');
+	var connection = new broadlink();
+	connection.on("deviceReady", function (device) {
+		adapter.log.info('Device dedected: ' + device.host.address + ' (' + _O(device,1) + ')');
+		c2pP(dns.reverse)(device.host.address).then( x => adapter.log.info('Device dedected: ' + x ));
+		if (device.host.address === adapter.config.ip) {
+			device.checkTemperature();
+			device.emitter.on('temperature', function (temperature) {
+				var i = temperature;
+			});
+			currentDevice = device;
+			adapter.log.info('Device connected: ' + adapter.config.ip + ' (' + device.getType() + ')');
+			main();
+			return false;
+		}
+	}).discover();
+	//	} else {
+	//		adapter.log.warn('No IP-Address found. Please set in configuration.');
+	//	}
 });
 
 function sendCode(value) {
@@ -188,7 +237,7 @@ function enterLeaningMode(aktChannel, name) {
 		}
 		clearInterval(timer);
 		currentDevice.emitter.removeAllListeners('rawData');
-		adapter.setState((aktChannel ? aktChannel + '.' : '') + 'enableLearningMode', {val: false, ack: true});
+		adapter.setState((aktChannel ? aktChannel + '.' : '') + 'enableLearningMode', { val: false, ack: true });
 	});
 
 	currentDevice.enterLearning();
@@ -252,7 +301,7 @@ function createLerningModeState(path, cb) {
 		},
 		native: {}
 	}, function (err, obj) {
-		adapter.setState(id, {val: false, ack: true}, cb);
+		adapter.setState(id, { val: false, ack: true }, cb);
 	});
 }
 
@@ -265,10 +314,10 @@ function addCode(id, obj) {
 
 function checkMigrateStates(objs, cb) {
 	return cb && cb(); // remove this line,
-					   // if you want to move the (ir)code from the 'id' or 'name' to the obj.native.code property
-					   // this function will convert all existing states with a name or id != the nativeName // '>>> Learned, please describe'
-					   //
-					   // the id shouldn't be used because in this case the (ir)code can change. the native object is for own, native values
+	// if you want to move the (ir)code from the 'id' or 'name' to the obj.native.code property
+	// this function will convert all existing states with a name or id != the nativeName // '>>> Learned, please describe'
+	//
+	// the id shouldn't be used because in this case the (ir)code can change. the native object is for own, native values
 
 	var objsArr = [];
 	for (var id in objs) {
@@ -354,7 +403,7 @@ function main() {
 		native: {}
 	}, function (err, obj) {
 		if (err || !obj) return;
-		adapter.setState(obj.id, {val: '', ack: true});
+		adapter.setState(obj.id, { val: '', ack: true });
 	});
 	adapter.setObject('createCode', {
 		type: 'state',
@@ -369,7 +418,7 @@ function main() {
 		native: {}
 	}, function (err, obj) {
 		if (err || !obj) return;
-		adapter.setState(obj.id, {val: '', ack: true});
+		adapter.setState(obj.id, { val: '', ack: true });
 	});
 
 	// adapter.setObject('enableLearningMode', {
@@ -387,5 +436,5 @@ function main() {
 
 	adapter.subscribeStates('*');
 	adapter.subscribeObjects('*');
-	adapter.setState('enableLearningMode', {val: false, ack: true});
+	adapter.setState('enableLearningMode', { val: false, ack: true });
 }

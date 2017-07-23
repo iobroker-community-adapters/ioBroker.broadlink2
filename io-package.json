@@ -30,7 +30,8 @@
     "type": "hardware"
   },
   "native": {
-    "ip": ""
+    "ip": ".fritz.box",
+    "rmpost":".fritz.box"
   },
   "objects": [
   ]
