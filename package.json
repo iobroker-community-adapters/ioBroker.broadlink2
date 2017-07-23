@@ -2,7 +2,7 @@
   "name": "iobroker.broadlink2",
   "version": "0.1.4",
   "description": "ioBroker Broadlink2 Adapter",
-  "author": "Frank Joke <frankjoke@hotmail.com>"
+  "author": "Frank Joke <frankjoke@hotmail.com>",
   "contributors": [ "Reinhard Hiebl <reinhard@hieblmedia.com>" ],
   "homepage": "https://github.com/frankjoke/ioBroker.broadlink2",
   "license": "MIT",
