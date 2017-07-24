@@ -279,7 +279,7 @@ adapter.on('unload', function (callback) {
 				}
 				scanList.set(_D(`Device found ${x}`,x),device);
 				device.on('payload', (err,payload) => {
-					_D(`Device ${device.name} sent err:"${_O(err)}" with payload "${_O(payload)}"`);
+					_D(`Device ${device.name} sent err/cmd:"${_O(err)}" with payload "${_O(payload)}"`);
 				});
 				return makeState(x,device);
 				})
@@ -295,7 +295,7 @@ adapter.on('unload', function (callback) {
 			adapter.log.info('Device connected: ' + adapter.config.ip + ' (' + device.getType() + ')');
 			main();
 */
-			return _D(true,true);
+			return false;
 //		}
 	}).discover();
 	wait(10000).then(x => main(_D('Start main()')));
