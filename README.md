@@ -1,5 +1,5 @@
 ![Logo](admin/broadlink.png) 
-ioBroker.broadlink2  
+iobroker.broadlink2  
 ==================
 
 [![NPM version](http://img.shields.io/npm/v/iobroker.broadlink2.svg)](https://www.npmjs.com/package/iobroker.broadlink2)

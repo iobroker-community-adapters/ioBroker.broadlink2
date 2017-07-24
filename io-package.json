@@ -21,11 +21,11 @@
     "mode": "daemon",
     "icon": "broadlink.png",
     "enabled": true,
-    "extIcon": "https://raw.githubusercontent.com/frankjoke/ioBroker.broadlink2/master/admin/broadlink.png",
+    "extIcon": "https://raw.githubusercontent.com/frankjoke/iobroker.broadlink2/master/admin/broadlink.png",
     "keywords": [
       "broadlink"
     ],
-    "readme": "https://github.com/frankjoke/ioBroker.broadlink2/blob/master/README.md",
+    "readme": "https://github.com/frankjoke/iobroker.broadlink2/blob/master/README.md",
     "loglevel": "info",
     "type": "hardware"
   },
