@@ -34,6 +34,9 @@ You just need to prepend "CODE_".
 ## Known-Issues
 If you learn the same signal multiple times the code can be different everytime. This can not be changed.
 
+## Important/Wichtig!
+* requires node >=v4.2
+
 ## Changelog
 ### 0.2.0
 * Implemented SP2 switches and they are working to set them!
