@@ -7,8 +7,8 @@ ioBroker.broadlink2
 
 [![NPM](https://nodei.co/npm/iobroker.broadlink.png?downloads=true)](https://nodei.co/npm/iobroker.broadlink2/)
 
-**Tests:** Linux/Mac: [![Travis-CI Build Status](https://travis-ci.org/hieblmedia/ioBroker.broadlink2.svg?branch=master)](https://travis-ci.org/hieblmedia/ioBroker.broadlink2)
-Windows: [![AppVeyor Build status](https://ci.appveyor.com/api/projects/status/pil6266rrtw6l5c0?svg=true)](https://ci.appveyor.com/project/hieblmedia/iobroker-broadlink2)
+**Tests:** Linux/Mac: [![Travis-CI Build Status](https://travis-ci.org/frankjoke/ioBroker.broadlink2.svg?branch=master)](https://travis-ci.org/frankjoke/ioBroker.broadlink2)
+Windows: [![AppVeyor Build status](https://ci.appveyor.com/api/projects/status/pil6266rrtw6l5c0?svg=true)](https://ci.appveyor.com/project/frankjoke/iobroker-broadlink2)
 
 This is an ioBroker adapter for multiple  Broadlink devices like RM3, SP1, SP2, SP3,... .
 

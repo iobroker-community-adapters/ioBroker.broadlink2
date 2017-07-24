@@ -13,8 +13,8 @@ module.exports = function (grunt) {
     var iopackage = grunt.file.readJSON('io-package.json');
     var version   = (pkg && pkg.version) ? pkg.version : iopackage.common.version;
     var newname   = grunt.option('name');
-    var author    = grunt.option('author') || 'Reinhard Hiebl';
-    var email     = grunt.option('email')  || 'reinhard@hieblmedia.com';
+    var author    = grunt.option('author') || 'Frank Joke';
+    var email     = grunt.option('email')  || 'frankjoke@hotmail.com';
     var fs        = require('fs');
 
     // check arguments
@@ -108,11 +108,11 @@ module.exports = function (grunt) {
                             replacement: newname ? (newname[0].toUpperCase() + newname.substring(1)) : 'Broadlink'
                         },
                         {
-                            match: /Reinhard Hiebl/g,
+                            match: /Frank Joke/g,
                             replacement: author
                         },
                         {
-                            match: /reinhard@hieblmedia.com/g,
+                            match: /frankjoke@hotmail.com/g,
                             replacement: email
                         }
                     ]
