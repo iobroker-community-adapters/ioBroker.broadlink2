@@ -33,3 +33,9 @@ You just need to prepend "CODE_".
 
 ## Known-Issues
 If you learn the same signal multiple times the code can be different everytime. This can not be changed.
+
+## Changelog
+### 0.2.0
+* Implemented SP2 switches and they are working to set them!
+* currently ONLY SP1 && SP2 (SP3?) are working, please test!
+* Disabled RM? devices, no test available, ordered one for later re-implementation

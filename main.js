@@ -10,12 +10,13 @@ var utils = require(__dirname + '/lib/utils'),
 const util = require('util');
 const exec = require('child_process').exec;
 const dns =       require('dns');
+const debug = false;
 
 function _O(obj, level) { return util.inspect(obj, false, level || 2, false).replace(/\n/g, ' '); }
 
 // function _J(str) { try { return JSON.parse(str); } catch (e) { return {'error':'JSON Parse Error of:'+str}}} 
 function _N(fun) { return setTimeout.apply(null, [fun, 0].concat(Array.prototype.slice.call(arguments, 1))); } // move fun to next schedule keeping arguments
-function _D(l, v) { adapter.log.debug(l); return v === undefined ? l : v; }
+function _D(l, v) { (debug ? adapter.log.info : adapter.log.debug)(`<span style="color:darkblue;">debug: ${l}</span>`); return v === undefined ? l : v; }
 function _I(l, v) { adapter.log.info(l); return v === undefined ? l : v; }
 function _W(l, v) { adapter.log.warn(l); return v === undefined ? l : v; }
 function _PR(v) { return Promise.resolve(v); } function _PE(v) { return Promise.reject(v); }
@@ -30,12 +31,14 @@ function pSeries(obj,promfn,delay) {  // makes an call for each item 'of' obj to
     for(var item of obj) f(item);
     return p.then(() => nv);
 }
+/*
 function pSeriesIn(obj,promfn,delay) {  // makes an call for each item 'in' obj to promfun(key,obj) which need to return a promise. All Promises are executed therefore in sequence one after the other
     var p = Promise.resolve();
     const   nv = [], f = k => p = p.then(() => promfn(k,obj).then(res => wait(delay || 0, nv.push(res))));
     for(var item in obj) f(item);
     return p.then(() => nv);
 }
+*/
 function c2pP(f) {// turns a callback(err,data) function into a promise 
     return function () {
         const args = Array.prototype.slice.call(arguments);
@@ -45,6 +48,7 @@ function c2pP(f) {// turns a callback(err,data) function into a promise
         });
     };
 }
+/* 
 function c1pP(f) {  // turns a callback(data) function into a promise
     return function () {
         const args = Array.prototype.slice.call(arguments);
@@ -53,6 +57,68 @@ function c1pP(f) {  // turns a callback(data) function into a promise
             f.apply(this, args);
         });
     };
+}
+*/
+var ain = '';
+const scanList = new Map();
+const objects = new Map();
+//const pSetState = c2pP(adapter.setState);
+function pSetState(id,val,ack) {
+//    _D(`pSetState: ${id} = ${val} with ${ack}`);
+    return c2pP(adapter.setState)(id,val,ack ? true : false);
+}
+
+function makeState(id,value) {
+    if (objects.has(id))
+        return pSetState(id,value,true);
+    _D(`Make State ${id} and set value to '${_O(value)}'`) ///TC
+    var st = {
+        common: {
+            name:  id, // You can add here some description
+            read:  true,
+            write: id.endsWith('.STATE'),
+            state: 'state',
+            role:  'value',
+            type:  typeof value
+        },
+        type: 'state',
+        _id: id
+    };
+    if (id.endsWith('Percent'))
+        st.common.unit = "%";
+    return  c2pP(adapter.extendObject)(id,st)
+        .then(x => {
+            objects.set(id,x);
+           return pSetState(id,x.val,true).then( a => x, e => x);
+        })
+        .catch(err => _D(`MS ${_O(err)}:=extend`,id));
+
+}
+
+function getState(id) {
+	return c2pP(adapter.getState)(id);
+}
+
+function processMessage(obj) {
+    if (obj && obj.command) {
+        _D(`process Message ${_O(obj)}`);
+        switch (obj.command) {
+            case 'ping': {
+                // Try to connect to mqtt broker
+                if (obj.callback && obj.message) {
+                    ping.probe(obj.message, {log: adapter.log.debug}, function (err, result) {
+                        adapter.sendTo(obj.from, obj.command, res, obj.callback);
+                    });
+                }
+                break;
+            }
+        }
+    }
+    adapter.getMessage(function (err, obj) {
+        if (obj) {
+            processMessage(obj);
+        }
+    });    
 }
 
 var reCODE = /^CODE_|^/;
@@ -72,6 +138,7 @@ adapter.on('unload', function (callback) {
 		callback();
 	}
 }).on('objectChange', function (id, obj) {
+	_D(`objectChange of "${id}": ${_O(obj)}`); /*
 	if (!id || !obj) {
 		if (id) delete codes[id];
 		return;
@@ -83,9 +150,30 @@ adapter.on('unload', function (callback) {
 			if (inObjectChange) inObjectChange--;
 		});
 	}
+	*/
 }).on('stateChange', function (id, state) {
+	_D(`stateChange of "${id}": ${_O(state)}`); 
+	if (state && !state.ack && state.from!= 'system.adapter.'+ain) {
+		var id2 = id.split('.').slice(2,-1).join('.');
+		var id1 = id.split('.').slice(2,3)[0];
+		_D(`Somebody (${state.from}) changed ${id.split('.').slice(-1)[0]} of "${id2}" type ${id1} to ${_O(state)}`); 
+		var device = scanList.get(id2);
+		if (!device) return _W(`stateChange error no device found: ${id} ${_O(state)}`);
+		switch(id1) {
+			case 'SP1':
+			case 'SP2':
+				device.set_power(state.val);
+				_I(`Change ${id} to ${state.val}`)
+				break;
+			default:
+				_W(`stateChange error invalid id type: ${id}=${id1} ${_O(state)}`);
+				break;
+		}
+		
+	}
+/*
 	if (!state || state.ack || id.indexOf(adapter.namespace) !== 0 || !currentDevice) return;
-
+	
 	var ar = id.split('.');
 	var command = ar[ar.length - 1];
 
@@ -133,7 +221,7 @@ adapter.on('unload', function (callback) {
 		//     });
 		// }
 	}
-
+*/
 	// }).on('stateChange', function (id, state) {
 	// 	if (currentDevice) {
 	// 		if (state && !state.ack && id.indexOf(adapter.namespace) === 0) {
@@ -173,25 +261,32 @@ adapter.on('unload', function (callback) {
 	// 			}
 	// 		}
 	// 	}
-}).on('message', function (obj) {
-	//if (currentDevice) {
-	//	if (typeof obj == 'object' && obj.message) {
-	//		if (obj.command == 'send') {
-	//			// e.g. send email or pushover or whatever
-	//			console.log('send command');
-	//			// Send response in callback if required
-	//			if (obj.callback) adapter.sendTo(obj.from, obj.command, 'Message received', obj.callback);
-	//		}
-	//	}
-	//}
-}).on('ready', function () {
+}).on('message', obj => processMessage(obj)
+).on('ready', function () {
 	//	if (adapter.config.ip) {
-	adapter.log.info('Discover UDP devices');
+	ain = adapter.name + '.' + adapter.instance + '.';
+	_I('Discover UDP devices for 10sec on '+ain);
 	var connection = new broadlink();
 	connection.on("deviceReady", function (device) {
-		adapter.log.info('Device dedected: ' + device.host.address + ' (' + _O(device,1) + ')');
-		c2pP(dns.reverse)(device.host.address).then( x => adapter.log.info('Device dedected: ' + x ));
-		if (device.host.address === adapter.config.ip) {
+		const typ = device.getType();
+		_I(`Device type ${typ} dedected: ${_O(device,1)}`);
+		c2pP(dns.reverse)(device.host.address)
+			.then( x => x.toString().trim().endsWith(adapter.config.ip) ? x.toString().trim().slice(0,x.length-adapter.config.ip.length-1) : x, e => device.host.address.split('.').join('-'))
+			.then( x => device.name = typ + '.' + x )
+			.then( x => {
+				if(scanList.has(x))  {
+					return _W(`Device found already: ${x} with ${_O(scanList.get(x))} and ${_O(device)}`);
+				}
+				scanList.set(_D(`Device found ${x}`,x),device);
+				device.on('payload', (err,payload) => {
+					_D(`Device ${device.name} sent err:"${_O(err)}" with payload "${_O(payload)}"`);
+				});
+				return makeState(x,device);
+				})
+			.catch(e => _W(`Error in device dedect: "${e}"`))
+			;
+/*
+			if (device.host.address === adapter.config.ip) {
 			device.checkTemperature();
 			device.emitter.on('temperature', function (temperature) {
 				var i = temperature;
@@ -199,9 +294,11 @@ adapter.on('unload', function (callback) {
 			currentDevice = device;
 			adapter.log.info('Device connected: ' + adapter.config.ip + ' (' + device.getType() + ')');
 			main();
-			return false;
-		}
+*/
+			return _D(true,true);
+//		}
 	}).discover();
+	wait(10000).then(x => main(_D('Start main()')));
 	//	} else {
 	//		adapter.log.warn('No IP-Address found. Please set in configuration.');
 	//	}
@@ -363,10 +460,33 @@ function checkMigrateStates(objs, cb) {
 }
 
 function main() {
-	//adapter.log.info('Config IP-Address: ' + adapter.config.ip);
+	_D('Config IP-Address end to remove: ' + adapter.config.ip);
+	pSeries(scanList, x => {
+		const devid = x[0],
+			device = x[1],
+			typ = device.getType();
 
+		_D(`Process item ${devid} with ${_O(device)}`);
+		switch (typ) {
+			case 'SP2':
+			case 'SP1':
+				let nst = devid+'.STATE';
+				return makeState(nst,false)
+					.then(x => getState(nst))
+					.then(x => _D(`New State ${nst}: ${_O(x)}`))
+					.then(x => _D(device.check_power()))
+					.catch(e => _W(`Error in StateCreation ${e}`));
+				break;
+			default:
+				_W(`unknown device type ${typ} for ${devid} on ${_O(device)}`);
+				break;
+		}
+		return _PR(devid);
+	}).then(x => _D('Main finish'),e => _W(`Error in main: ${e}`));
+/*
 	adapter.getAdapterObjects(function (objs) {
 		for (var id in objs) {
+			_D(`getAdapterObjects ${id} ${_O(objs[id])}`);
 			addCode(id, objs[id]);
 		}
 		checkMigrateStates(objs);
@@ -433,8 +553,8 @@ function main() {
 	// 	native: {}
 	// });
 	createLerningModeState();
-
+*/
 	adapter.subscribeStates('*');
 	adapter.subscribeObjects('*');
-	adapter.setState('enableLearningMode', { val: false, ack: true });
+//	adapter.setState('enableLearningMode', { val: false, ack: true });
 }
