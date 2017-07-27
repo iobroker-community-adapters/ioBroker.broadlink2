@@ -68,7 +68,7 @@ function pSetState(id,val,ack) {
     return c2pP(adapter.setState)(id,val,ack ? true : false);
 }
 
-function makeState(id,value) {
+function makeState(id,value,add) {
     if (objects.has(id))
         return pSetState(id,value,true);
     _D(`Make State ${id} and set value to '${_O(value)}'`) ///TC
@@ -83,7 +83,9 @@ function makeState(id,value) {
         },
         type: 'state',
         _id: id
-    };
+	};
+	if (add !== undefined)
+		st.common.custom = { broadlink2: add};
     if (id.endsWith('Percent'))
         st.common.unit = "%";
     return  c2pP(adapter.extendObject)(id,st)
@@ -155,8 +157,8 @@ adapter.on('unload', function (callback) {
 	_D(`stateChange of "${id}": ${_O(state)}`); 
 	if (state && !state.ack && state.from!= 'system.adapter.'+ain) {
 		var id2 = id.split('.').slice(2,-1).join('.');
-		var id1 = id.split('.').slice(2,3)[0];
-		_D(`Somebody (${state.from}) changed ${id.split('.').slice(-1)[0]} of "${id2}" type ${id1} to ${_O(state)}`); 
+		var id1 = id2.split(':')[0];
+		_D(`Somebody (${state.from}) changed ${id} of "${id2}" type ${id1} to ${_O(state)}`); 
 		var device = scanList.get(id2);
 		if (!device) return _W(`stateChange error no device found: ${id} ${_O(state)}`);
 		switch(id1) {
@@ -269,10 +271,11 @@ adapter.on('unload', function (callback) {
 	var connection = new broadlink();
 	connection.on("deviceReady", function (device) {
 		const typ = device.getType();
+//		device.typ = typ;
 		_I(`Device type ${typ} dedected: ${_O(device,1)}`);
 		c2pP(dns.reverse)(device.host.address)
 			.then( x => x.toString().trim().endsWith(adapter.config.ip) ? x.toString().trim().slice(0,x.length-adapter.config.ip.length-1) : x, e => device.host.address.split('.').join('-'))
-			.then( x => device.name = typ + '.' + x )
+			.then( x => device.name = typ + ':' + x )
 			.then( x => {
 				if(scanList.has(x))  {
 					return _W(`Device found already: ${x} with ${_O(scanList.get(x))} and ${_O(device)}`);
@@ -281,7 +284,8 @@ adapter.on('unload', function (callback) {
 				device.on('payload', (err,payload) => {
 					_D(`Device ${device.name} sent err/cmd:"${_O(err)}" with payload "${_O(payload)}"`);
 				});
-				return makeState(x,device);
+				if (typ.startsWith('RM')) 
+					return makeState(x,false,{name: device.name, host: device.host, type: device.type });
 				})
 			.catch(e => _W(`Error in device dedect: "${e}"`))
 			;
@@ -471,7 +475,7 @@ function main() {
 			case 'SP2':
 			case 'SP1':
 				let nst = devid+'.STATE';
-				return makeState(nst,false)
+				return makeState(nst,false,{name: device.name, host: device.host, type: device.type})
 					.then(x => getState(nst))
 					.then(x => _D(`New State ${nst}: ${_O(x)}`))
 					.then(x => _D(device.check_power()))

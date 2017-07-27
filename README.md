@@ -24,6 +24,10 @@ It scans the network to find compatible devices and installs them (currently onl
 * Requires node >=v4.2
 
 ## Changelog
+### 0.2.1
+* Changed naming convention and used type:name instead of type.name to reduce ioBroker subdivision of devices 
+* generate device object only if device is a remote control
+
 ### 0.2.0
 * Implemented SP2 switches and they are working to set them!
 * Currently ONLY SP1 && SP2 (SP3?) are working, please test!
