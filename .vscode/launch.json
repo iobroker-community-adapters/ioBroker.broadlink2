@@ -1,0 +1,19 @@
+{
+    // Use IntelliSense to learn about possible Node.js debug attributes.
+    // Hover to view descriptions of existing attributes.
+    // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+    "version": "0.2.0",
+    "configurations": [
+        
+        {
+            "type": "node",
+            "request": "attach",
+            "name": "JESSI4",
+            "address": "192.168.178.72",
+            "port": 5858,
+            "localRoot": "${workspaceRoot}",
+            "remoteRoot": "/opt/iobroker/node_modules/iobroker.broadlink2",
+            "smartStep": true,
+        }
+    ]
+}

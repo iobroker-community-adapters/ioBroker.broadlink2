@@ -24,6 +24,9 @@ It scans the network to find compatible devices and installs them (currently onl
 * Requires node >=v4.2
 
 ## Changelog
+### 0.3.0
+* Poll frequency can be set to check the switches (which are able to do so, SM2 for example) and change the state if they are  changed by the user on the device.
+
 ### 0.2.1
 * Changed naming convention and used type:name instead of type.name to reduce ioBroker subdivision of devices 
 * generate device object only if device is a remote control

@@ -1,7 +1,7 @@
 {
   "common": {
     "name": "broadlink2",
-    "version": "0.2.1",
+    "version": "0.3.0",
     "title": "Broadlink (RM3,SP1,SP2,SP3,...) Adapter for multiple devices",
     "news": {
       "0.1.4": {
@@ -31,7 +31,7 @@
   },
   "native": {
     "ip": ".fritz.box",
-    "rmpost":".fritz.box"
+    "poll": "30"
   },
   "objects": [
   ]

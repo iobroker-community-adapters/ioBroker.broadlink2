@@ -1,10 +1,10 @@
 "use strict";
-var utils = require(__dirname + '/lib/utils'),
+const utils = require(__dirname + '/lib/utils'),
 	adapter = utils.adapter('broadlink2'),
 	broadlink = require(__dirname + '/lib/broadlink'),
 	//zlib = require('zlib'),
-	namespaceChannelLearned = 'learnedSignals',
-	currentDevice,
+	namespaceChannelLearned = 'learnedSignals';
+var	currentDevice,
 	inObjectChange;
 
 const util = require('util');
@@ -72,7 +72,7 @@ function makeState(id,value,add) {
     if (objects.has(id))
         return pSetState(id,value,true);
     _D(`Make State ${id} and set value to '${_O(value)}'`) ///TC
-    var st = {
+    const st = {
         common: {
             name:  id, // You can add here some description
             read:  true,
@@ -156,16 +156,17 @@ adapter.on('unload', function (callback) {
 }).on('stateChange', function (id, state) {
 	_D(`stateChange of "${id}": ${_O(state)}`); 
 	if (state && !state.ack && state.from!= 'system.adapter.'+ain) {
-		var id2 = id.split('.').slice(2,-1).join('.');
-		var id1 = id2.split(':')[0];
+		let id2 = id.split('.').slice(2,-1).join('.');
+		let id1 = id2.split(':')[0];
 		_D(`Somebody (${state.from}) changed ${id} of "${id2}" type ${id1} to ${_O(state)}`); 
-		var device = scanList.get(id2);
+		let device = scanList.get(id2);
 		if (!device) return _W(`stateChange error no device found: ${id} ${_O(state)}`);
 		switch(id1) {
 			case 'SP1':
 			case 'SP2':
 				device.set_power(state.val);
 				_I(`Change ${id} to ${state.val}`)
+				device.oval = state.val;
 				break;
 			default:
 				_W(`stateChange error invalid id type: ${id}=${id1} ${_O(state)}`);
@@ -268,7 +269,7 @@ adapter.on('unload', function (callback) {
 	//	if (adapter.config.ip) {
 	ain = adapter.name + '.' + adapter.instance + '.';
 	_I('Discover UDP devices for 10sec on '+ain);
-	var connection = new broadlink();
+	let connection = new broadlink();
 	connection.on("deviceReady", function (device) {
 		const typ = device.getType();
 //		device.typ = typ;
@@ -281,8 +282,26 @@ adapter.on('unload', function (callback) {
 					return _W(`Device found already: ${x} with ${_O(scanList.get(x))} and ${_O(device)}`);
 				}
 				scanList.set(_D(`Device found ${x}`,x),device);
+				device.iname = x;
+				device.oval = false;
 				device.on('payload', (err,payload) => {
-					_D(`Device ${device.name} sent err/cmd:"${_O(err)}" with payload "${_O(payload)}"`);
+					let nst = x +'.STATE',
+						res = !!payload[4];
+					
+					switch(device.type) {
+						case 'SP2':
+							if (!err) {
+								_D(`Device ${nst} sent with "${res}"`);
+								if (device.oval != res) {
+									device.oval = res;
+									return makeState(nst,res);
+								}
+							}
+							break;
+						default: 
+							_D(`Device ${device.name} sent err/cmd:"${_O(err)}" with payload "${_O(payload)}"`);
+							break;
+					}
 				});
 				if (typ.startsWith('RM')) 
 					return makeState(x,false,{name: device.name, host: device.host, type: device.type });
@@ -309,7 +328,7 @@ adapter.on('unload', function (callback) {
 });
 
 function sendCode(value) {
-	var buffer = new Buffer(value.replace(reCODE, ''), 'hex');
+	let buffer = new Buffer(value.replace(reCODE, ''), 'hex');
 	//var buffer = new Buffer(value.substr(5), 'hex'); // substr(5) removes CODE_ from string
 
 	currentDevice.sendData(buffer);
@@ -463,6 +482,27 @@ function checkMigrateStates(objs, cb) {
 	doIt();
 }
 
+function doPoll() {
+	_D(`Poll after ${adapter.config.poll} seconds`);
+	pSeries(scanList, x => {
+		const devid = x[0],
+			device = x[1],
+			typ = device.type;
+
+//		_D(`Poll item ${devid} with ${_O(device,0)}`);
+		switch (typ) {
+			case 'SP2':
+//				let nst = devid+'.STATE';
+//				_D(`Poll item  type ${typ} of ${devid}`);
+				device.check_power();
+				break;
+			default: break;
+		}
+		return _PR(devid);
+	})
+	;	
+}
+
 function main() {
 	_D('Config IP-Address end to remove: ' + adapter.config.ip);
 	pSeries(scanList, x => {
@@ -486,7 +526,14 @@ function main() {
 				break;
 		}
 		return _PR(devid);
-	}).then(x => _D('Main finish'),e => _W(`Error in main: ${e}`));
+	}).then(x => {
+		const p = parseInt(adapter.config.poll);
+		if (p) {
+			setInterval(doPoll,p*1000);
+			_D(`Poll every ${p} secods.`);
+		}
+	})
+	.then(x => _D('Main finish'),e => _W(`Error in main: ${e}`));
 /*
 	adapter.getAdapterObjects(function (objs) {
 		for (var id in objs) {
@@ -559,6 +606,6 @@ function main() {
 	createLerningModeState();
 */
 	adapter.subscribeStates('*');
-	adapter.subscribeObjects('*');
+//	adapter.subscribeObjects('*');
 //	adapter.setState('enableLearningMode', { val: false, ack: true });
 }
