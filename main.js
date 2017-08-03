@@ -320,7 +320,7 @@ adapter.on('unload', function (callback) {
 					case 'RM2':
 						device.on('temperature', (val) => {
 							let nst = x +tempName;
-							_D(`Received temperature ${val} from ${x}`);
+//							_D(`Received temperature ${val} from ${x}`);
 							if (device.ltemp != val) {
 								device.ltemp = val;
 								makeState(nst,val);
@@ -503,13 +503,11 @@ function checkMigrateStates(objs, cb) {
 }
 */
 function doPoll() {
-//	_D(`Poll after ${adapter.config.poll} seconds`);
 	pSeries(scanList, x => {
 		const device = x[1];
 		device.checkTemperature && device.checkTemperature();
 		return _PR(device.check_power && device.check_power());
-	})
-	;	
+	},50);	
 }
 
 function startLearning(name) {
