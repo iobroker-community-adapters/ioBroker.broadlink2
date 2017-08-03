@@ -10,7 +10,7 @@ var	currentDevice,
 const util = require('util');
 const exec = require('child_process').exec;
 const dns =       require('dns');
-const debug = false;
+const debug = true;
 
 function _O(obj, level) { return util.inspect(obj, false, level || 2, false).replace(/\n/g, ' '); }
 
@@ -91,7 +91,7 @@ function makeState(id,value,add) {
     return  c2pP(adapter.extendObject)(id,st)
         .then(x => {
             objects.set(id,x);
-           return pSetState(id,x.val,true).then( a => x, e => x);
+//           return pSetState(id,x.val,true).then( a => x, e => x);
         })
         .catch(err => _D(`MS ${_O(err)}:=extend`,id));
 
@@ -290,13 +290,13 @@ adapter.on('unload', function (callback) {
 					
 					switch(device.type) {
 						case 'SP2':
-							if (!err) {
+							if (!err && payload[0]==1) {
 								_D(`Device ${nst} sent with "${res}"`);
 								if (device.oval != res) {
 									device.oval = res;
 									return makeState(nst,res);
 								}
-							}
+							}	else _W(`Device ${nst} sent err:${err} with ${_O(payload)}`);
 							break;
 						default: 
 							_D(`Device ${device.name} sent err/cmd:"${_O(err)}" with payload "${_O(payload)}"`);
@@ -518,7 +518,7 @@ function main() {
 				return makeState(nst,false,{name: device.name, host: device.host, type: device.type})
 					.then(x => getState(nst))
 					.then(x => _D(`New State ${nst}: ${_O(x)}`))
-					.then(x => _D(device.check_power()))
+					.then(x => device.check_power && device.check_power())
 					.catch(e => _W(`Error in StateCreation ${e}`));
 				break;
 			default:
