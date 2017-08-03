@@ -18,6 +18,8 @@ I could not test all of them because I have only a RM2 Pro Plus and some SM2.
 
 SP1 devices cannot be polled.
 
+* This adapter is based on original Broadlink adapter v0.1.1 found here: (https://github.com/hieblmedia/ioBroker.broadlink)
+
 ## Configuration
 * Enter prefix of network address in configuration which should be removed when generating device names 
 * Enter the number of seconds between polls. On each poll all SP* devices expluding SP1 are asked what the switch status is. This feature can be disabled by setting the poll delay to 0.
