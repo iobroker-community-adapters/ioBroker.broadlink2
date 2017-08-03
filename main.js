@@ -290,16 +290,16 @@ adapter.on('unload', function (callback) {
 					
 					switch(device.type) {
 						case 'SP2':
-							if (!err && payload[0]==1) {
-								_D(`Device ${nst} sent with "${res}"`);
+							if (payload !== null && payload[0]==1) {
+								_D(`Device ${nst} sent cmd ${err}/${err.toString(16)} with "${res}"`);
 								if (device.oval != res) {
 									device.oval = res;
 									return makeState(nst,res);
 								}
-							}	else _W(`Device ${nst} sent err:${err} with ${_O(payload)}`);
+							}	else _W(`Device ${nst} sent err:${err}/${err.toString(16)}`);
 							break;
 						default: 
-							_D(`Device ${device.name} sent err/cmd:"${_O(err)}" with payload "${_O(payload)}"`);
+							_D(`Device ${device.name} sent err/cmd:"${err}/${err.toString(16)}" with payload "${_O(payload)}"`);
 							break;
 					}
 				});
