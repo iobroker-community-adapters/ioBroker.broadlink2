@@ -60,12 +60,18 @@ function c1pP(f) {  // turns a callback(data) function into a promise
     };
 }
 */
-var ain = '';
 const scanList = new Map(),
 	objects = new Map(),
 	tempName = '.Temperature',
-	learnName = '.Learn';
-
+	learnName = '.Learn',
+	learnedName = '.LearnedStates.',
+	codeName = "CODE_",
+	reCODE = /^CODE_|^/,
+	reIsCODE = /^CODE_[a-f0-9]{16}/,
+	defaultName = '>>> Rename learned @ ';
+var ain = '',
+	codes = {};
+//var defaultName = '>>> Learned, please describe';
 
 function pSetState(id,val,ack) {
 //    _D(`pSetState: ${id} = ${val} with ${ack}`);
@@ -74,8 +80,8 @@ function pSetState(id,val,ack) {
 
 
 function makeState(id,value,add) {
-    if (objects.has(id))
-        return pSetState(id,value,true).then(() => _D("State "+id+" updated: "+_O(objects.get(id)),objects.get(id)));
+    if (objects.has(id) && value !== undefined)
+        return pSetState(id,value,true).then(() => _D(`${id} updated with ${value} on: ${_O(objects.get(id))}`,objects.get(id)));
     _D(`Make State ${id} and set value to '${_O(value)}'`) ///TC
     const st = {
         common: {
@@ -97,6 +103,10 @@ function makeState(id,value,add) {
 	} else if (id.endsWith(tempName)) {
 		st.common.role = "value.temperature"; 
 		st.common.unit = "°C";
+	} else if (id.indexOf(learnedName) != -1) {
+		st.common.name = `${defaultName}${new Date()}`
+		st.common.role = 'button';
+		st.common.write = true;
 	}
 	if (add !== undefined)
 		st.common.custom = { broadlink2: add};
@@ -139,11 +149,6 @@ function processMessage(obj) {
     });    
 }
 
-var reCODE = /^CODE_|^/;
-var reIsCODE = /^CODE_[a-f0-9]{16}/;
-var codes = {};
-var defaultName = '>>> Learned, please describe';
-
 adapter.on('unload', function (callback) {
 	try {
 		if (currentDevice) {
@@ -170,12 +175,15 @@ adapter.on('unload', function (callback) {
 	}
 	*/
 }).on('stateChange', function (id, state) {
-	_D(`stateChange of "${id}": ${_O(state)}`); 
+//	_D(`stateChange of "${id}": ${_O(state)}`); 
 	if (state && !state.ack && state.from!= 'system.adapter.'+ain) {
+		let id0 = id.split('.').slice(2,3)[0];
 		let id2 = id.split('.').slice(2,-1).join('.');
 		let id1 = id2.split(':')[0];
-		_D(`Somebody (${state.from}) changed ${id} of "${id2}" type ${id1} to ${_O(state)}`); 
-		let device = scanList.get(id2);
+		let id3 = id.split('.').slice(-1)[0];
+		// _D(`Somebody (${state.from}) changed ${id} of "${id2}" type ${id1} to ${_O(state)}`); 
+		_D(`Somebody (${state.from}) id0 ${id0} changed ${id} of "${id2}" type ${id3} to ${_O(state)}`); 
+		let device = scanList.get(id0);
 		if (!device) return _W(`stateChange error no device found: ${id} ${_O(state)}`);
 		switch(id1) {
 			case 'SP1':
@@ -185,7 +193,10 @@ adapter.on('unload', function (callback) {
 				device.oval = state.val;
 				break;
 			case 'RM2':
-				startLearning(id2);
+				if (id.indexOf(learnedName)=== -1)
+					return startLearning(id2);
+				_D(`Maybe I should send command from ${id0} changed ${id} of "${id2}" type ${id1} to ${id3}`); 		
+				sendCode(device,id3);		
 				break;
 			default:
 				_W(`stateChange error invalid id type: ${id}=${id1} ${_O(state)}`);
@@ -347,12 +358,12 @@ adapter.on('unload', function (callback) {
 	wait(5000).then(() => main(_D('Start main()')));	
 });
 
-function sendCode(value) {
+function sendCode(currentDevice,value) {
 	let buffer = new Buffer(value.replace(reCODE, ''), 'hex');
 	//var buffer = new Buffer(value.substr(5), 'hex'); // substr(5) removes CODE_ from string
 
 	currentDevice.sendData(buffer);
-	adapter.log.debug('sendData to ' + currentDevice.host.address + ', Code: ' + value);
+	_D('sendData to ' + currentDevice.name + ', Code: ' + value);
 }
 
 function isSignalCode(value) {
@@ -519,7 +530,8 @@ function startLearning(name) {
 	device.emitter.once("rawData", data =>  {       // use currentDevice.emitter.once, not the copy currentDevice.on. Otherwise this event will be called as often you call currentDevice.on()
 		const hex = data.toString('hex');
 		learned = 0;
-		_I(`Learned Code ${device.name} (hex): ${hex}`);
+		_I(`Learned Code ${device.name} (hex): ${hex}`);	
+		makeState(name+learnedName+codeName+hex,undefined,{code: hex, data: data});
 	});
 	device.enterLearning();
 	pRepeat(30, x => learned-- <=0 ? _PR() : wait(_D(`Learning for ${device.name} wait ${learned} `,1000)).then(e => device.checkData()));
@@ -547,10 +559,11 @@ function main() {
 			case 'RM2':
 				nst = devid+learnName;			
 				return makeState(nst,false,{name: device.name, host: device.host, type: device.type})
-					.then(x => getState(nst))
+					.then(() => getState(nst))
 					.then(x => _D(`New State ${nst}: ${_O(x)}`))
-					.then(x => device.checkTemperature && (device.checkTemperature() || true) && makeState(devid+tempName,0.1,{name: device.name, type: device.type}))
-					.then(x => makeState(devid+'.learnedStates.__DUMMY__',".... Dummy Entry ....",{name: device.name, type: device.type}))
+					.then(() => makeState(devid+tempName,0.1,{name: device.name, type: device.type}))
+					.then(() => device.checkTemperature && device.checkTemperature())
+//					.then(x => makeState(devid+'.learnedStates.__DUMMY__',".... Dummy Entry ....",{name: device.name, type: device.type}))
 					.catch(e => _W(`Error in StateCreation ${e}`))
 					.then(() => startLearning(devid));
 				break;

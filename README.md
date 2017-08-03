@@ -33,6 +33,7 @@ SP1 devices cannot be polled.
 ## Changelog
 ### 0.3.1
 * Poll more devices and some better debug code.
+* first RM2++ device integration with learning!
 
 ### 0.3.0
 * Poll frequency can be set to check the switches (which are able to do so, SM2 for example) and change the state if they are  changed by the user on the device.
