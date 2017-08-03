@@ -10,7 +10,7 @@ iobroker.broadlink2
 **Tests:** Linux/Mac: [![Travis-CI Build Status](https://travis-ci.org/frankjoke/iobroker.broadlink2.svg?branch=master)](https://travis-ci.org/frankjoke/iobroker.broadlink2)
 Windows: [![AppVeyor Build status](https://ci.appveyor.com/api/projects/status/pil6266rrtw6l5c0?svg=true)](https://ci.appveyor.com/project/frankjoke/iobroker-broadlink2)
 
-This is an ioBroker adapter for multiple  Broadlink switch like RM3, SP1, SP2, SP3, Honeywell SP2, SPMini, SPMini2, SPMiniPlus and some OEM products from them.
+This is an ioBroker adapter for multiple  Broadlink switch like RM2, SP1, SP2, SP3, Honeywell SP2, SPMini, SPMini2, SPMiniPlus and some OEM products from them.
 ALso remote controllers are supported like RM2, RM Mini, RM Pro Phicomm, RM2 Home Plus, RM2 Home Plus GDT, RM2 Pro Plus, RM2 Pro Plus2 and RM2 Pro Plus BL. 
 It scans the network to find compatible devices and installs them (currently only switches type SP?).
 
@@ -22,7 +22,7 @@ SP1 devices cannot be polled.
 
 ## Configuration
 * Enter prefix of network address in configuration which should be removed when generating device names 
-* Enter the number of seconds between polls. On each poll all SP* devices expluding SP1 are asked what the switch status is. This feature can be disabled by setting the poll delay to 0.
+* Enter the number of seconds between polls. On each poll all SP* devices expluding SP1 are asked what the switch status is. This feature can be disabled by setting the poll delay to 0. On RM devices with temperature readout the temperature will be updated as well.
 
 ## Known-Issues
 * If you learn the same signal multiple times the code can be different everytime. This can not be changed.

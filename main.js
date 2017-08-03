@@ -24,6 +24,7 @@ function _PR(v) { return Promise.resolve(v); } function _PE(v) { return Promise.
 
 const pExec = c2pP(exec);
 function wait(time,arg) { return new Promise(res => parseInt(time)>=0 ? setTimeout(res,parseInt(time), arg) : res(arg))}  // wait time (in ms) and then resolve promise with arg, returns a promise thich means the '.then()' will be executed after the delay
+function pRepeat(nrepeat, fn, arg, r) { r = r || []; return fn(arg).then(x => (nrepeat <= 0 ? Promise.resolve(r) : pRepeat(nrepeat - 1, fn,arg, r, r.push(x)))); }
 
 function pSeries(obj,promfn,delay) {  // makes an call for each item 'of' obj to promfun(item) which need to return a promise. All Promises are executed therefore in sequence one after the other
     var p = Promise.resolve();
@@ -60,23 +61,27 @@ function c1pP(f) {  // turns a callback(data) function into a promise
 }
 */
 var ain = '';
-const scanList = new Map();
-const objects = new Map();
-//const pSetState = c2pP(adapter.setState);
+const scanList = new Map(),
+	objects = new Map(),
+	tempName = '.Temperature',
+	learnName = '.Learn';
+
+
 function pSetState(id,val,ack) {
 //    _D(`pSetState: ${id} = ${val} with ${ack}`);
     return c2pP(adapter.setState)(id,val,ack ? true : false);
 }
 
+
 function makeState(id,value,add) {
     if (objects.has(id))
-        return pSetState(id,value,true);
+        return pSetState(id,value,true).then(() => _D("State "+id+" updated: "+_O(objects.get(id)),objects.get(id)));
     _D(`Make State ${id} and set value to '${_O(value)}'`) ///TC
     const st = {
         common: {
             name:  id, // You can add here some description
             read:  true,
-            write: id.endsWith('.STATE'),
+            write: false,
             state: 'state',
             role:  'value',
             type:  typeof value
@@ -84,6 +89,15 @@ function makeState(id,value,add) {
         type: 'state',
         _id: id
 	};
+	if(id.endsWith(learnName)) {
+		st.common.role = 'button';
+		st.common.write = true;
+	} else if (id.endsWith('.STATE')) {
+		st.common.write = true;
+	} else if (id.endsWith(tempName)) {
+		st.common.role = "value.temperature"; 
+		st.common.unit = "°C";
+	}
 	if (add !== undefined)
 		st.common.custom = { broadlink2: add};
     if (id.endsWith('Percent'))
@@ -93,7 +107,9 @@ function makeState(id,value,add) {
             objects.set(id,x);
 //           return pSetState(id,x.val,true).then( a => x, e => x);
         })
-        .catch(err => _D(`MS ${_O(err)}:=extend`,id));
+		.catch(err => _D(`MS ${_O(err)}:=extend`,id))
+		.then(() => objects.get(id))
+		;
 
 }
 
@@ -167,6 +183,9 @@ adapter.on('unload', function (callback) {
 				device.set_power(state.val);
 				_I(`Change ${id} to ${state.val}`)
 				device.oval = state.val;
+				break;
+			case 'RM2':
+				startLearning(id2);
 				break;
 			default:
 				_W(`stateChange error invalid id type: ${id}=${id1} ${_O(state)}`);
@@ -284,29 +303,33 @@ adapter.on('unload', function (callback) {
 				scanList.set(_D(`Device found ${x}`,x),device);
 				device.iname = x;
 				device.oval = false;
-				device.on('payload', (err,payload) => {
-					let nst = x +'.STATE',
-						res = !!payload[4];
-					
-					switch(device.type) {
-						case 'SP2':
+				switch(device.type) {
+					case 'SP2':
+						device.on('payload', (err,payload) => {
+							let nst = x +'.STATE',
+								res = !!payload[4];
 							if (payload !== null && payload[0]==1) {
-								_D(`Device ${nst} sent cmd ${err}/${err.toString(16)} with "${res}"`);
+//								_D(`Device ${nst} sent cmd ${err}/${err.toString(16)} with "${res}"`);
 								if (device.oval != res) {
 									device.oval = res;
 									return makeState(nst,res);
 								}
 							}	else _W(`Device ${nst} sent err:${err}/${err.toString(16)}`);
-							break;
-						default: 
-							_D(`Device ${device.name} sent err/cmd:"${err}/${err.toString(16)}" with payload "${_O(payload)}"`);
-							break;
-					}
-				});
-				if (typ.startsWith('RM')) 
-					return makeState(x,false,{name: device.name, host: device.host, type: device.type });
-				})
-			.catch(e => _W(`Error in device dedect: "${e}"`))
+						});
+						break;
+					case 'RM2':
+						device.on('temperature', (val) => {
+							let nst = x +tempName;
+							_D(`Received temperature ${val} from ${x}`);
+							if (device.ltemp != val) {
+								device.ltemp = val;
+								makeState(nst,val);
+							}
+						});
+//						return makeState(x,false,{name: device.name, host: device.host, type: device.type });
+						break;
+				}
+			}).catch(e => _W(`Error in device dedect: "${e}"`))
 			;
 /*
 			if (device.host.address === adapter.config.ip) {
@@ -321,10 +344,7 @@ adapter.on('unload', function (callback) {
 			return false;
 //		}
 	}).discover();
-	wait(10000).then(x => main(_D('Start main()')));
-	//	} else {
-	//		adapter.log.warn('No IP-Address found. Please set in configuration.');
-	//	}
+	wait(5000).then(() => main(_D('Start main()')));	
 });
 
 function sendCode(value) {
@@ -340,7 +360,7 @@ function isSignalCode(value) {
 	//return value.length > 21 && value.substr(0, 5) == 'CODE_';
 
 }
-
+/*
 function enterLeaningMode(aktChannel, name) {
 	var leaveTimer;
 	adapter.log.info('Enter learning mode - aktChannel=' + aktChannel + ' Wait 30 seconds for data before leaving...');
@@ -481,26 +501,31 @@ function checkMigrateStates(objs, cb) {
 	};
 	doIt();
 }
-
+*/
 function doPoll() {
-	_D(`Poll after ${adapter.config.poll} seconds`);
+//	_D(`Poll after ${adapter.config.poll} seconds`);
 	pSeries(scanList, x => {
-		const devid = x[0],
-			device = x[1],
-			typ = device.type;
-
-//		_D(`Poll item ${devid} with ${_O(device,0)}`);
-		switch (typ) {
-			case 'SP2':
-//				let nst = devid+'.STATE';
-//				_D(`Poll item  type ${typ} of ${devid}`);
-				device.check_power();
-				break;
-			default: break;
-		}
-		return _PR(devid);
+		const device = x[1];
+		device.checkTemperature && device.checkTemperature();
+		return _PR(device.check_power && device.check_power());
 	})
 	;	
+}
+
+function startLearning(name) {
+	_D('Start learning for device: ' + name);
+	const device = scanList.get(name);
+	if (!device)
+		return(_E(`wrong name "${name}" in startLearning`));
+	var learned = 30;
+	device.emitter.once("rawData", data =>  {       // use currentDevice.emitter.once, not the copy currentDevice.on. Otherwise this event will be called as often you call currentDevice.on()
+		const hex = data.toString('hex');
+		learned = 0;
+		_I(`Learned Code ${device.name} (hex): ${hex}`);
+	});
+	device.enterLearning();
+	pRepeat(30, x => learned-- <=0 ? _PR() : wait(_D(`Learning for ${device.name} wait ${learned} `,1000)).then(e => device.checkData()));
+
 }
 
 function main() {
@@ -509,17 +534,27 @@ function main() {
 		const devid = x[0],
 			device = x[1],
 			typ = device.getType();
+		let nst = devid+'.STATE';
 
 		_D(`Process item ${devid} with ${_O(device)}`);
 		switch (typ) {
 			case 'SP2':
 			case 'SP1':
-				let nst = devid+'.STATE';
 				return makeState(nst,false,{name: device.name, host: device.host, type: device.type})
 					.then(x => getState(nst))
 					.then(x => _D(`New State ${nst}: ${_O(x)}`))
 					.then(x => device.check_power && device.check_power())
 					.catch(e => _W(`Error in StateCreation ${e}`));
+				break;
+			case 'RM2':
+				nst = devid+learnName;			
+				return makeState(nst,false,{name: device.name, host: device.host, type: device.type})
+					.then(x => getState(nst))
+					.then(x => _D(`New State ${nst}: ${_O(x)}`))
+					.then(x => device.checkTemperature && (device.checkTemperature() || true) && makeState(devid+tempName,0.1,{name: device.name, type: device.type}))
+					.then(x => makeState(devid+'.learnedStates.__DUMMY__',".... Dummy Entry ....",{name: device.name, type: device.type}))
+					.catch(e => _W(`Error in StateCreation ${e}`))
+					.then(() => startLearning(devid));
 				break;
 			default:
 				_W(`unknown device type ${typ} for ${devid} on ${_O(device)}`);
