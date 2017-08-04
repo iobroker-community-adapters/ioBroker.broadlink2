@@ -10,7 +10,7 @@ var currentDevice,
 const util = require('util');
 const exec = require('child_process').exec;
 const dns = require('dns');
-const debug = true;
+const debug = false;
 
 function _O(obj, level) { return util.inspect(obj, false, level || 2, false).replace(/\n/g, ' '); }
 
