@@ -546,9 +546,8 @@ function startLearning(name) {
 function main() {
 	_D('Config IP-Address end to remove: ' + adapter.config.ip);
 	pSeries(scanList, x => {
-		//		const devid = x[0],
-		//			device = x[1],
-		const [devid, device] = x,
+		const devid = x[0],
+			device = x[1],
 			typ = device.getType();
 		let nst = devid + '.STATE';
 
