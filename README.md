@@ -41,7 +41,7 @@ Just create an object (state, type button) with name where you prepend "CODE_".
 * Requires node >=v4.2
 
 ## Changelog
-### 0.4.0
+### 0.4.1
 * Cleaned up code
 * Debug and Info messages corrected
 
