@@ -41,6 +41,10 @@ Just create an object (state, type button) with name where you prepend "CODE_".
 * Requires node >=v4.2
 
 ## Changelog
+### 0.4.0
+* Cleaned up code
+* Debug and Info messages corrected
+
 ### 0.3.5
 * Small bugs for node 4.x removed
 * Poll more devices and some better debug code.
