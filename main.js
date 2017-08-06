@@ -66,7 +66,7 @@ function makeState(id, value, add) {
 			role: 'value',
 			type: typeof value
 		},
-		type: 'state',
+		type: id.split('.').length == 1 ? 'device' : 'state',
 		_id: id
 	};
 	if (id.endsWith(learnName)) {
@@ -91,6 +91,7 @@ function makeState(id, value, add) {
 		st.native = { broadlink2: add };
 	if (id.endsWith('Percent'))
 		st.common.unit = "%";
+	
 	return c2pP(adapter.extendObject)(id, st)
 		.then(x => {
 			objects.set(id, x);
