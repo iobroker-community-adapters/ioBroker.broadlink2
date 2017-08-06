@@ -189,13 +189,13 @@ adapter.on('unload', function (callback) {
 							device.on('payload', (err, payload) => {
 								let nst = x + '.STATE',
 									res = !!payload[4];
-								if (payload !== null && payload[0] == 1) {
+								if (payload !== null && (payload[0] == 1 || payload[0] == 2)) {
 									//								_D(`Device ${nst} sent cmd ${err}/${err.toString(16)} with "${res}"`);
 									if (device.oval != res) {
 										device.oval = res;
 										return makeState(nst, res);
 									}
-								} else _W(`Device ${nst} sent err:${err}/${err.toString(16)}`);
+								} else _W(`Device ${nst} sent err:${err}/${err.toString(16)} with ${payload.toString('hex')}`);
 							});
 							break;
 						case 'RM2':
