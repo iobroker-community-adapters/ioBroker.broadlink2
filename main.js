@@ -88,7 +88,7 @@ function makeState(id, value, add) {
 		st.common.type = typeof true;
 	}
 	if (add !== undefined)
-		st.common.custom = { broadlink2: add };
+		st.native = { broadlink2: add };
 	if (id.endsWith('Percent'))
 		st.common.unit = "%";
 	return c2pP(adapter.extendObject)(id, st)
@@ -214,7 +214,7 @@ adapter.on('unload', function (callback) {
 			return false;
 			//		}
 		}).discover();
-		wait(5000).then(() => main(_D('Start main()')));
+		wait(10000).then(() => main(_D('Start main()')));
 	});
 
 function sendCode(currentDevice, value) {
@@ -297,7 +297,7 @@ function main() {
 			_D(`Poll every ${p} secods.`);
 		}
 	})
-		.then(x => _I(`Adapter ${ain} started and found ${scanList.size} devices named ${_O(scanList.keys())}.`), e => _W(`Error in main: ${e}`))
+		.then(x => _I(`Adapter ${ain} started and found ${scanList.size} devices named ${Array.from(scanList.keys()).join(', ')}.`), e => _W(`Error in main: ${e}`))
 		.then(x => adapter.subscribeStates('*'))
 		;
 	//	adapter.subscribeObjects('*');

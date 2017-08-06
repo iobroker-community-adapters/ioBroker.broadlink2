@@ -36,11 +36,16 @@ Just create an object (state, type button) with name where you prepend "CODE_".
 
 ## Known-Issues
 * If you learn the same signal multiple times the code can be different everytime. This can not be changed.
+* Sometimes it does not find devices if they do not respond to the search. Restart adapter to restart the scan.
 
 ## Important/Wichtig!
 * Requires node >=v4.2
 
 ## Changelog
+### 0.4.2
+* Changed message to inform about found devices.
+* Moved device info from  custom to native to avoid blue mark in adapter object list.
+
 ### 0.4.1
 * Cleaned up code
 * Debug and Info messages corrected
