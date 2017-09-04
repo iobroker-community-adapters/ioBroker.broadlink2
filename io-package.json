@@ -1,7 +1,7 @@
 {
   "common": {
     "name": "broadlink2",
-    "version": "0.4.2",
+    "version": "0.4.3",
     "title": "Broadlink2 (RM2++,SP1,SP2,SP3,...) Adapter for multiple devices",
     "news": {
       "0.1.4": {

@@ -73,7 +73,7 @@ function makeState(id, value, add) {
 		st.common.role = 'button';
 		st.common.write = true;
 		st.common.type = typeof true;
-	} else if (id.endsWith('.STATE')) {
+	} else if (id.endsWith('_STATE')) {
 		st.common.write = true;
 		st.common.role = 'switch';
 		st.common.type = typeof true;
@@ -187,7 +187,7 @@ adapter.on('unload', function (callback) {
 					switch (device.type) {
 						case 'SP2':
 							device.on('payload', (err, payload) => {
-								let nst = x + '.STATE',
+								let nst = x + '_STATE',
 									res = !!payload[4];
 								if (payload !== null && (payload[0] == 1 || payload[0] == 2)) {
 									//								_D(`Device ${nst} sent cmd ${err}/${err.toString(16)} with "${res}"`);
@@ -263,7 +263,7 @@ function main() {
 		const devid = x[0],
 			device = x[1],
 			typ = device.getType();
-		let nst = devid + '.STATE';
+		let nst = devid + '_STATE';
 
 		_D(`Process item ${devid} with ${_O(device)}`);
 		switch (typ) {
