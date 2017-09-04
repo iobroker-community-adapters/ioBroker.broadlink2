@@ -1,4 +1,4 @@
-## ![Logo](./admin/broadlink.png) Steuern von BroadLink IR/RF-Remotes und Schaltsteckdosen
+# ![Logo](./admin/broadlink.png) Steuern von BroadLink IR/RF-Remotes und Schaltsteckdosen
 
 [![NPM version](http://img.shields.io/npm/v/iobroker.broadlink2.svg)](https://www.npmjs.com/package/iobroker.broadlink2)
 [![Downloads](https://img.shields.io/npm/dm/iobroker.broadlink2.svg)](https://www.npmjs.com/package/iobroker.broadlink2)
