@@ -40,8 +40,9 @@ Just create an object (state, type button) with name where you prepend "CODE_".
 * Requires node >=v4.2
 
 ## Changelog
-### 0.4.3
+### 0.4.4
 * Don't create substates for switches
+* Problem with tests resolved
 
 ### 0.4.2
 * Changed message to inform about found devices.

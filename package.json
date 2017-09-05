@@ -1,6 +1,6 @@
 {
   "name": "iobroker.broadlink2",
-  "version": "0.4.3",
+  "version": "0.4.4",
   "description": "ioBroker Broadlink2 Adapter",
   "author": "Frank Joke <frankjoke@hotmail.com>",
   "contributors": [
@@ -35,7 +35,7 @@
     "mocha": "^2.3.4",
     "chai": "^3.4.1"
   },
-  "main": "broardlink2.js",
+  "main": "broadlink2.js",
   "scripts": {
     "test": "node node_modules/mocha/bin/mocha"
   },
