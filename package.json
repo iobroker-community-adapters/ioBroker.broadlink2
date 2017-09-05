@@ -35,7 +35,7 @@
     "mocha": "^2.3.4",
     "chai": "^3.4.1"
   },
-  "main": "broarlink2.js",
+  "main": "broardlink2.js",
   "scripts": {
     "test": "node node_modules/mocha/bin/mocha"
   },
