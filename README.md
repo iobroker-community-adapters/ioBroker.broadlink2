@@ -12,8 +12,13 @@ This is an ioBroker adapter for multiple  Broadlink switch like RM2, SP1, SP2, S
 ALso remote controllers are supported like RM2, RM Mini, RM Pro Phicomm, RM2 Home Plus, RM2 Home Plus GDT, RM2 Pro Plus, RM2 Pro Plus2 and RM2 Pro Plus BL. Multiple controllers will generate their own entries and need to be trained separately.
 It scans the network to find compatible devices and installs them (currently only switches type SP?).
 
-I could not test all of them because I have only a RM2 Pro Plus and some SM2.
+If you learned states for RM* and then rename their name the state-ID will change to the new name as well!
 
+You can create also your own new commands in LearnedStates if you use 'code'+ your code as the value (with 'CODE_' preceeding the code or even better (because of it will remain if you rename the state) add a field 'code' to native with the admin.object pencil and put there the hex code (without 'CODE_'!).
+
+I could not test all of the possible devices because I have only a RM2 Pro Plus and some SM2.
+
+### Note
 SP1 devices cannot be polled.
 
 * This adapter is based on original Broadlink adapter v0.1.1 found here: <https://github.com/hieblmedia/ioBroker.broadlink>
@@ -40,6 +45,10 @@ Just create an object (state, type button) with name where you prepend "CODE_".
 * Requires node >=v4.2
 
 ## Changelog
+### 1.0.0
+* Added learned state renaming. Just rename the name and the ID will be renamed as well!
+* Added debugging with 'debug!' at beginning of IP suffix
+
 ### 0.4.4
 * Don't create substates for switches
 * Problem with tests resolved
