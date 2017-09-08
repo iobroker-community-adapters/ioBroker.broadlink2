@@ -23,11 +23,10 @@ function main() {
 		reIsCODE = /^CODE_[a-f0-9]{16}/,
 		defaultName = '>>> Rename learned @ ';
 
-		var currentDevice;
-		
-			function sendCode(currentDevice, value) {
-		let buffer = new Buffer(value.replace(reCODE, ''), 'hex');
-		//var buffer = new Buffer(value.substr(5), 'hex'); // substr(5) removes CODE_ from string
+	var currentDevice;
+
+	function sendCode(currentDevice, value) {
+		let buffer = new Buffer(value.replace(reCODE, ''), 'hex'); //var buffer = new Buffer(value.substr(5), 'hex'); // substr(5) removes CODE_ from string
 
 		currentDevice.sendData(buffer);
 		A.D('sendData to ' + currentDevice.name + ', Code: ' + value);
@@ -123,7 +122,6 @@ function main() {
 				case 'RM2':
 					if (id.indexOf(learnedName) === -1)
 						return startLearning(id2);
-					//				A.D(`Maybe I should send command from ${id0} changed ${id} of "${id2}" type ${id1} to ${id3}`);
 					return isSignalCode(state.val) && sendCode(device, state.val) ||
 						A.getObject(id)
 						.then((obj) =>
@@ -156,7 +154,6 @@ function main() {
 							let nst = x + '_STATE',
 								res = !!payload[4];
 							if (payload !== null && (payload[0] == 1 || payload[0] == 2)) {
-								//								A.D(`Device ${nst} sent cmd ${err}/${err.toString(16)} with "${res}"`);
 								if (device.oval != res) {
 									device.oval = res;
 									return A.makeState(nst, res, true);
@@ -173,7 +170,6 @@ function main() {
 								A.makeState(nst, val, true);
 							}
 						});
-						//						return makeState(x,false,{name: device.name, host: device.host, type: device.type });
 						break;
 				}
 			}).catch(e => A.W(`Error in device dedect: "${e}"`));
@@ -228,9 +224,7 @@ function main() {
 						.then(x => A.D(`New State ${nst}: ${A.O(x)}`))
 						.then(() => A.makeState(st2, undefined))
 						.then(() => device.checkTemperature && device.checkTemperature())
-						//					.then(x => makeState(devid+'.learnedStates.__DUMMY__',".... Dummy Entry ....",{name: device.name, type: device.type}))
 						.catch(e => A.W(`Error in StateCreation ${e}`));
-					//					.then(() => startLearning(devid));
 				default:
 					A.W(`unknown device type ${typ} for ${devid} on ${A.O(device)}`);
 					return Promise.resolve(devid);
@@ -245,6 +239,4 @@ function main() {
 		.then(() => A.I(`Adapter ${A.ains} started and found ${Object.keys(scanList).length} devices named ${Object.keys(scanList)}.`), e => A.W(`Error in main: ${e}`))
 		.then(() => adapter.subscribeStates('*'))
 		.catch(e => A.W(`Unhandled error in main: ${e}`));
-	//	adapter.subscribeObjects('*');
-	//	adapter.setState('enableLearningMode', { val: false, ack: true });
 }
