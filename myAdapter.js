@@ -11,8 +11,8 @@ const https = require('https');
 const exec = require('child_process').exec;
 const assert = require('assert');
 
-function MyAdapter(ori_adapter, main, message) {
-    if (!(this instanceof MyAdapter)) return new MyAdapter(ori_adapter, main, message);
+function MyAdapter(ori_adapter, main) {
+    if (!(this instanceof MyAdapter)) return new MyAdapter(ori_adapter, main);
     let adapter = ori_adapter,
         that = this;
 
@@ -33,7 +33,7 @@ function MyAdapter(ori_adapter, main, message) {
     that.E = (l, v) => (slog(adapter.log.error, l), v === undefined ? l : v);
 
     that._main = typeof main === 'function' ? main : () => that.W(`No 'main() defined!`);
-    that._message = typeof message === 'function' ? message : (mes) => that.W(`Message ${that.O(mes)} received and not handled!`);
+    that._messages = (mes) => that.W(`Message ${that.O(mes)} received and no handler defined!`);
     that._stopping = false;
     that._timer = null;
     that._debug = false;
@@ -216,7 +216,7 @@ function MyAdapter(ori_adapter, main, message) {
     };
 
     that.makeState = function (ido, value, ack) {
-        that.D(`Make State ${that.O(ido)} and set value to:${that.O(value)} ack:${ack}`); ///TC
+//        that.D(`Make State ${that.O(ido)} and set value to:${that.O(value)} ack:${ack}`); ///TC
         ack = ack === undefined || !!ack;
         let id = ido;
         if (typeof id === 'string')
@@ -258,8 +258,8 @@ function MyAdapter(ori_adapter, main, message) {
 
     that.processMessage = (obj) => {
         (obj && obj.command ?
-            that._message(obj) :
-            Promise.resolve(that._message(that.W(`invalid Message ${obj}`, obj))))
+            that._messages(obj) :
+            Promise.resolve(that._messages(that.W(`invalid Message ${obj}`, obj))))
         .then(res => that.c2p(adapter.getMessage)().then(obj => obj ? that.processMessage(obj) : res));
     };
 
@@ -268,8 +268,7 @@ function MyAdapter(ori_adapter, main, message) {
         if (that._timer)
             clearInterval(that._timer);
         that._timer = null;
-        if (adapter && adapter.log && adapter.log.warn)
-            that.D(`Adapter disconnected and stopped with dostop(${dostop}) and callback(${!!callback})`);
+        that.D(`Adapter disconnected and stopped with dostop(${dostop}) and callback(${!!callback})`);
         Promise.resolve(that._unload ? that._unload(dostop) : null)
             .then(() => callback && callback())
             .catch(() => that.W('catch stop.'))
@@ -279,24 +278,28 @@ function MyAdapter(ori_adapter, main, message) {
     adapter.on('message', (obj) => that.processMessage(that.I(`received Message ${that.O(obj)}`, obj)))
         .on('unload', (callback) => that.stop(false, callback))
         .on('ready', () => that.initAdapter().then(() => that._main()))
-        .on('objectChange', (id, obj) => obj && obj._id && that._objChange ?
-            that._objChange(that.D(`objChange called for${id} = ${that.O(obj)}`, id), obj) : null)
+        .on('objectChange', (id, obj) => obj && obj._id && that._objChange ? that._objChange(id, obj) : null)
         .on('stateChange', (id, state) => state && state.from != 'system.adapter.' + that.ains && that._stateChange ?
             that._stateChange(that.D(`stateChange called for${id} = ${that.O(state)}`, id), state) : null);
 
+    Object.defineProperty(MyAdapter.prototype, "messages", {
+        get: () => this._messages,
+        set: (y) => this._messages = (assert(typeof y === 'function', 'Error: messages handler not a function!'), y)
+    });
+
     Object.defineProperty(MyAdapter.prototype, "stateChange", {
         get: () => this._stateChange,
-        set: (y) => this._stateChange = (assert(typeof y === 'function', 'Error: StateChange not a function!'), y)
+        set: (y) => this._stateChange = (assert(typeof y === 'function', 'Error: StateChange handler not a function!'), y)
     });
 
     Object.defineProperty(MyAdapter.prototype, "objChange", {
         get: () => this._objChange,
-        set: (y) => this._objChange = (assert(typeof y === 'function', 'Error: ObjectChange not a function!'), y)
+        set: (y) => this._objChange = (assert(typeof y === 'function', 'Error: ObjectChange handler not a function!'), y)
     });
 
     Object.defineProperty(MyAdapter.prototype, "unload", {
         get: () => this._unload,
-        set: (y) => this._unload = (assert(typeof y === 'function', 'Error: unload not a function!'), y)
+        set: (y) => this._unload = (assert(typeof y === 'function', 'Error: unload handler not a function!'), y)
     });
 
     Object.defineProperty(MyAdapter.prototype, "debug", {

@@ -46,7 +46,7 @@ Just create an object (state, type button) with name where you prepend "CODE_".
 
 ## Changelog
 ### 1.0.0
-* Added learned state renaming. Just rename the name and the ID will be renamed as well!
+* Added learned state renaming, just rename the name and the ID will be renamed as well.
 * Added debugging with 'debug!' at beginning of IP suffix
 
 ### 0.4.4
