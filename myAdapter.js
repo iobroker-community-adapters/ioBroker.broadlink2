@@ -18,6 +18,20 @@ function MyAdapter(ori_adapter, main, message) {
 
     assert(adapter && adapter.name, 'myAdapter:(adapter) no adapter here!');
 
+    function slog(log, text) {
+        if (typeof log === 'function')
+            log(text);
+        else
+            console.log(text);
+    }
+
+    that.D = (str, val) => (that._debug ?
+        slog(adapter.log.info, `<span style="color:darkblue;">debug: ${str}</span>`) :
+        slog(adapter.log.debug, str), val !== undefined ? val : str);
+    that.I = (l, v) => (slog(adapter.log.info, l), v === undefined ? l : v);
+    that.W = (l, v) => (slog(adapter.log.warn, l), v === undefined ? l : v);
+    that.E = (l, v) => (slog(adapter.log.error, l), v === undefined ? l : v);
+
     that._main = typeof main === 'function' ? main : () => that.W(`No 'main() defined!`);
     that._message = typeof message === 'function' ? message : (mes) => that.W(`Message ${that.O(mes)} received and not handled!`);
     that._stopping = false;
@@ -28,10 +42,6 @@ function MyAdapter(ori_adapter, main, message) {
 
     that.O = (obj, level) => util.inspect(obj, false, level || 2, false).replace(/\n/g, ' ');
     that.N = (fun) => setTimeout.apply(null, [fun, 0].concat(Array.prototype.slice.call(arguments, 1))); // move fun to next schedule keeping arguments
-    that.D = (str, val) => ((that._debug ? adapter.log.info : adapter.log.debug)(that._debug ? `<span style="color:darkblue;">debug: ${str}</span>` : str), val !== undefined ? val : str);
-    that.I = (l, v) => (adapter.log.info(l), v === undefined ? l : v);
-    that.W = (l, v) => (adapter.log.warn(l), v === undefined ? l : v);
-    that.E = (l, v) => (adapter.log.error(l), v === undefined ? l : v);
     that.T = (i) => {
         let t = typeof i;
         if (t === 'object') {
@@ -188,13 +198,12 @@ function MyAdapter(ori_adapter, main, message) {
                 }
                 return res.length;
             }, err => that.E('err from getObjectList: ' + err, 'no'))
-            .then(len => {
-                that.D(`${adapter.name} received ${len} objects with config ${Object.keys(adapter.config)}`);
-                //            that.D('System Objects: '+that.O(that.objects,5))
-                adapter.subscribeStates('*');
-                adapter.subscribeObjects('*');
-                //                return main();
-            }).catch(err => that.W(`Error in adapter.ready: ${err}`));
+            .then(len => that.D(`${adapter.name} received ${len} objects with config ${Object.keys(adapter.config)}`))
+            .catch(err => that.W(`Error in adapter.ready: ${err}`))
+            .then(() => {
+                if (that._stateChange) adapter.subscribeStates('*');
+                if (that._objChange) adapter.subscribeObjects('*');
+            });
     };
 
     that.changeState = function (id, value, ack, always) {
@@ -239,7 +248,7 @@ function MyAdapter(ori_adapter, main, message) {
                 for (let j in ido[i])
                     st.native[j] = ido[i][j];
             } else if (i != 'id' && i != 'val')
-                st.common[i] = ido[i];
+            st.common[i] = ido[i];
         //        that.I(`will create state:${id} with ${that.O(st)}`);
         return that.extendObject(id, st, null)
             .then(x => that.states[id] = x)
@@ -270,24 +279,24 @@ function MyAdapter(ori_adapter, main, message) {
     adapter.on('message', (obj) => that.processMessage(that.I(`received Message ${that.O(obj)}`, obj)))
         .on('unload', (callback) => that.stop(false, callback))
         .on('ready', () => that.initAdapter().then(() => that._main()))
-        .on('objectChange', (id, obj) => obj && obj._id && that._objChange ? 
-            that._objChange(that.D(`objChange called for${id} = ${that.O(obj)}`, id), obj): null)
-        .on('stateChange',  (id, state) => state && state.from != 'system.adapter.' + that.ains && that._stateChange ?
+        .on('objectChange', (id, obj) => obj && obj._id && that._objChange ?
+            that._objChange(that.D(`objChange called for${id} = ${that.O(obj)}`, id), obj) : null)
+        .on('stateChange', (id, state) => state && state.from != 'system.adapter.' + that.ains && that._stateChange ?
             that._stateChange(that.D(`stateChange called for${id} = ${that.O(state)}`, id), state) : null);
 
     Object.defineProperty(MyAdapter.prototype, "stateChange", {
         get: () => this._stateChange,
-        set: (y) => this._stateChange = (assert(typeof y === 'function','Error: StateChange not a function!'),y)
+        set: (y) => this._stateChange = (assert(typeof y === 'function', 'Error: StateChange not a function!'), y)
     });
 
     Object.defineProperty(MyAdapter.prototype, "objChange", {
         get: () => this._objChange,
-        set: (y) => this._objChange = (assert(typeof y === 'function','Error: ObjectChange not a function!'),y)
+        set: (y) => this._objChange = (assert(typeof y === 'function', 'Error: ObjectChange not a function!'), y)
     });
 
     Object.defineProperty(MyAdapter.prototype, "unload", {
         get: () => this._unload,
-        set: (y) => this._unload = (assert(typeof y === 'function','Error: unload not a function!'),y)
+        set: (y) => this._unload = (assert(typeof y === 'function', 'Error: unload not a function!'), y)
     });
 
     Object.defineProperty(MyAdapter.prototype, "debug", {

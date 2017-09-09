@@ -7,39 +7,58 @@
 "use strict";
 const utils = require('./lib/utils'),
 	adapter = utils.adapter('broadlink2'),
-	MyAdapter = require('./myAdapter'),
 	broadlink = require('./lib/broadlink'),
-	dns = require('dns');
+	dns = require('dns'),
+	MyAdapter = require('./myAdapter');
 
-const A = new MyAdapter(adapter, main);
+var currentDevice;
 
-function main() {
-	const scanList = {},
-		tempName = '.Temperature',
-		learnName = '.Learn',
-		learnedName = '.LearnedStates.',
-		codeName = "CODE_",
-		reCODE = /^CODE_|^/,
-		reIsCODE = /^CODE_[a-f0-9]{16}/,
-		defaultName = '>>> Rename learned @ ';
+const A = new MyAdapter(adapter, main),
+	scanList = {},
+	tempName = '.Temperature',
+	learnName = '.Learn',
+	learnedName = '.LearnedStates.',
+	codeName = "CODE_",
+	reCODE = /^CODE_|^/,
+	reIsCODE = /^CODE_[a-f0-9]{16}/,
+	defaultName = '>>> Rename learned @ ';
 
-	var currentDevice;
+A.objChange = function (obj) {
+	if (typeof obj === 'string' && obj.indexOf(learnedName) > 0)
+		return A.getObject(obj).
+	then(oobj => {
+		const nst = oobj.common,
+			ncn = nst.name,
+			dev = obj.split('.'),
+			fnn = dev.slice(2,-1).concat(ncn).join('.');
+		if (ncn == dev[4]) // no need to rename!
+			return;
+		if (!A.states[fnn] ? (ncn.match(/[\.\,\;]/g) || !oobj.native.code ?
+				A.W(`Cannot rename ${obj} to ${oobj.common.name} because it includes charaters like ".,;" or does not have a learned code`, true)
+				: false)
+			: A.W(`Cannot rename ${obj} to ${fnn} because the name is already used!`,true)) {
+			oobj.common.name = dev[4];
+			return A.setObject(obj,oobj)
+				.catch(e => A.W(`rename back err ${e} on ${A.O(oobj)}!`));
+		}
+		nst.id = (dev[2] + learnedName + ncn);
+		nst.native = oobj.native;
+		nst.val = codeName + oobj.native.code;
+
+		if (oobj.common.name != dev[4])
+			return A.makeState(nst, nst.val, true)
+				.then(() => A.removeState(obj))
+				.catch(err => A.W(`objChange error: ${obj}=${nst.id} ${A.O(err)}`));
+	});
+};
+
+A.stateChange = function (id, state) {
 
 	function sendCode(currentDevice, value) {
 		let buffer = new Buffer(value.replace(reCODE, ''), 'hex'); //var buffer = new Buffer(value.substr(5), 'hex'); // substr(5) removes CODE_ from string
 
 		currentDevice.sendData(buffer);
 		A.D('sendData to ' + currentDevice.name + ', Code: ' + value);
-	}
-
-	function isSignalCode(value) {
-		return reIsCODE.test(value);
-	}
-
-	function doPoll() {
-		A.series(A.obToArray(scanList), device =>
-			Promise.resolve(device.checkTemperature && device.checkTemperature(),
-				device.check_power && device.check_power()), 50);
 	}
 
 	function startLearning(name) {
@@ -69,11 +88,46 @@ function main() {
 			.then(() => A.I(`Stop learning for ${name}!`));
 	}
 
-	A.I('Discover UDP devices for 10sec on ' + A.ains);
-	let connection = new broadlink();
+	//	A.D(`stateChange of "${id}": ${A.O(state)}`); 
+	if (!state.ack) {
+		let id0 = id.split('.').slice(2, 3)[0],
+			id2 = id.split('.').slice(2, -1).join('.'),
+			id1 = id2.split(':')[0],
+			id3 = id.split('.').slice(-1)[0];
+		// A.D(`Somebody (${state.from}) changed ${id} of "${id2}" type ${id1} to ${A.O(state)}`); 
+		A.D(`Somebody (${state.from}) id0 ${id0} changed ${id} of "${id2}" type ${id3} to ${A.O(state)}`);
+		let device = scanList[id0];
+		if (!device) return A.W(`stateChange error no device found: ${id} ${A.O(state)}`);
+		switch (id1) {
+			case 'SP1':
+			case 'SP2':
+				device.set_power(state.val);
+				A.I(`Change ${id} to ${state.val}`);
+				device.oval = state.val;
+				break;
+			case 'RM2':
+				if (id.indexOf(learnedName) === -1)
+					return startLearning(id2);
+				return reIsCODE.test(state.val) && sendCode(device, state.val) ||
+					A.getObject(id)
+					.then((obj) =>
+						obj && obj.native && obj.native.code ?
+						sendCode(device, obj.native.code) :
+						null);
+			default:
+				return A.W(`stateChange error invalid id type: ${id}=${id1} ${A.O(state)}`);
+		}
+	}
+};
 
-	if ((A.debug = adapter.config.ip.startsWith('debug!')))
-		adapter.config.ip = adapter.config.ip.slice(A.D(`Debug mode on!`, 6)).trim();
+
+function main() {
+
+	function doPoll() {
+		A.series(A.obToArray(scanList), device =>
+			Promise.resolve(device.checkTemperature && device.checkTemperature(),
+				device.check_power && device.check_power()), 50);
+	}
 
 	A.unload = () => {
 		if (currentDevice) {
@@ -83,64 +137,21 @@ function main() {
 		A.D('Closed connection/listener');
 	};
 
-	A.objChange = function (obj) {
-		if (typeof obj === 'string' && obj.indexOf(learnedName) > 0)
-			return A.getObject(obj).
-		then(oobj => {
-			if (oobj.common.name.match(/[\.\,\;]/g) && !oobj.native.code)
-				return A.W(`Cannot rename ${obj} to ${oobj.common.name} because it includes charaters like ".,;" or does not have a learned code`);
-			let dev = obj.split('.'),
-				nst = oobj.common;
-			nst.id = (dev[2] + learnedName + oobj.common.name);
-			nst.native = oobj.native;
-			nst.val = codeName + oobj.native.code;
-			if (oobj.common.name != dev[4])
-				return A.makeState(nst, nst.val, true)
-					.then(() => A.removeState(obj))
-					.catch(err => A.W(`objChange error: ${obj}=${nst.id} ${A.O(err)}`));
-		});
-	};
+	A.I('Discover UDP devices for 10sec on ' + A.ains);
+	let connection = new broadlink();
 
-	A.stateChange = function (id, state) {
-		//	A.D(`stateChange of "${id}": ${A.O(state)}`); 
-		if (!state.ack) {
-			let id0 = id.split('.').slice(2, 3)[0],
-				id2 = id.split('.').slice(2, -1).join('.'),
-				id1 = id2.split(':')[0],
-				id3 = id.split('.').slice(-1)[0];
-			// A.D(`Somebody (${state.from}) changed ${id} of "${id2}" type ${id1} to ${A.O(state)}`); 
-			A.D(`Somebody (${state.from}) id0 ${id0} changed ${id} of "${id2}" type ${id3} to ${A.O(state)}`);
-			let device = scanList[id0];
-			if (!device) return A.W(`stateChange error no device found: ${id} ${A.O(state)}`);
-			switch (id1) {
-				case 'SP1':
-				case 'SP2':
-					device.set_power(state.val);
-					A.I(`Change ${id} to ${state.val}`);
-					device.oval = state.val;
-					break;
-				case 'RM2':
-					if (id.indexOf(learnedName) === -1)
-						return startLearning(id2);
-					return isSignalCode(state.val) && sendCode(device, state.val) ||
-						A.getObject(id)
-						.then((obj) =>
-							obj && obj.native && obj.native.code ?
-							sendCode(device, codeName + obj.native.code) :
-							null);
-				default:
-					return A.W(`stateChange error invalid id type: ${id}=${id1} ${A.O(state)}`);
-			}
-		}
-	};
+	if ((A.debug = adapter.config.ip.startsWith('debug!')))
+		adapter.config.ip = adapter.config.ip.slice(A.D(`Debug mode on!`, 6)).trim();
 
 	connection.on("deviceReady", function (device) {
 		const typ = device.getType();
 		//		device.typ = typ;
 		A.I(`Device type ${typ} dedected: ${A.O(device, 1)}`);
 		A.c2p(dns.reverse)(device.host.address)
-			.then(x => x.toString().trim().endsWith(adapter.config.ip) ? x.toString().trim().slice(0, x.length - adapter.config.ip.length - 1) : x, () => device.host.address.split('.').join('-'))
-			.then(x => device.name = typ + ':' + x)
+			.then(x => x.toString().trim().endsWith(adapter.config.ip) ? 
+				x.toString().trim().slice(0, x.length - adapter.config.ip.length - 1) 
+				: x, () => device.host.address)
+			.then(x => device.name = typ + ':' + x.split('.').join('-'))
 			.then(x => {
 				if (scanList[x]) {
 					return A.W(`Device found already: ${x} with ${A.O(scanList[x])} and ${A.O(device)}`);
