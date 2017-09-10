@@ -104,13 +104,14 @@ MyAdapter.init = function MyAdapterInit(ori_adapter, ori_main) {
     return that;
 };
 
-MyAdapter.J = function (str, reviewer) {
+MyAdapter.J = function (/** string */ str, /** function */ reviewer) {
     let res;
     try {
         res = JSON.parse(str, reviewer);
     } catch (e) {
         res = {
-            jsonStringifyError: `${e} on string ${str}`
+            error: e,
+            error_description: `${e} on string ${str}`
         };
     }
     return res;
