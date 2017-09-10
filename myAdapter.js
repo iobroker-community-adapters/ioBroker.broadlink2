@@ -18,19 +18,19 @@ function MyAdapter(ori_adapter, main) {
 
     assert(adapter && adapter.name, 'myAdapter:(adapter) no adapter here!');
 
-    function slog(log, text) {
-        if (typeof log === 'function')
-            log(text);
+    function slog(adapter, log, text) {
+        if (adapter && adapter.log && typeof adapter.log[log] === 'function')
+            adapter.log[log](text);
         else
             console.log(text);
     }
 
     that.D = (str, val) => (that._debug ?
-        slog(adapter.log.info, `<span style="color:darkblue;">debug: ${str}</span>`) :
-        slog(adapter.log.debug, str), val !== undefined ? val : str);
-    that.I = (l, v) => (slog(adapter.log.info, l), v === undefined ? l : v);
-    that.W = (l, v) => (slog(adapter.log.warn, l), v === undefined ? l : v);
-    that.E = (l, v) => (slog(adapter.log.error, l), v === undefined ? l : v);
+        slog(adapter, 'info', `<span style="color:darkblue;">debug: ${str}</span>`) :
+        slog(adapter, 'debug', str), val !== undefined ? val : str);
+    that.I = (l, v) => (slog(adapter, 'info', l), v === undefined ? l : v);
+    that.W = (l, v) => (slog(adapter, 'warn', l), v === undefined ? l : v);
+    that.E = (l, v) => (slog(adapter, 'error', l), v === undefined ? l : v);
 
     that._main = typeof main === 'function' ? main : () => that.W(`No 'main() defined!`);
     that._messages = (mes) => that.W(`Message ${that.O(mes)} received and no handler defined!`);
@@ -216,7 +216,7 @@ function MyAdapter(ori_adapter, main) {
     };
 
     that.makeState = function (ido, value, ack) {
-//        that.D(`Make State ${that.O(ido)} and set value to:${that.O(value)} ack:${ack}`); ///TC
+        //        that.D(`Make State ${that.O(ido)} and set value to:${that.O(value)} ack:${ack}`); ///TC
         ack = ack === undefined || !!ack;
         let id = ido;
         if (typeof id === 'string')

@@ -38,7 +38,7 @@ A.objChange = function (obj) {
 				if (!A.states[fnn] ? (ncn.match(/[\.\,\;]/g) || !oobj.native.code ?
 						A.W(`Cannot rename ${obj} to ${oobj.common.name} because it includes charaters like ".,;" or does not have a learned code`, true) :
 						false) :
-					A.W(`Cannot rename ${obj} to ${fnn} because the name is already used!`, true)) {
+					A.W(`Cannot rename ${obj} to ${ncn} because the name is already used!`, true)) {
 					oobj.common.name = dev[4];
 					return A.setObject(obj, oobj)
 						.catch(e => A.W(`rename back err ${e} on ${A.O(oobj)}!`));
