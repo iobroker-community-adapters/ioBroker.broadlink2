@@ -33,9 +33,10 @@ SP1 devices cannot be polled.
 * Now press some button on your remote control within 30 seconds.
 * An new Object should now appear within the Object "broadlink.[n].[devicename].LearnedState" with the name ">>> Rename learned @ YYYYMMDDTHHmmSS"
 * You can click on the button in object view to send the code.
+* To rename the item click on the name (starting with `>>>`) and change the name. It should not include `,`, `.` or `;`
 
 It is also possible to use the codes from [RM-Bridge](http://rm-bridge.fun2code.de/).
-Just create an object (state, type button) with name where you prepend "CODE_".
+Just create an object (state, type button) with value where you prepend "CODE_" or with native entry `code` without any 'CODE_'.
 
 ## Known-Issues
 * If you learn the same signal multiple times the code can be different everytime. This can not be changed.
@@ -47,7 +48,7 @@ Just create an object (state, type button) with name where you prepend "CODE_".
 ## Changelog
 ### 1.0.0
 * Added learned state renaming, just rename the name and the ID will be renamed as well.
-* Added debugging with 'debug!' at beginning of IP suffix
+* Added debugging with 'debug!' at beginning of IP suffix and you will see debug messages without setting Adapter to debug.
 
 ### 0.4.4
 * Don't create substates for switches

@@ -10,12 +10,9 @@ const utils = require('./lib/utils'),
 	broadlink = require('./lib/broadlink'),
 	dns = require('dns'),
 	assert = require('assert'),
-	MyAdapter = require('./myAdapter');
+	A = require('./myAdapter');
 
-var currentDevice;
-
-const A = new MyAdapter(adapter, main),
-	scanList = {},
+const scanList = {},
 	tempName = '.Temperature',
 	learnName = '.Learn',
 	learnedName = '.LearnedStates.',
@@ -23,6 +20,10 @@ const A = new MyAdapter(adapter, main),
 	reCODE = /^CODE_|^/,
 	reIsCODE = /^CODE_[a-f0-9]{16}/,
 	defaultName = '>>> Rename learned @ ';
+
+var currentDevice;
+
+A.init(adapter, main); // associate adapter and main with MyAdapter
 
 A.objChange = function (obj) {
 	//	A.D(`objChange called for${obj._id} = ${that.O(obj)}`, id);
@@ -36,9 +37,9 @@ A.objChange = function (obj) {
 				if (ncn == dev[4] || ncn.startsWith(defaultName)) // no need to rename!
 					return null;
 				if (!A.states[fnn] ? (ncn.match(/[\.\,\;]/g) || !oobj.native.code ?
-						A.W(`Cannot rename ${obj} to ${oobj.common.name} because it includes charaters like ".,;" or does not have a learned code`, true) :
+						A.W(`Cannot rename to ${oobj.common.name} because it includes charaters like ".,;" or does not have a learned code: ${obj}`, true) :
 						false) :
-					A.W(`Cannot rename ${obj} to ${ncn} because the name is already used!`, true)) {
+					A.W(`Cannot rename to ${ncn} because the name is already used: ${obj}`, true)) {
 					oobj.common.name = dev[4];
 					return A.setObject(obj, oobj)
 						.catch(e => A.W(`rename back err ${e} on ${A.O(oobj)}!`));
@@ -98,10 +99,10 @@ A.stateChange = function (id, state) {
 				.catch(err => A.W(`learning makeState error: ${device.name}} ${err}`));
 		});
 		device.enterLearning();
-		A.retry(learned, () => --learned <= 0 ? 
-			Promise.resolve() 
-			: A.wait(A.D(`Learning for ${device.name} wait ${learned} `, 1000))
-			.then(() => Promise.reject(device.checkData())))
+		A.retry(learned, () => --learned <= 0 ?
+				Promise.resolve() :
+				A.wait(A.D(`Learning for ${device.name} wait ${learned} `, 1000))
+				.then(() => Promise.reject(device.checkData())))
 			//			.catch(e => e)
 			.then(() => A.I(`Stop learning for ${name}!`), () => A.I(`Stop learning for ${name}!`));
 	}
@@ -142,7 +143,7 @@ A.stateChange = function (id, state) {
 function main() {
 
 	function doPoll() {
-		A.series(A.obToArray(scanList), device =>
+		A.seriesOf(A.obToArray(scanList), device =>
 			Promise.resolve(device.checkTemperature && device.checkTemperature(),
 				device.check_power && device.check_power()), 50);
 	}
@@ -207,7 +208,7 @@ function main() {
 
 	A.D('Config IP-Address end to remove: ' + adapter.config.ip);
 	A.wait(10000)
-		.then(() => A.series(Object.keys(scanList), devid => {
+		.then(() => A.seriesIn(scanList, devid => {
 			const device = scanList[devid],
 				typ = device.getType();
 			let nst = devid + '_STATE';
