@@ -46,6 +46,9 @@ Just create an object (state, type button) with value where you prepend "CODE_" 
 * Requires node >=v4.2
 
 ## Changelog
+### 1.0.1
+* Renamed to ioBroker.broadlink2 on Git
+
 ### 1.0.0
 * Added learned state renaming, just rename the name and the ID will be renamed as well.
 * Added debugging with 'debug!' at beginning of IP suffix and you will see debug messages without setting Adapter to debug.
