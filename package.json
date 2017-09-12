@@ -1,12 +1,12 @@
 {
   "name": "iobroker.broadlink2",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "ioBroker Broadlink2 Adapter",
   "author": "Frank Joke <frankjoke@hotmail.com>",
   "contributors": [
     "Reinhard Hiebl <reinhard@hieblmedia.com>"
   ],
-  "homepage": "https://github.com/frankjoke/iobroker.broadlink2",
+  "homepage": "https://github.com/frankjoke/ioBroker.broadlink2",
   "license": "MIT",
   "keywords": [
     "ioBroker",
@@ -20,7 +20,7 @@
   ],
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/frankjoke/iobroker.broadlink2.git"
+    "url": "git+https://github.com/frankjoke/ioBroker.broadlink2.git"
   },
   "engines": {
     "node": ">=0.12.0"
@@ -40,7 +40,7 @@
     "test": "node node_modules/mocha/bin/mocha"
   },
   "bugs": {
-    "url": "https://github.com/frankjoke/iobroker.broadlink2/issues"
+    "url": "https://github.com/frankjoke/ioBroker.broadlink2/issues"
   },
   "directories": {
     "doc": "doc",

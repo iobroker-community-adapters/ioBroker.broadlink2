@@ -1,7 +1,7 @@
 {
   "common": {
     "name": "broadlink2",
-    "version": "1.0.0",
+    "version": "1.0.1",
     "title": "Broadlink2 (RM2++,SP1,SP2,SP3,...) Adapter for multiple W-Lan devices",
     "news": {
       "0.4.4": {
@@ -17,7 +17,7 @@
     "mode": "daemon",
     "icon": "broadlink.png",
     "enabled": true,
-    "extIcon": "https://raw.githubusercontent.com/frankjoke/iobroker.broadlink2/master/admin/broadlink.png",
+    "extIcon": "https://raw.githubusercontent.com/frankjoke/ioBroker.broadlink2/master/admin/broadlink.png",
     "keywords": [
       "Broadlink",
       "W-Lan",
@@ -26,7 +26,7 @@
       "Switch",
       "RM2", "RM3", "SP1", "SP2"
     ],
-    "readme": "https://github.com/frankjoke/iobroker.broadlink2/blob/master/README.md",
+    "readme": "https://github.com/frankjoke/ioBroker.broadlink2/blob/master/README.md",
     "loglevel": "info",
     "type": "hardware"
   },
