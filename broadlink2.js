@@ -405,7 +405,7 @@ function main() {
 				A.D(`Poll every ${p} secods.`);
 			}
 		})
-		.then(() => A.I(`Adapter ${A.ains} started and found ${Object.keys(scanList).length} devices named ${Object.keys(scanList)}.`), e => A.W(`Error in main: ${e}`))
+		.then(() => A.I(`Adapter ${A.ains} started and found ${Object.keys(scanList).length} devices named '${Object.keys(scanList).join("', '")}'.`), e => A.W(`Error in main: ${e}`))
 		//		.then(() => adapter.subscribeStates('*'))
 		.catch(e => A.W(`Unhandled error in main: ${e}`));
 }
