@@ -109,11 +109,11 @@ A.stateChange = function (id, state) {
 
 	//	A.D(`stateChange of "${id}": ${A.O(state)}`); 
 	if (!state.ack) {
-		let id0 = id.split('.').slice(2, 3)[0],
-			id2 = id.split('.').slice(2, -1).join('.'),
+		let idx = id.split('.'),
+			id0 = idx.slice(2, 3)[0].endsWith('_STATE') ? idx.slice(2, 3)[0].slice(0, -6) : idx.slice(2, 3)[0],
+			id2 = (idx.slice(2, 3)[0].endsWith('_STATE') ? idx.slice(-1) : idx.slice(2, 3))[0],
 			id1 = id2.split(':')[0],
-			id3 = id.split('.').slice(-1)[0];
-		// A.D(`Somebody (${state.from}) changed ${id} of "${id2}" type ${id1} to ${A.O(state)}`); 
+			id3 = idx.slice(-1)[0];
 		A.D(`Somebody (${state.from}) id0 ${id0} changed ${id} of "${id2}" type ${id3} to ${A.O(state)}`);
 		let device = scanList[id0];
 		if (!device) return A.W(`stateChange error no device found: ${id} ${A.O(state)}`);
@@ -134,7 +134,7 @@ A.stateChange = function (id, state) {
 						sendCode(device, obj.native.code) :
 						null);
 			default:
-				return A.W(`stateChange error invalid id type: ${id}=${id1} ${A.O(state)}`);
+				return A.W(`stateChange error invalid id type: ${id}=${id0} ${A.O(state)}`);
 		}
 	}
 };

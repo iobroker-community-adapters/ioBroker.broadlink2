@@ -46,8 +46,9 @@ Just create an object (state, type button) with value where you prepend "CODE_" 
 * Requires node >=v4.2
 
 ## Changelog
-### 1.0.1
+### 1.0.3
 * Renamed to ioBroker.broadlink2 on Git
+* Bug fix on 1.0.1
 
 ### 1.0.0
 * Added learned state renaming, just rename the name and the ID will be renamed as well.
