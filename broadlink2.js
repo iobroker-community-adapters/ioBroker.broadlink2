@@ -244,7 +244,6 @@ function main() {
 							let nst = x + tempName;
 							if (!payload)
 								return;
-<<<<<<< HEAD
 
 							var param = payload[0];
 							switch (param) {
@@ -325,33 +324,6 @@ function main() {
 										type: typeof 1
 									});
 
-=======
-							
-							var param = payload[0];
-							switch (param) {
-								case 1:
-									
-									var nnLight = { 0:"dunkel", 1:"dämerung", 2:"normal", 3:"hell"};
-									var nnair = { 0:"sehr gut", 1:"gut", 2:"normal", 3:"schlecht"};
-									var nnnoise = { 0:"ruhig", 1:"normal", 2:"laut"};									
-									
-									 data = {};
-									 data['temperature'] = (payload[0x4] * 10 + payload[0x5]) / 10.0;
-									 data['humidity'] = (payload[0x6] * 10 + payload[0x7]) / 10.0;
-									 data['light'] = payload[0x8];
-									 data['air_quality'] = payload[0x0a];
-									 data['noise'] = payload[0xc];
-																			 
-									 A.makeState(x + tempName, data['temperature'],{name: device.name, host: device.host, type: typeof 1.1, role: "value.temperature", write: false, unit: "°C"});
-									 A.makeState(x + humName, data['humidity'],{name: device.name, host: device.host, type:  typeof 1.1, role: "value.temperature", write: false, unit: "°C"})
-									 A.makeState(x + lightName, nnLight[data['light']],{name: device.name, host: device.host, type: typeof "string"});
-									 A.makeState(x + lightRAWName, data['light'],{name: device.name, host: device.host, type: typeof 1});
-									 A.makeState(x + airQualityName, nnair[data['air_quality']],{name: device.name, host: device.host, type: typeof "string" });
-									 A.makeState(x + airQualityRAWName, data['air_quality'],{name: device.name, host: device.host, type: device.type, type: typeof 1 });		
-									 A.makeState(x + noiseName, nnnoise[data['noise']],{name: device.name, host: device.host, type: device.type, type: typeof "string" });
-									 A.makeState(x + noiseRAWName, data['noise'],{name: device.name, host: device.host, type: device.type, type: typeof 1 });												 								 							 
-									
->>>>>>> 01bfdbb4e8ff4e67fc5e304cdd6e584249173e1b
 									break;
 								case 4: //get from check_data
 									var data = Buffer.alloc(payload.length - 4, 0);
@@ -365,12 +337,7 @@ function main() {
 									break;
 							}
 						})
-<<<<<<< HEAD
 						break;
-=======
-						break; 						
-						
->>>>>>> 01bfdbb4e8ff4e67fc5e304cdd6e584249173e1b
 				}
 			}).catch(e => A.W(`Error in device dedect: "${e}"`));
 		return false;
@@ -426,11 +393,7 @@ function main() {
 						.then(() => device.checkTemperature && device.checkTemperature())
 						.catch(e => A.W(`Error in StateCreation ${e}`));
 				case 'A1':
-<<<<<<< HEAD
 					return device.check_sensors && device.check_sensors();
-=======
-					return  device.check_sensors && device.check_sensors();
->>>>>>> 01bfdbb4e8ff4e67fc5e304cdd6e584249173e1b
 				default:
 					A.W(`unknown device type ${typ} for ${devid} on ${A.O(device)}`);
 					return Promise.resolve(devid);
