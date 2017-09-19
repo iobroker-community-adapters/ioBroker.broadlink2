@@ -14,6 +14,13 @@ const utils = require('./lib/utils'),
 
 const scanList = {},
 	tempName = '.Temperature',
+	humName = '.Humidity',
+	lightName = '.Light',
+	lightRAWName = '.LightRAW',
+	airQualityName = '.AirQuality',
+	airQualityRAWName = '.AirQualityRAW',
+	noiseName = '.Noise',
+	noiseRAWName = '.NoiseRAW',
 	learnName = '.Learn',
 	learnedName = '.LearnedStates.',
 	codeName = "CODE_",
@@ -145,6 +152,7 @@ function main() {
 	function doPoll() {
 		A.seriesOf(A.obToArray(scanList), device =>
 			Promise.resolve(device.checkTemperature && device.checkTemperature(),
+				device.check_sensors && device.check_sensors(),
 				device.check_power && device.check_power()), 50);
 	}
 
@@ -201,6 +209,51 @@ function main() {
 							}
 						});
 						break;
+					case 'A1':
+						device.on("payload", function (err, payload) {
+							let nst = x + tempName;
+							if (!payload)
+								return;
+							
+							var param = payload[0];
+							switch (param) {
+								case 1:
+									
+									var nnLight = { 0:"dunkel", 1:"dämerung", 2:"normal", 3:"hell"};
+									var nnair = { 0:"sehr gut", 1:"gut", 2:"normal", 3:"schlecht"};
+									var nnnoise = { 0:"ruhig", 1:"normal", 2:"laut"};									
+									
+									 data = {};
+									 data['temperature'] = (payload[0x4] * 10 + payload[0x5]) / 10.0;
+									 data['humidity'] = (payload[0x6] * 10 + payload[0x7]) / 10.0;
+									 data['light'] = payload[0x8];
+									 data['air_quality'] = payload[0x0a];
+									 data['noise'] = payload[0xc];
+																			 
+									 A.makeState(x + tempName, data['temperature'],{name: device.name, host: device.host, type: typeof 1.1, role: "value.temperature", write: false, unit: "°C"});
+									 A.makeState(x + humName, data['humidity'],{name: device.name, host: device.host, type:  typeof 1.1, role: "value.temperature", write: false, unit: "°C"})
+									 A.makeState(x + lightName, nnLight[data['light']],{name: device.name, host: device.host, type: typeof "string"});
+									 A.makeState(x + lightRAWName, data['light'],{name: device.name, host: device.host, type: typeof 1});
+									 A.makeState(x + airQualityName, nnair[data['air_quality']],{name: device.name, host: device.host, type: typeof "string" });
+									 A.makeState(x + airQualityRAWName, data['air_quality'],{name: device.name, host: device.host, type: device.type, type: typeof 1 });		
+									 A.makeState(x + noiseName, nnnoise[data['noise']],{name: device.name, host: device.host, type: device.type, type: typeof "string" });
+									 A.makeState(x + noiseRAWName, data['noise'],{name: device.name, host: device.host, type: device.type, type: typeof 1 });												 								 							 
+									
+									break;
+								case 4: //get from check_data
+									var data = Buffer.alloc(payload.length - 4, 0);
+									payload.copy(data, 0, 4);
+									//this.emit("rawData", data);
+									this.emitter.emit("rawData", data);
+									break;
+								case 3:
+									break;
+								case 4:
+									break;
+							}
+						})
+						break; 						
+						
 				}
 			}).catch(e => A.W(`Error in device dedect: "${e}"`));
 		return false;
@@ -255,6 +308,8 @@ function main() {
 						.then(() => A.makeState(st2, undefined))
 						.then(() => device.checkTemperature && device.checkTemperature())
 						.catch(e => A.W(`Error in StateCreation ${e}`));
+				case 'A1':
+					return  device.check_sensors && device.check_sensors();
 				default:
 					A.W(`unknown device type ${typ} for ${devid} on ${A.O(device)}`);
 					return Promise.resolve(devid);
