@@ -45,12 +45,17 @@ Mit `sendTo('broadlink2.0','get', 'RM2:RMPROPLUS.Temperature'` kann der state vo
 
 ## Known-Issues
 * If you learn the same signal multiple times the code can be different everytime. This can not be changed.
-* Sometimes it does not find devices if they do not respond to the search. Restart adapter to restart the scan.
+* Sometimes it does not find devices if they do not respond to the search. Do a rescan or restart adapter to restart a new instance.
 
 ## Important/Wichtig
 * Requires node >=v4.2
 
 ## Changelog
+### 1.1.1
+* Added ***NewDeviceScan***-Button um einen neuen scan zu veranlassen ohne den Adapter zu starten.
+* Adapter lest sofort die Werte der Devices ein
+* Problem solved which occured when multiple IP names were resolved by reverse-dns.
+
 ### 1.1.0
 * Support for A1 devices added (thanks a lot to **blackrozes**)
 * bug fix for SP?

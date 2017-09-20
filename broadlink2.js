@@ -23,6 +23,7 @@ const scanList = {},
 	noiseRAWName = '.NoiseRAW',
 	learnName = '.Learn',
 	learnedName = '.LearnedStates.',
+	scanName = 'NewDeviceScan',
 	codeName = "CODE_",
 	reCODE = /^CODE_|^/,
 	reIsCODE = /^CODE_[a-f0-9]{16}/,
@@ -64,11 +65,11 @@ A.objChange = function (obj) {
 
 A.stateChange = function (id, state) {
 
-	function sendCode(currentDevice, value) {
+	function sendCode(device, value) {
 		let buffer = new Buffer(value.replace(reCODE, ''), 'hex'); //var buffer = new Buffer(value.substr(5), 'hex'); // substr(5) removes CODE_ from string
 
-		currentDevice.sendData(buffer);
-		A.D('sendData to ' + currentDevice.name + ', Code: ' + value);
+		device.sendData(buffer);
+		A.D('sendData to ' + device.name + ', Code: ' + value);
 	}
 
 	function startLearning(name) {
@@ -76,7 +77,7 @@ A.stateChange = function (id, state) {
 		const device = scanList[name];
 		assert(!!device, `wrong name "${name}" in startLearning`);
 		var learned = 35;
-		device.emitter.once("rawData", data => { // use currentDevice.emitter.once, not the copy currentDevice.on. Otherwise this event will be called as often you call currentDevice.on()
+		device.emitter.once("rawData", data => { // use current.emitter.once, not the copy current.on. Otherwise this event will be called as often you call current.on()
 			const hex = data.toString('hex');
 			learned = 0;
 			A.getObjectList({
@@ -121,6 +122,7 @@ A.stateChange = function (id, state) {
 			id2 = (idx.slice(2, 3)[0].endsWith('_STATE') ? idx.slice(-1) : idx.slice(2, 3))[0],
 			id1 = id2.split(':')[0],
 			id3 = idx.slice(-1)[0];
+		if (id2 == scanName && id.endsWith('.' + scanName)) return Promise.resolve(currentDevice ? A.D(`Restart scan to discover devices!`, currentDevice.discover()) : A.W(`No current driver to start discover!`));
 		A.D(`Somebody (${state.from}) id0 ${id0} changed ${id} of "${id2}" type ${id3} to ${A.O(state)}`);
 		let device = scanList[id0];
 		if (!device) return A.W(`stateChange error no device found: ${id} ${A.O(state)}`);
@@ -186,58 +188,83 @@ function main() {
 				device.check_power && device.check_power()), 50);
 	}
 
-	A.unload = () => {
-		if (currentDevice) {
-			currentDevice.closeConnection();
-			currentDevice = null;
-		}
-		A.D('Closed connection/listener');
-	};
-
 	A.I('Discover UDP devices for 10sec on ' + A.ains);
-	let connection = new broadlink();
+	currentDevice = new broadlink();
 
 	if ((A.debug = adapter.config.ip.startsWith('debug!')))
-		adapter.config.ip = adapter.config.ip.slice(A.D(`Debug mode on!`, 6)).trim();
+		adapter.config.ip = adapter.config.ip.slice(A.D(`Debug mode on!`, 6));
 
-	connection.on("deviceReady", function (device) {
+	adapter.config.ip = adapter.config.ip.trim().toLowerCase();
+
+	currentDevice.on("deviceReady", function (device) {
 		const typ = device.getType();
 		//		device.typ = typ;
-		A.I(`Device type ${typ} dedected: ${A.O(device, 1)}`);
 		A.c2p(dns.reverse)(device.host.address)
-			.then(x => x.toString().trim().endsWith(adapter.config.ip) ?
-				x.toString().trim().slice(0, x.length - adapter.config.ip.length - 1) :
-				x, () => device.host.address)
+			.then(x => A.T(x, []) ? x[0].toString().trim() : x.toString().trim(), () => device.host.address)
+			.then(x =>
+				x.toLowerCase().endsWith(adapter.config.ip) ? x.slice(0, -adapter.config.ip.length) : x)
 			.then(x => device.name = typ + ':' + x.split('.').join('-'))
 			.then(x => {
 				if (scanList[x]) {
-					return A.W(`Device found already: ${x} with ${A.O(scanList[x])} and ${A.O(device)}`);
+					return A.W(`Device found already: ${x} with ${A.O(device.host)}`);
 				}
+				device.host.name = x;
+				device.host.mac = Array.prototype.slice.call(device.mac, 0).map(s => s.toString(16)).join(':');
+				A.I(`Device ${x} dedected: ${A.O(device.host)}`);
 				scanList[x] = device;
 				device.iname = x;
-				device.oval = false;
+				var common;
 				switch (device.type) {
 					case 'SP2':
+						device.oval = undefined;
 						device.on('payload', (err, payload) => {
 							let nst = x + '_STATE',
 								res = !!payload[4];
+							common = {
+								id: nst,
+								write: true,
+								role: 'switch',
+								type: typeof true,
+								native: {
+									host: device.host
+								}
+							};
 							if (payload !== null && (payload[0] == 1 || payload[0] == 2)) {
-								if (device.oval != res) {
+								if (device.oval !== res) {
 									device.oval = res;
-									return A.makeState(nst, res, true);
+									return A.makeState(common, res, true);
 								}
 							} else A.W(`Device ${nst} sent err:${err}/${err.toString(16)} with ${payload.toString('hex')}`);
 						});
 						break;
 					case 'RM2':
+						common = {
+							id: x + learnName,
+							write: true,
+							role: 'button',
+							type: typeof true,
+							native: {
+								host: device.host
+							}
+						};
+						device.ltemp == undefined;
 						device.on('temperature', (val) => {
-							let nst = x + tempName;
+							let common2 = {
+								id: x + tempName,
+								role: "value.temperature",
+								write: false,
+								unit: "°C",
+								type: typeof 1.1
+							};
+
+
 							//							A.D(`Received temperature ${val} from ${x}`);
-							if (device.ltemp != val) {
+							if (device.ltemp !== val) {
 								device.ltemp = val;
-								A.makeState(nst, val, true);
+								A.makeState(common2, val, true);
 							}
 						});
+						A.makeState(common, false, true);
 						break;
 					case 'A1':
 						device.on("payload", function (err, payload) {
@@ -345,60 +372,14 @@ function main() {
 
 	A.D('Config IP-Address end to remove: ' + adapter.config.ip);
 	A.wait(10000)
-		.then(() => A.seriesIn(scanList, devid => {
-			const device = scanList[devid],
-				typ = device.getType();
-			let nst = devid + '_STATE';
-
-			A.D(`Process item ${devid} with ${A.O(device)}`);
-			switch (typ) {
-				case 'SP2':
-				case 'SP1':
-					let common = {
-						id: nst,
-						write: true,
-						role: 'switch',
-						type: typeof true,
-						native: {
-							host: device.host
-						}
-					};
-					return A.makeState(common, undefined)
-						.then(() => A.getState(nst))
-						//						.then(x => A.D(`New State ${nst}: ${A.O(x)}`))
-						.then(() => device.check_power && device.check_power())
-						.catch(e => A.W(`Error in StateCreation ${e}`));
-				case 'RM2':
-					nst = devid + learnName;
-					let st1 = {
-						id: devid + learnName,
-						write: true,
-						role: 'button',
-						type: typeof true,
-						native: {
-							host: device.host
-						}
-					};
-					let st2 = {
-						id: devid + tempName,
-						role: "value.temperature",
-						write: false,
-						unit: "°C",
-						type: typeof 1.1
-					};
-					return A.makeState(st1, undefined)
-						.then(() => A.getState(nst))
-						.then(x => A.D(`New State ${nst}: ${A.O(x)}`))
-						.then(() => A.makeState(st2, undefined))
-						.then(() => device.checkTemperature && device.checkTemperature())
-						.catch(e => A.W(`Error in StateCreation ${e}`));
-				case 'A1':
-					return device.check_sensors && device.check_sensors();
-				default:
-					A.W(`unknown device type ${typ} for ${devid} on ${A.O(device)}`);
-					return Promise.resolve(devid);
-			}
-		})).then(() => {
+		.then(() => doPoll())
+		.then(() => A.makeState({
+			id: scanName,
+			write: true,
+			role: 'button',
+			type: typeof true,
+		}, false, true))
+		.then(() => {
 			const p = parseInt(adapter.config.poll);
 			if (p) {
 				setInterval(doPoll, p * 1000);
@@ -406,6 +387,5 @@ function main() {
 			}
 		})
 		.then(() => A.I(`Adapter ${A.ains} started and found ${Object.keys(scanList).length} devices named '${Object.keys(scanList).join("', '")}'.`), e => A.W(`Error in main: ${e}`))
-		//		.then(() => adapter.subscribeStates('*'))
 		.catch(e => A.W(`Unhandled error in main: ${e}`));
 }
