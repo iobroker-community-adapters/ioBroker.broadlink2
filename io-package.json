@@ -1,12 +1,12 @@
 {
   "common": {
-    "name": "Broadlink2",
+    "name": "broadlink2",
     "version": "1.1.1",
     "title": "Broadlink2 (RM2++,SP1,SP2,SP3,...) Adapter for multiple W-Lan devices",
     "news": {
-      "0.4.4": {
-        "en": "Adapter handles RM and SP",
-        "de": "Adapter verarbeitet RM- und SP-Geräte"
+      "1.1.1": {
+        "en": "Adapter handles RM, SP and A1 devices and can rescan them",
+        "de": "Adapter verarbeitet RM-, SP- und A1-Geräte"
       }
     },
     "desc": {
