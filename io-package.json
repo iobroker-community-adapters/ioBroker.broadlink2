@@ -1,6 +1,6 @@
 {
   "common": {
-    "name": "broadlink2",
+    "name": "Broadlink2",
     "version": "1.1.1",
     "title": "Broadlink2 (RM2++,SP1,SP2,SP3,...) Adapter for multiple W-Lan devices",
     "news": {
