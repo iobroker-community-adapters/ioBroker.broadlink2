@@ -2,7 +2,7 @@
 
 [![NPM version](http://img.shields.io/npm/v/iobroker.broadlink2.svg)](https://www.npmjs.com/package/iobroker.broadlink2)
 [![Downloads](https://img.shields.io/npm/dm/iobroker.broadlink2.svg)](https://www.npmjs.com/package/iobroker.broadlink2)
-**Tests:** Linux/Mac: [![Travis-CI Build Status](https://travis-ci.org/frankjoke/iobroker.broadlink2.svg?branch=master)](https://travis-ci.org/frankjoke/iobroker.broadlink2)
+**Tests:** Linux/Mac: [![Travis-CI Build Status](https://travis-ci.org/frankjoke/ioBroker.broadlink2.svg?branch=master)](https://travis-ci.org/frankjoke/ioBroker.broadlink2)
 Windows: [![AppVeyor Build status](https://ci.appveyor.com/api/projects/status/pil6266rrtw6l5c0?svg=true)](https://ci.appveyor.com/project/frankjoke/iobroker-broadlink2)
 
 [![NPM](https://nodei.co/npm/iobroker.broadlink2.png?downloads=true)](https://nodei.co/npm/iobroker.broadlink2/)
