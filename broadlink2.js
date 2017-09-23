@@ -69,7 +69,7 @@ function sendCode(device, value) {
 
 	device.sendData(buffer);
 	return Promise.resolve(device.name + ' sent ' + value);
-//	return Promise.resolve(A.D('sendData to ' + device.name + ', Code: ' + value));
+	//	return Promise.resolve(A.D('sendData to ' + device.name + ', Code: ' + value));
 }
 
 A.stateChange = function (id, state) {
@@ -127,7 +127,7 @@ A.stateChange = function (id, state) {
 			state.val = true;
 			return sendScene(scene, state);
 		}
-//		A.D(`Somebody (${state.from}) id0 ${id0} changed ${id} of "${id0}" to ${A.O(state)}`);
+		//		A.D(`Somebody (${state.from}) id0 ${id0} changed ${id} of "${id0}" to ${A.O(state)}`);
 		if (id0 === scenesName)
 			return A.getObject(id)
 				.then((obj) =>
@@ -196,10 +196,10 @@ A.messages = (msg) => {
 			val: true,
 			ack: false,
 			from: msg.from
-		},
-		id = msg.message.startsWith(A.ain) ? msg.message.trim() : A.ain + (msg.message.trim());
+		};
+	var	id = msg.message.startsWith(A.ain) ? msg.message.trim() : A.ain + (msg.message.trim());
 
-//	A.D(`Execute Message ${A.O(id)}`);
+	//	A.D(`Execute Message ${A.O(id)}`);
 
 	switch (msg.command) {
 		case 'switch_off':
@@ -218,8 +218,8 @@ A.messages = (msg) => {
 			if (msg.message.startsWith(A.ain))
 				msg.message = msg.message.slice(A.ain.length)
 			let ids = msg.message.split('.'),
-				id = ids[0],
 				code = ids[1];
+			id = ids[0];
 			if (!id.startsWith('RM:') || !scanList[id] || !code.startsWith(codeName))
 				return Promise.reject(A.D(`Invalid message "${msg.message}" for "send" to ${id}${sendName}`));
 			return Promise.resolve(A.D(`Executed on ${id} the message "${msg.message}"`), sendCode(scanList[id], code));
