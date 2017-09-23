@@ -22,7 +22,7 @@ const slog = (adapter, log, text) => adapter && adapter.log && typeof adapter.lo
 
 function processMessage(obj) {
     return (obj.command === 'debug' ? Promise.resolve(`debug set to '${inDebug = MyAdapter.parseLogic(obj.message)}'`) : messages(obj))
-        .then(res => MyAdapter.I(`Message from '${obj.from}', command '${obj.command}', message '${MyAdapter.S(obj.message)}' executed with result:"${MyAdapter.S(res)}"`, res),
+        .then(res => MyAdapter.D(`Message from '${obj.from}', command '${obj.command}', message '${MyAdapter.S(obj.message)}' executed with result:"${MyAdapter.S(res)}"`, res),
             err => MyAdapter.W(`invalid Message ${MyAdapter.O(obj)} caused error ${MyAdapter.O(err)}`, err))
         .then(res => obj.callback ? adapter.sendTo(obj.from, obj.command, res, obj.callback) : undefined)
         .then(() => MyAdapter.c2p(adapter.getMessage)().then(obj => obj ? processMessage(obj) : true));
@@ -33,6 +33,7 @@ function initAdapter() {
     MyAdapter.D(`Adapter ${MyAdapter.ains} starting.`);
     MyAdapter.getObjectList = MyAdapter.c2p(adapter.objects.getObjectList);
     MyAdapter.getForeignState = MyAdapter.c2p(adapter.getForeignState);
+    MyAdapter.setForeignState = MyAdapter.c2p(adapter.setForeignState);
     MyAdapter.getState = MyAdapter.c2p(adapter.getState);
     MyAdapter.setState = MyAdapter.c2p(adapter.setState);
 
@@ -103,7 +104,9 @@ MyAdapter.init = function MyAdapterInit(ori_adapter, ori_main) {
         .on('ready', () => initAdapter().then(main))
         .on('objectChange', (id, obj) => obj && obj._id && objChange ? objChange(id, obj) : null)
         .on('stateChange', (id, state) => state && state.from != 'system.adapter.' + MyAdapter.ains && stateChange ?
-            stateChange(MyAdapter.D(`stateChange called for ${id} = ${MyAdapter.O(state)}`, id), state) : null);
+            stateChange(MyAdapter.D(`stateChange called for ${id} = ${MyAdapter.O(state)}`, id), state).then(() => true,
+                err => MyAdapter.W(`Error in StateChange for ${id} = ${MyAdapter.O(state)}`)
+            ) : null);
 
     return that;
 };
@@ -122,6 +125,8 @@ MyAdapter.J = function ( /** string */ str, /** function */ reviewer) {
 };
 
 MyAdapter.nop = obj => obj;
+MyAdapter.split = (x,s) => MyAdapter.trim((typeof x === 'string' ? x : `${x}`).split(s));
+MyAdapter.trim = (x) => Array.isArray(x) ? x.map(MyAdapter.trim) : typeof x === 'string' ? x.trim() : `${x}`.trim();
 MyAdapter.D = (str, val) => (inDebug ?
     slog(adapter, 'info', `<span style="color:darkblue;">debug: ${str}</span>`) :
     slog(adapter, 'debug', str), val !== undefined ? val : str);
@@ -208,18 +213,8 @@ MyAdapter.locDate = (date) => date instanceof Date ?
     new Date(Date.now() - (new Date().getTimezoneOffset()) * 60000);
 MyAdapter.dateTime = (date) => MyAdapter.locDate(date).toISOString().slice(0, -5).replace('T', '@');
 MyAdapter.obToArray = (obj) => (Object.keys(obj).map(i => obj[i]));
-MyAdapter.includes = function (obj, value) {
-    switch (MyAdapter.T(obj)) {
-        case 'object':
-            return obj[value] !== undefined;
-        case 'array':
-            for (var i of obj)
-                if (i === value)
-                    return true;
-        default:
-            return obj === value;
-    }
-}
+MyAdapter.includes = (obj, value) => MyAdapter.T(obj,{}) ? obj[value] !== undefined : 
+    MyAdapter.T(obj,[]) ? obj.find(x => x === value) !== undefined : obj === value;
 
 MyAdapter.stop = (dostop, callback) => {
     if (stopping) return;

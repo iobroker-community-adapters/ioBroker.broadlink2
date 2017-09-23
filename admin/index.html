@@ -3,94 +3,437 @@
 <script type="text/javascript" src="../../lib/js/jquery-1.11.1.min.js"></script>
 <script type="text/javascript" src="../../socket.io/socket.io.js"></script>
 <script type="text/javascript" src="../../lib/js/jquery-ui-1.10.3.full.min.js"></script>
+
 <link rel="stylesheet" type="text/css" href="../../css/adapter.css" />
 <script type="text/javascript" src="../../js/translate.js"></script>
 <script type="text/javascript" src="../../js/adapter-settings.js"></script>
+
+<style>
+	.number {
+		width: 70px
+	}
+
+	.table-values th {
+		background: #686868;
+		color: #FFF;
+		font-weight: bold;
+	}
+
+	.table-values tr:nth-child(even) {
+		background: #d0d0d0;
+	}
+</style>
+
 <script type="text/javascript">
+	var scenes = [];
 	systemDictionary = {
-		"Broadlink2 adapter settings": {"de": "Broadlink2 Adapter Einstellungen"},
-		"Settings": {"de": "Einstellungen"},
-		"Poll switches every x seconds (0 = no polling)": {"de": "Abfrage der Schalter alle x Sekunden"},
-		"Remove IP suffix": {"de": "Unterdrücke IP suffix"},
+		"Broadlink2 adapter settings": {
+			"de": "Broadlink2 Adapter Einstellungen"
+		},
+		"Settings": {
+			"de": "Einstellungen"
+		},
+		"Poll switches every x seconds (0 = no polling)": {
+			"de": "Abfrage der Schalter alle x Sekunden"
+		},
+		"Remove IP suffix": {
+			"de": "Unterdrücke IP suffix (sollte mit . wie '.fritz.box' beginnen)"
+		},
 		"On save adapter restarts with new config immediately": {
 			"de": "Beim Speichern von Einstellungen wird der Adapter sofort neu gestartet."
-		}
+		},
+		"SceneDescription": {
+			de: "Szenen können aus gelernten States, Szenen, Sender.CODE_xxx oder einer Verzögerung in Millisekunden bestehen.",
+			en: "Scene can consist of learned states, scenes or Sender.CODE_xxx or a time delay in ms!"
+		},
+		"Scene setup": {
+			"de": "Szenen-Definition:"
+		},
+		"name": {de:"Name der Szene",en:"Scene Name"},
+		"scene": {de:"Szene, Kommandos mit ',' getrennt",en:"Scene"},
 	};
+	
+	// the function loadSettings has to exist ...
 	function load(settings, onChange) {
-		for (var key in settings) {
-			var $el = $('#' + key + '.value');
-			if ($el.attr('type') == 'checkbox') {
-				$el.prop('checked', settings[key]).change(function () {
+		if (!settings) return;
+
+		$('.value').each(function () {
+			var key = $(this).attr('id');
+			var $key = $('#' + key + '.value');
+			if ($key.attr('type') === 'checkbox') {
+				$key.prop('checked', settings[key]).change(function () {
 					onChange();
 				});
 			} else {
-				$el.val(settings[key]).change(function () {
+				$key.val(settings[key]).change(function () {
 					onChange();
 				}).keyup(function () {
-					$(this).trigger('change');
+					onChange();
 				});
 			}
-		}
-		// Signal to admin, that no changes yet
+		});
+		getExtendableInstances(function (result) {
+			if (result) {
+				var text = '';
+				for (var r = 0; r < result.length; r++) {
+					var name = result[r]._id.substring('system.adapter.'.length);
+					text += '<option value="' + name + '" ' + (settings.webInstance === name ? 'selected' : '') +
+						'>' + name + '</option>';
+				}
+				$('#webInstance').append(text);
+			}
+		});
+
 		onChange(false);
+		if (typeof values2table === 'function') {
+			values2table('values', settings.scenes, onChange);
+		} else {
+			_values2table('values', settings.scenes, onChange);
+		}
 	}
+
+	function _table2values(id) {
+		var $div;
+		if (!id) {
+			$div = $('body');
+		} else {
+			$div = $('#' + id);
+		}
+		var names = [];
+		$div.find('.table-values th').each(function () {
+			var name = $(this).data('name');
+			if (name) {
+				names.push(name);
+			} else {
+				names.push('___ignore___');
+			}
+		});
+		var values = [];
+		var j = 0;
+		$div.find('.table-lines tr').each(function () {
+			values[j] = {};
+			$(this).find('td').each(function () {
+				var $input = $(this).find('input');
+				if ($input.length) {
+					var name = $input.data('name');
+					if ($input.attr('type') === 'checkbox') {
+						values[j][name] = $input.prop('checked');
+					} else {
+						values[j][name] = $input.val();
+					}
+				}
+			});
+			j++;
+		});
+
+		return values;
+	}
+
+	function _values2table(id, values, onChange) {
+		if (typeof values === 'function') {
+			onChange = values;
+			values = id;
+			id = '';
+		}
+
+		var names = [];
+		var $div;
+		if (!id) {
+			$div = $('body');
+		} else {
+			$div = $('#' + id);
+		}
+		var $add = $div.find('.table-button-add');
+
+		if (!$add.data('inited')) {
+			$add.data('inited', true);
+
+			$add.button({
+					icons: {
+						primary: 'ui-icon-plus'
+					},
+					text: false
+				})
+				.css({
+					width: '1em',
+					height: '1em'
+				})
+				.click(function () {
+					var values = $div.find('.table-values').data('values');
+					var obj = {};
+					for (var i = 0; i < names.length; i++) {
+						if (!names[i]) continue;
+						obj[names[i].name] = names[i].def;
+					}
+					values.push(obj);
+					setTimeout(function () {
+						_values2table(id, values, onChange);
+					}, 100);
+				});
+		}
+
+		if (values) {
+			var buttons = [];
+			var $table = $div.find('.table-values');
+			$table.data('values', values);
+
+			// load rooms
+			if (!$table.data('rooms') && $table.find('th[data-name="room"]').length) {
+				getEnums('rooms', function (err, list) {
+					var result = {};
+					result[_('none')] = '';
+					var nnames = [];
+					for (var n in list) {
+						nnames.push(n);
+					}
+					nnames.sort(function (a, b) {
+						a = a.toLowerCase();
+						b = b.toLowerCase();
+						if (a > b) return 1;
+						if (a < b) return -1;
+						return 0;
+					});
+
+					for (var l = 0; l < nnames.length; l++) {
+						result[nnames[l]] = list[nnames[l]].common.name || l;
+					}
+					$table.data('rooms', result);
+					_values2table(id, values, onChange);
+				});
+				return;
+			}
+
+			$table.find('th').each(function () {
+				var name = $(this).data('name');
+				if (name) {
+					var obj = {
+						name: name,
+						type: $(this).data('type') || 'text',
+						def: $(this).data('default')
+					};
+					if (obj.type === 'checkbox') {
+						if (obj.def === 'false') obj.def = false;
+						if (obj.def === 'true') obj.def = true;
+						obj.def = !!obj.def;
+					} else if (obj.type === 'select') {
+						var vals = ($(this).data('options') || '').split(';');
+						obj.options = {};
+						for (var v = 0; v < vals.length; v++) {
+							var parts = vals[v].split('/');
+							obj.options[parts[0]] = parts[1] || parts[0];
+						}
+					} else {
+						obj.def = obj.def || '';
+					}
+					names.push(obj);
+				} else {
+					names.push(null);
+				}
+
+				name = $(this).data('buttons');
+
+				if (name) {
+					var bs = name.split(' ');
+					buttons.push(bs);
+				} else {
+					buttons.push(null);
+				}
+			});
+
+			var text = '';
+			for (var v = 0; v < values.length; v++) {
+				text += '<tr>';
+
+				for (var i = 0; i < names.length; i++) {
+					text += '<td>';
+					if (names[i]) {
+						if (names[i].type === 'checkbox') {
+							text += '<input class="values-input" type="checkbox" data-index="' + v + '" data-name="' +
+								names[i].name + '" ' + (values[v][names[i].name] ? 'checked' : '') +
+								'" data-old-value="' + (values[v][names[i].name] === undefined ? '' : values[v][names[i]
+									.name
+								]) + '"/>';
+						} else if (names[i].type === 'select') {
+							text += '<select class="values-input" data-index="' + v + '" data-name="' + names[i].name +
+								'" data-old-value="' + (values[v][names[i].name] === undefined ? '' : values[v][names[i]
+									.name
+								]) + '">';
+							var options;
+							if (names[i].name === 'room') {
+								options = $table.data('rooms');
+							} else {
+								options = names[i].options;
+							}
+							var val = (values[v][names[i].name] === undefined ? '' : values[v][names[i].name]);
+							for (var p in options) {
+								text += '<option value="' + p + '" ' + (p === val ? ' selected' : '') + '>' + options[p] +
+									'</option>';
+							}
+							text += '</select>';
+						} else {
+							text += '<input class="values-input" style="width: 100%" type="' + names[i].type +
+								'" data-index="' + v + '" data-name="' + names[i].name + '" value="' + (values[v][names[
+									i].name] === undefined ? '' : values[v][names[i].name]) + '"  data-old-value="' + (
+									values[v][names[i].name] === undefined ? '' : values[v][names[i].name]) + '"/>';
+						}
+					}
+
+					if (buttons[i]) {
+						for (var b = 0; b < buttons[i].length; b++) {
+							if ((!v && buttons[i][b] === 'up') || v === values.length - 1 && buttons[i][b] === 'down') {
+								text += '<button data-command="' + buttons[i][b] +
+									'" class="values-buttons" disabled>&nbsp;</button>';
+								continue;
+							}
+							text += '<button data-index="' + v + '" data-command="' + buttons[i][b] +
+								'" class="values-buttons"></button>';
+						}
+					}
+					text += '</td>';
+				}
+
+				text += '</tr>';
+			}
+			var $lines = $('.table-lines');
+			if (!$lines.length) {
+				$table.append('<tbody class="table-lines"></tbody>');
+				$lines = $('.table-lines');
+			}
+
+			$lines.html(text);
+
+			$lines.find('.values-buttons').each(function () {
+				var command = $(this).data('command');
+				if (command === 'delete') {
+					$(this).button({
+							icons: {
+								primary: 'ui-icon-trash'
+							},
+							text: false
+						})
+						.css({
+							width: '1em',
+							height: '1em'
+						})
+						.click(function () {
+							var id = $(this).data('index');
+							values.splice(id, 1);
+							onChange();
+							setTimeout(function () {
+								_values2table(id, values, onChange);
+							}, 100);
+						});
+				} else if (command === 'up') {
+					$(this).button({
+							icons: {
+								primary: 'ui-icon-triangle-1-n'
+							},
+							text: false
+						})
+						.css({
+							width: '1em',
+							height: '1em'
+						})
+						.click(function () {
+							var id = $(this).data('index');
+							var elem = values[id];
+							values.splice(id, 1);
+							values.splice(id - 1, 0, elem);
+							onChange();
+							setTimeout(function () {
+								_values2table(id, values, onChange);
+							}, 100);
+						});
+				} else if (command === 'down') {
+					$(this).button({
+							icons: {
+								primary: 'ui-icon-triangle-1-s'
+							},
+							text: false
+						})
+						.css({
+							width: '1em',
+							height: '1em'
+						})
+						.click(function () {
+							var id = $(this).data('index');
+							var elem = values[id];
+							values.splice(id, 1);
+							values.splice(id + 1, 0, elem);
+							onChange();
+							setTimeout(function () {
+								_values2table(id, values, onChange);
+							}, 100);
+						});
+				}
+			});
+
+			$lines.find('.values-input').change(function () {
+				if ($(this).attr('type') === 'checkbox') {
+					if ($(this).prop('checked').toString() !== $(this).data('old-value')) onChange();
+					values[$(this).data('index')][$(this).data('name')] = $(this).prop('checked');
+				} else {
+					if ($(this).val() !== $(this).data('old-value')) onChange();
+					values[$(this).data('index')][$(this).data('name')] = $(this).val();
+
+				}
+			}).keyup(function () {
+				$(this).trigger('change');
+			});
+		}
+	}
+
+
 	function save(callback) {
+		// example: select elements with class=value and build settings object
 		var obj = {};
 		$('.value').each(function () {
 			var $this = $(this);
-			obj[$this.attr('id')] = $this.val();
+			if ($this.attr('type') === 'checkbox') {
+				obj[$this.attr('id')] = $this.prop('checked');
+			} else {
+				obj[$this.attr('id')] = $this.val();
+			}
 		});
+		obj.scenes = (typeof table2values === 'function') ? table2values() : _table2values();
+
 		callback(obj);
 	}
 </script>
 
-<style>
-	td {
-		font-size: 13px;
-		padding-left: 1px;
-		padding-right: 4px;
-		padding-top: 3px;
-		padding-bottom: 3px;
-	}
-
-	input {
-		font-size: 13px;
-	}
-
-	h1 {
-		font-size: 11px;
-		color: #505050;
-		font-weight: bold;
-		width: 100%;
-		padding-left: 6px;
-		padding-right: 5px;
-		padding-top: 5px;
-		padding-bottom: 5px;
-		background-color: #e0e0e0;
-	}
 </style>
 
 <div id="adapter-container">
 	<table>
 		<tr>
 			<td><img src="broadlink.png" /></td>
-			<td style="padding-top: 20px;padding-left: 10px"><h3 class="translate">Broadlink2 adapter settings</h3></td>
+			<td style="padding-top: 20px;padding-left: 10px">
+				<h3 class="translate">Broadlink2 adapter settings</h3>
+			</td>
 		</tr>
 	</table>
-
-	<h1 class="translate">Settings</h1>
 	<p>
 		<span class="translate">Remove IP suffix</span> <input class="value" id="ip" /><br>
 	</p>
 	<p>
 		<span class="translate">Poll switches every x seconds (0 = no polling)</span> <input class="value" id="poll" /><br>
 	</p>
-
-	<table>
-		<tr>
-			<td class="translate">On save adapter restarts with new config immediately</td>
-		</tr>
-	</table>
+	<div id="values" style="width: 100%; height: calc(100% - 210px)">
+		<span class="translate">Scene setup</span><button class="table-button-add" style="margin-left: 10px; width: 1.5em; height: 1.5em"></button>
+		<div style="width: 100%; height: calc(100% - 30px); overflow: auto;">
+			<table class="table-values" style="width: 100%;">
+				<thead>
+					<tr>
+						<th data-name="name" style="width: 120px" class="translate">name</th>
+						<th data-name="scene" style="width: 80%" class="translate">scene</th>
+						<th data-buttons="delete" style="width: 25px"></th>
+					</tr>
+				</thead>
+			</table>
+		</div>
+	</div>
+	<p> <span class="translate">SceneDescription</span></p>
+	<p> <span class="translate">On save adapter restarts with new config immediately</span></p>
 </div>
 
 </html>
