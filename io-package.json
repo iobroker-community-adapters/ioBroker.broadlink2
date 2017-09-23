@@ -2,7 +2,7 @@
   "common": {
     "name": "broadlink2",
     "version": "1.5.0",
-    "title": "Broadlink2 (RM2++,SP1,SP2,SP3,...) Adapter for multiple W-Lan devices",
+    "title": "Broadlink2 (RM++, SP++, A1) Adapter for multiple W-Lan devices",
     "news": {
       "1.1.1": {
         "en": "Adapter handles RM, SP and A1 devices and can rescan them",
@@ -10,8 +10,8 @@
       }
     },
     "desc": {
-      "en": "Broadlink2 Adapter for multiple BroadLink wireless devices (RM2++,SP1,SP2,SP3,...)",
-      "de": "Broadlink2 Adapter für verschiedene Broadlink WLan-Geräte (RM2++,SP1,SP2,SP3,...)"
+      "en": "Broadlink2 Adapter for multiple BroadLink wireless devices (RM++, SP++, A1)",
+      "de": "Broadlink2 Adapter für verschiedene Broadlink WLan-Geräte (RM++, SP++, A1)"
     },
     "platform": "Javascript/Node.js",
     "mode": "daemon",

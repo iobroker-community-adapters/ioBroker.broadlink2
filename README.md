@@ -7,7 +7,7 @@ Windows: [![AppVeyor Build status](https://ci.appveyor.com/api/projects/status/p
 
 [![NPM](https://nodei.co/npm/iobroker.broadlink2.png?downloads=true)](https://nodei.co/npm/iobroker.broadlink2/)
 
-## Adapter für verschiedene Broadlink WLan-Geräte (RM2++,SP1,SP2,SP3,...)
+## Adapter für verschiedene Broadlink WLan-Geräte (RM++,SP++,A1)
 This is an ioBroker adapter for multiple  Broadlink switch like RM2, SP1, SP2, SP3, Honeywell SP2, SPMini, SPMini2, SPMiniPlus and some OEM products from them.
 ALso remote controllers are supported like RM2, RM Mini, RM Pro Phicomm, RM2 Home Plus, RM2 Home Plus GDT, RM2 Pro Plus, RM2 Pro Plus2 and RM2 Pro Plus BL. Multiple controllers will generate their own entries and need to be trained separately.
 It scans the network to find compatible devices and installs them (currently only switches type SP?).
