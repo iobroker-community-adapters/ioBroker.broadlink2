@@ -77,6 +77,7 @@ A.stateChange = function (id, state) {
 	function startLearning(name) {
 		const device = scanList[name];
 		assert(!!device, `wrong name "${name}" in startLearning`);
+		if (device.learning) return Promise.reject(A.W(`Device ${name} is still in learning mode and cannot start it again!`));
 		A.I('Start learning for device: ' + name);
 		var learned = 35;
 		device.emitter.once("rawData", data => { // use current.emitter.once, not the copy current.on. Otherwise this event will be called as often you call current.on()
@@ -109,10 +110,13 @@ A.stateChange = function (id, state) {
 				.catch(err => A.W(`learning makeState error: ${device.name}} ${err}`));
 		});
 		device.enterLearning();
-		return A.retry(learned, () => --learned <= 0 ? Promise.resolve() :
+		
+		return A.makeState(name,device.learning = true,true)
+			.then(() => A.retry(learned, () => --learned <= 0 ? Promise.resolve() :
 				A.wait(A.D(`Learning for ${device.name} wait ${learned} `, 1000))
-				.then(() => Promise.reject(device.checkData())))
-			.then(() => A.I(`Stop learning for ${name}!`), () => A.I(`Stop learning for ${name}!`));
+				.then(() => Promise.reject(device.checkData()))))
+			.then(() => A.I(`Stop learning for ${name}!`), () => A.I(`Stop learning for ${name}!`))
+			.then(() => A.makeState(name,device.learning = false,true));
 	}
 
 	//	A.D(`stateChange of "${id}": ${A.O(state)}`); 
@@ -121,7 +125,7 @@ A.stateChange = function (id, state) {
 			id = id.slice(A.ain.length);
 		let idx = id.split('.'),
 			id0 = idx[0];
-		if (id0 === scanName && idx.slice(-1)[0] === scanName) return Promise.resolve(currentDevice ? A.D(`Restart scan to discover devices!`, currentDevice.discover()) : A.W(`No current driver to start discover!`));
+		if (id0 === scanName && idx.slice(-1)[0] === scanName) return deviceScan();
 		if (id0 === sceneName && idx.slice(-1)[0] === sceneName) {
 			const scene = state.val;
 			state.val = true;
@@ -159,6 +163,21 @@ A.stateChange = function (id, state) {
 	}
 };
 
+function deviceScan() {
+	if (!currentDevice) return Promise.reject(A.W(`No current driver to start discover!`));
+	if (currentDevice.scanning) return Promise.reject(A.W(`Scan operation in progress, no new scan can be started until it finished!`));
+	currentDevice.discover();
+	return A.makeState({
+			id: scanName,
+			write: true,
+			role: 'button',
+			type: typeof true,
+		}, currentDevice.scanning = true, true)
+		.then(() => A.wait(6000)) // 6s for the scan of ip' should be OKs
+		.then(() => A.makeState(scanName, currentDevice.scanning = false, true))
+		.catch(err => A.W(`Error in deviceScan: ${currentDevice.scanning = true, A.O(err)}`))
+}
+
 function sendScene(scene, st) {
 	const s = A.T(scene, []) ? A.trim(scene) : A.T(scene, '') ? A.trim(scene.split(',')) : `error in scene: neither a string nor an Array!: ${A.O(scene)}`;
 	const sn = s.map(ss => A.trim(ss) === parseInt(ss).toString() ? parseInt(ss) : A.trim(ss));
@@ -193,11 +212,11 @@ A.messages = (msg) => {
 	if (A.T(msg.message) !== 'string')
 		return A.W(`Wrong message received: ${A.O(msg)}`)
 	const st = {
-			val: true,
-			ack: false,
-			from: msg.from
-		};
-	var	id = msg.message.startsWith(A.ain) ? msg.message.trim() : A.ain + (msg.message.trim());
+		val: true,
+		ack: false,
+		from: msg.from
+	};
+	var id = msg.message.startsWith(A.ain) ? msg.message.trim() : A.ain + (msg.message.trim());
 
 	//	A.D(`Execute Message ${A.O(id)}`);
 
@@ -268,7 +287,7 @@ function main() {
 				}
 				device.host.name = x;
 				device.host.mac = Array.prototype.slice.call(device.mac, 0).map(s => s.toString(16)).join(':');
-				A.I(`Device ${x} dedected: ${A.O(device.host)}`);
+				A.I(`Device ${x} dedected: ${A.obToArray(device.host)}`);
 				scanList[x] = device;
 				device.iname = x;
 				switch (device.typ) {
@@ -308,19 +327,29 @@ function main() {
 							}
 						});
 						A.makeState({
-							id: x + learnName,
-							write: true,
-							role: 'button',
-							type: typeof true,
-							native: {
-								host: device.host
-							}
-						}, false, true).then(() => A.makeState({
-							id: x + sendName,
-							role: "text",
-							write: true,
-							type: typeof ''
-						}, ' ', true));
+								id: x,
+								role: "value",
+								write: true,
+								type: typeof true,
+								native: {
+									host: device.host
+								}
+							}, false, true)
+							.then(() => A.makeState({
+								id: x + learnName,
+								write: true,
+								role: 'button',
+								type: typeof true,
+								native: {
+									host: device.host
+								}
+							}, false, true))
+							.then(() => A.makeState({
+								id: x + sendName,
+								role: "text",
+								write: true,
+								type: typeof ''
+							}, ' ', true));
 						break;
 					case 'A1':
 						device.on("payload", function (err, payload) {
@@ -421,7 +450,7 @@ function main() {
 				}
 			}).catch(e => A.W(`Error in device dedect: "${e}"`));
 		return false;
-	}).discover();
+	});
 
 	A.D('Config IP-Address end to remove: ' + adapter.config.ip);
 	A.seriesOf(adapter.config.scenes, scene =>
@@ -433,14 +462,9 @@ function main() {
 				native: {
 					scene: scene.scene
 				}
-			}), 100).then(() => A.wait(9000))
+			}), 100)
+		.then(() => deviceScan())
 		.then(() => doPoll())
-		.then(() => A.makeState({
-			id: scanName,
-			write: true,
-			role: 'button',
-			type: typeof true,
-		}, false, true))
 		.then(() => A.makeState({
 			id: sceneName,
 			write: true,
