@@ -20,7 +20,7 @@ The adapter has fixed states to send codes from RM-devices or to learn them It c
 
 If devices which are configured on a certain IP are not found again they will be flagged 'notReachable'! If they are connected again they will be useable normally.
 
-Please delete devices from admin.objects i case you remove permanentely a device!
+Please delete devices from admin.objects in case you remove them permanentely or renamed them in your router!
 
 ### Note
 SP1 devices cannot be polled.
