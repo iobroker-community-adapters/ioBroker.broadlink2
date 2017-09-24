@@ -27,12 +27,13 @@ const scanList = {},
 	scenesName = 'Scenes',
 	learnedName = '.L.',
 	scanName = 'NewDeviceScan',
+	reachName = '.notReachable',
 	codeName = "CODE_",
 	reCODE = /^CODE_|^/,
 	reIsCODE = /^CODE_[a-f0-9]{16}/,
 	defaultName = '>>> Rename learned @ ';
 
-var currentDevice;
+var currentDevice, adapterObjects;
 
 A.init(adapter, main); // associate adapter and main with MyAdapter
 
@@ -110,13 +111,13 @@ A.stateChange = function (id, state) {
 				.catch(err => A.W(`learning makeState error: ${device.name}} ${err}`));
 		});
 		device.enterLearning();
-		
-		return A.makeState(name,device.learning = true,true)
+
+		return A.makeState(name, device.learning = true, true)
 			.then(() => A.retry(learned, () => --learned <= 0 ? Promise.resolve() :
 				A.wait(A.D(`Learning for ${device.name} wait ${learned} `, 1000))
 				.then(() => Promise.reject(device.checkData()))))
 			.then(() => A.I(`Stop learning for ${name}!`), () => A.I(`Stop learning for ${name}!`))
-			.then(() => A.makeState(name,device.learning = false,true));
+			.then(() => A.makeState(name, device.learning = false, true));
 	}
 
 	//	A.D(`stateChange of "${id}": ${A.O(state)}`); 
@@ -148,7 +149,7 @@ A.stateChange = function (id, state) {
 			case 'RM':
 				if (id.endsWith(sendName))
 					return state.val.startsWith(codeName) ? sendCode(device, state.val) :
-						Promise.reject(A.W(`Code to send to ${id0} needs to start with ${codeName}`))
+						Promise.reject(A.W(`Code to send to ${id0} needs to start with ${codeName}`));
 				if (id.endsWith(learnName))
 					return startLearning(id0);
 				return reIsCODE.test(state.val) && sendCode(device, state.val) ||
@@ -175,7 +176,7 @@ function deviceScan() {
 		}, currentDevice.scanning = true, true)
 		.then(() => A.wait(6000)) // 6s for the scan of ip' should be OKs
 		.then(() => A.makeState(scanName, currentDevice.scanning = false, true))
-		.catch(err => A.W(`Error in deviceScan: ${currentDevice.scanning = true, A.O(err)}`))
+		.catch(err => A.W(`Error in deviceScan: ${currentDevice.scanning = true, A.O(err)}`));
 }
 
 function sendScene(scene, st) {
@@ -187,7 +188,7 @@ function sendScene(scene, st) {
 		if (i.split('=').length === 2) {
 			let s = A.trim(i.split('='));
 			i = s[0];
-			st.val = s[1]
+			st.val = s[1];
 		} else st.val = true;
 		if (i.startsWith(A.ain))
 			i = i.slice(A.ain.length);
@@ -203,14 +204,14 @@ function sendScene(scene, st) {
 
 		return A.getState(i).then(() =>
 			A.setForeignState(i, st, false),
-			err =>
-			A.W(`id ${i[0]} not found in scene ${scene}`))
+			(err) =>
+			A.W(`id ${i[0]} not found in scene ${scene} with err: ${A.O(err)}`));
 	}, 100);
 }
 
 A.messages = (msg) => {
 	if (A.T(msg.message) !== 'string')
-		return A.W(`Wrong message received: ${A.O(msg)}`)
+		return A.W(`Wrong message received: ${A.O(msg)}`);
 	const st = {
 		val: true,
 		ack: false,
@@ -218,11 +219,10 @@ A.messages = (msg) => {
 	};
 	var id = msg.message.startsWith(A.ain) ? msg.message.trim() : A.ain + (msg.message.trim());
 
-	//	A.D(`Execute Message ${A.O(id)}`);
-
 	switch (msg.command) {
 		case 'switch_off':
 			st.val = false;
+			/* falls through */
 		case 'switch_on':
 		case 'send':
 			return A.getObject(id)
@@ -235,7 +235,7 @@ A.messages = (msg) => {
 			return sendScene(msg.message, st);
 		case 'send_code':
 			if (msg.message.startsWith(A.ain))
-				msg.message = msg.message.slice(A.ain.length)
+				msg.message = msg.message.slice(A.ain.length);
 			let ids = msg.message.split('.'),
 				code = ids[1];
 			id = ids[0];
@@ -243,7 +243,7 @@ A.messages = (msg) => {
 				return Promise.reject(A.D(`Invalid message "${msg.message}" for "send" to ${id}${sendName}`));
 			return Promise.resolve(A.D(`Executed on ${id} the message "${msg.message}"`), sendCode(scanList[id], code));
 		case 'get':
-			return A.getState(id)
+			return A.getState(id);
 		case 'switch':
 			let idx = A.split(msg.message, '=');
 			if (idx.length != 2 && !idx.startsWith('SP:'))
@@ -255,15 +255,27 @@ A.messages = (msg) => {
 	}
 };
 
+function doPoll() {
+	A.seriesOf(A.obToArray(scanList), device => {
+		if (!device.fun) return Promise.resolve(device.checkRequest = false);
+		device.fun(device.checkRequest = true);
+		A.wait(2000).then(() => device.checkRequest ? A.W(`Device ${device.name} not reachable`, true) : false)
+			.then(res => A.makeState({
+					id: device.name + reachName,
+					write: false,
+					role: 'indicator.unreach',
+					type: typeof true,
+				}, res ?
+				(currentDevice.discover(device.host.address), res) :
+				res, !(device.checkRequest = false)))
+			.catch(err => (device.checkRequest = false, A.W(`Error in polling of ${device.name}: ${A.O(err)}`)));
+		return Promise.resolve(device.fun);
+	}, 50);
+}
+
 
 function main() {
-
-	function doPoll() {
-		A.seriesOf(A.obToArray(scanList), device =>
-			Promise.resolve(device.checkTemperature && device.checkTemperature(),
-				device.check_sensors && device.check_sensors(),
-				device.check_power && device.check_power()), 50);
-	}
+	let notFound = 0;
 
 	A.I('Discover UDP devices for 10sec on ' + A.ains);
 	currentDevice = new broadlink();
@@ -282,7 +294,7 @@ function main() {
 				x.toLowerCase().endsWith(adapter.config.ip) ? x.slice(0, -adapter.config.ip.length) : x)
 			.then(x => device.name = typ + ':' + x.split('.').join('-'))
 			.then(x => {
-				if (scanList[x]) {
+				if (scanList[x] && !scanList[x].dummy) {
 					return A.W(`Device found already: ${x} with ${A.O(device.host)}`);
 				}
 				device.host.name = x;
@@ -295,8 +307,11 @@ function main() {
 						device.oval = undefined;
 						device.on('payload', (err, payload) => {
 							let res = !!payload[4];
+							device.checkRequest = false;
 							if (payload !== null && (payload[0] == 1 || payload[0] == 2)) {
 								if (device.oval !== res) {
+									if (device.oval !== undefined)
+										A.I(`Switch ${device.name} changed to ${res} most probably manually!`);
 									device.oval = res;
 									return A.makeState({
 										id: x,
@@ -312,9 +327,10 @@ function main() {
 						});
 						break;
 					case 'RM':
-						device.ltemp == undefined;
+						device.ltemp = undefined;
 						device.on('temperature', (val) => {
 							//							A.D(`Received temperature ${val} from ${x}`);
+							device.checkRequest = false;
 							if (device.ltemp !== val) {
 								device.ltemp = val;
 								A.makeState({
@@ -353,9 +369,9 @@ function main() {
 						break;
 					case 'A1':
 						device.on("payload", function (err, payload) {
-							let nst = x + tempName;
 							if (!payload)
 								return;
+							device.checkRequest = false;
 
 							var param = payload[0];
 							switch (param) {
@@ -401,7 +417,7 @@ function main() {
 										role: "value.temperature",
 										write: false,
 										unit: "°C"
-									})
+									});
 									A.makeState(x + lightName, nnLight[data.light], {
 										name: device.name,
 										host: device.host,
@@ -445,7 +461,7 @@ function main() {
 								case 4:
 									break;
 							}
-						})
+						});
 						break;
 				}
 			}).catch(e => A.W(`Error in device dedect: "${e}"`));
@@ -464,6 +480,26 @@ function main() {
 				}
 			}), 100)
 		.then(() => deviceScan())
+		.then(() => A.getObjectList({
+			startkey: A.ain,
+			endkey: A.ain + '\u9999'
+		}))
+		.then(res => adapterObjects = res.rows.length > 0 ? A.D(`Adapter has  ${res.rows.length} old states!`, adapterObjects = res.rows.map(x => x.doc)) : [])
+		.then(() => A.seriesOf(adapterObjects.filter(x => x.native && x.native.host), dev => {
+			let id = dev._id.slice(A.ain.length);
+			if (!scanList[id] && !id.endsWith(learnName)) {
+				let device = {
+					name: id,
+					fun: A.nop,
+					host: dev.native.host,
+					dummy: true
+				};
+				A.W(`device ${id} not found, please rescan later again or delete it! It was: ${A.obToArray(device.host)}`);
+				scanList[id] = device;
+				notFound++;
+			}
+			return Promise.resolve(true);
+		}, 1))
 		.then(() => doPoll())
 		.then(() => A.makeState({
 			id: sceneName,
@@ -478,6 +514,6 @@ function main() {
 				A.D(`Poll every ${p} secods.`);
 			}
 		})
-		.then(() => A.I(`Adapter ${A.ains} started and found ${Object.keys(scanList).length} devices named '${Object.keys(scanList).join("', '")}'.`), e => A.W(`Error in main: ${e}`))
+		.then(() => A.I(`Adapter ${A.ains} started and found ${Object.keys(scanList).length - notFound} devices named '${Object.keys(scanList).join("', '")}'.`), e => A.W(`Error in main: ${e}`))
 		.catch(e => A.W(`Unhandled error in main: ${e}`));
 }

@@ -18,6 +18,10 @@ You can create also your own new commands in LearnedStates if you use 'code'+ yo
 
 The adapter has fixed states to send codes from RM-devices or to learn them It can also send individual scenes (actions on multiple devices).
 
+If devices which are configured on a certain IP are not found again they will be flagged 'notReachable'! If they are connected again they will be useable normally.
+
+Please delete devices from admin.objects i case you remove permanentely a device!
+
 ### Note
 SP1 devices cannot be polled.
 
@@ -60,6 +64,11 @@ Der Adapter versteht jetzt auch 'sendTo' Kommandos.
 * Requires node >=v4.2
 
 ## Changelog
+### 1.5.2
+* Added ***notReachable*** states to devices which can return values (SP,RM,A1)
+* Added info when SP's are switched manually
+* devices which are disconnected will be stated as such and reconeccted automatically
+
 ### 1.5.0
 * Added ***Scenes*** um mehrere Befehle hintereinander auszuführen. Diese können aud Adapter.config angelegtr werden.
 * Adapter verwendet kürzere Namen

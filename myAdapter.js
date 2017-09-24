@@ -3,7 +3,7 @@
  *      (c) 2016- <frankjoke@hotmail.com>
  *      MIT License
  */
-// jshint es6: true, node: true, esversion: 6, strict: global, undef: true, unused: true
+// jshint  node: true, esversion: 6, strict: global, undef: true, unused: true
 "use strict";
 const util = require('util'),
     http = require('http'),
@@ -74,7 +74,7 @@ function initAdapter() {
 
 function MyAdapter(adapter, main) {
     if (adapter && main)
-        MyAdapter.init(adapter, main)
+        MyAdapter.init(adapter, main);
     return MyAdapter;
 }
 
@@ -105,7 +105,7 @@ MyAdapter.init = function MyAdapterInit(ori_adapter, ori_main) {
         .on('objectChange', (id, obj) => obj && obj._id && objChange ? objChange(id, obj) : null)
         .on('stateChange', (id, state) => state && state.from != 'system.adapter.' + MyAdapter.ains && stateChange ?
             stateChange(MyAdapter.D(`stateChange called for ${id} = ${MyAdapter.O(state)}`, id), state).then(() => true,
-                err => MyAdapter.W(`Error in StateChange for ${id} = ${MyAdapter.O(state)}`)
+                err => MyAdapter.W(`Error in StateChange for ${id} = ${MyAdapter.O(err)}`)
             ) : null);
 
     return that;
