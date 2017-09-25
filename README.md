@@ -38,6 +38,11 @@ SP1 devices cannot be polled.
 It is also possible to use the codes from [RM-Bridge](http://rm-bridge.fun2code.de/).
 Just create an object (state, type button) with value where you prepend "CODE_" or with native entry `code` without any 'CODE_'.
 
+## Use send messages to adapter
+
+Der Adapter versteht jetzt auch 'sendTo' Kommandos. `sendTo('broadlink2.0','send','your device id')` würde den Wagen den sie auf 225xe umbenannt haben versperren, `sendTo('broadlink2.0','send','RM*:yourdev.Learn')` würde lernen starten und `sendTo('broadlink2.0','debug','on')` (es geht auch 0,1,on,off,ein,aus,true,false) würde debug ein- oder ausschalten. SP?-Steckdosen könen mit 'switch_on' und 'switch_off' anstatt 'send' ein oder ausgeschaltet werden wie z.B. `sendTo('broadlink2.0','switch_on','SP*:yourdev_STATE')`.
+Mit `sendTo('broadlink2.0','get', 'RM2:RMPROPLUS.Temperature'` kann der state von Werten abgefragt werden, man bekommt z.B. `{ val: 29.9, ack: true, ts: 1505839335870, q: 0, from: 'system.adapter.broadlink2.0', lc: 1505839335870 }` zurück.
+
 ## Known-Issues
 * If you learn the same signal multiple times the code can be different everytime. This can not be changed.
 * Sometimes it does not find devices if they do not respond to the search. Restart adapter to restart the scan.
@@ -46,6 +51,11 @@ Just create an object (state, type button) with value where you prepend "CODE_" 
 * Requires node >=v4.2
 
 ## Changelog
+### 1.1.0
+* Support for A1 devices added (thanks a lot to **blackrozes**)
+* bug fix for SP?
+* Receive and execute message from sendTo to broadlink2 implemented
+
 ### 1.0.3
 * Renamed to ioBroker.broadlink2 on Git
 * Bug fix on 1.0.1
@@ -82,3 +92,37 @@ Just create an object (state, type button) with value where you prepend "CODE_" 
 * Implemented SP2 switches and they are working to set them!
 * Currently ONLY SP1 && SP2 (SP3?) are working, please test!
 * Disabled RM? devices, no test available, ordered one for later re-implementation
+
+## Configuration
+
+Der Benutzername, das Passwort und die Datenfilter müssen im Adapter config eingegeben werden.
+
+### Todo for later revisions
+
+## Installation
+
+Mit ioBroker admin, npm install iobroker.broadlink2 oder von <https://github.com/frankjoke/ioBroker.broadlink2> 
+
+## License
+
+The MIT License (MIT)
+
+Copyright (c) 2014-2016, bluefox <dogafox@gmail.com>
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in
+all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+THE SOFTWARE.

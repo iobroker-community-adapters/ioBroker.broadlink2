@@ -22,7 +22,7 @@ const slog = (adapter, log, text) => adapter && adapter.log && typeof adapter.lo
 
 function processMessage(obj) {
     return (obj.command === 'debug' ? Promise.resolve(`debug set to '${inDebug = MyAdapter.parseLogic(obj.message)}'`) : messages(obj))
-        .then(res => MyAdapter.I(`Message from '${obj.from}', command '${obj.command}', message '${obj.message}' executed with result:'${res}'`, res),
+        .then(res => MyAdapter.I(`Message from '${obj.from}', command '${obj.command}', message '${MyAdapter.S(obj.message)}' executed with result:'${MyAdapter.S(res)}'`, res),
             err => MyAdapter.W(`invalid Message ${MyAdapter.O(obj)} caused error ${MyAdapter.O(err)}`, err))
         .then(res => obj.callback ? adapter.sendTo(obj.from, obj.command, res, obj.callback) : undefined)
         .then(() => MyAdapter.c2p(adapter.getMessage)().then(obj => obj ? processMessage(obj) : true));
@@ -187,6 +187,7 @@ MyAdapter.clone = (obj) => JSON.parse(JSON.stringify(obj));
 MyAdapter.wait = (time, arg) => new Promise(res => setTimeout(res, time, arg));
 MyAdapter.F = (obj) => obj;
 MyAdapter.O = (obj, level) => util.inspect(obj, false, level || 2, false).replace(/\n/g, ' ');
+MyAdapter.S = (obj, level) => typeof obj === 'string' ? obj : MyAdapter.O(obj, level);
 MyAdapter.N = (fun) => setTimeout.apply(null, [fun, 0].concat(Array.prototype.slice.call(arguments, 1))); // move fun to next schedule keeping arguments
 MyAdapter.T = (i) => {
     let t = typeof i;

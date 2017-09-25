@@ -1,7 +1,7 @@
 {
   "common": {
     "name": "broadlink2",
-    "version": "1.0.3",
+    "version": "1.1.0",
     "title": "Broadlink2 (RM2++,SP1,SP2,SP3,...) Adapter for multiple W-Lan devices",
     "news": {
       "0.4.4": {
@@ -17,6 +17,8 @@
     "mode": "daemon",
     "icon": "broadlink.png",
     "enabled": true,
+    "messagebox": true,
+    "subscribe": "messagebox",
     "extIcon": "https://raw.githubusercontent.com/frankjoke/ioBroker.broadlink2/master/admin/broadlink.png",
     "keywords": [
       "Broadlink",
@@ -34,6 +36,5 @@
     "ip": ".fritz.box",
     "poll": "30"
   },
-  "objects": [
-  ]
+  "objects": []
 }
