@@ -257,9 +257,9 @@ A.messages = (msg) => {
 
 function doPoll() {
 	A.seriesOf(A.obToArray(scanList), device => {
-		if (!device.fun) return Promise.resolve(device.checkRequest = false);
-		device.fun(device.checkRequest = true);
-		A.wait(2000).then(() => device.checkRequest ? A.W(`Device ${device.name} not reachable`, true) : false)
+		if (!device.fun) return Promise.resolve(device.checkRequest = 0);
+		device.fun(++device.checkRequest);
+		A.wait(2000).then(() => device.checkRequest>1 ? A.W(`Device ${device.name} not reachable`, true) : false)
 			.then(res => A.makeState({
 					id: device.name + reachName,
 					write: false,
@@ -267,8 +267,8 @@ function doPoll() {
 					type: typeof true,
 				}, res ?
 				(currentDevice.discover(device.host.address), res) :
-				res, !(device.checkRequest = false)))
-			.catch(err => (device.checkRequest = false, A.W(`Error in polling of ${device.name}: ${A.O(err)}`)));
+				res, !(device.checkRequest = 0)))
+			.catch(err => (device.checkRequest = 0, A.W(`Error in polling of ${device.name}: ${A.O(err)}`)));
 		return Promise.resolve(device.fun);
 	}, 50);
 }
@@ -297,17 +297,17 @@ function main() {
 				if (scanList[x] && !scanList[x].dummy) {
 					return A.W(`Device found already: ${x} with ${A.O(device.host)}`);
 				}
+				device.checkRequest = 0;
 				device.host.name = x;
 				device.host.mac = Array.prototype.slice.call(device.mac, 0).map(s => s.toString(16)).join(':');
 				A.I(`Device ${x} dedected: ${A.obToArray(device.host)}`);
 				scanList[x] = device;
-				device.iname = x;
 				switch (device.typ) {
 					case 'SP':
 						device.oval = undefined;
 						device.on('payload', (err, payload) => {
 							let res = !!payload[4];
-							device.checkRequest = false;
+							device.checkRequest = 0;
 							if (payload !== null && (payload[0] == 1 || payload[0] == 2)) {
 								if (device.oval !== res) {
 									if (device.oval !== undefined)
@@ -330,7 +330,7 @@ function main() {
 						device.ltemp = undefined;
 						device.on('temperature', (val) => {
 							//							A.D(`Received temperature ${val} from ${x}`);
-							device.checkRequest = false;
+							device.checkRequest = 0;
 							if (device.ltemp !== val) {
 								device.ltemp = val;
 								A.makeState({
@@ -371,7 +371,7 @@ function main() {
 						device.on("payload", function (err, payload) {
 							if (!payload)
 								return;
-							device.checkRequest = false;
+							device.checkRequest = 0;
 
 							var param = payload[0];
 							switch (param) {
