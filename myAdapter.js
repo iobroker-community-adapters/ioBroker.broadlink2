@@ -1,5 +1,5 @@
 /**
- *      iobroker MyAdapter class
+ *      iobroker MyAdapter class V1.1.0 from broadlink2
  *      (c) 2016- <frankjoke@hotmail.com>
  *      MIT License
  */
@@ -341,11 +341,11 @@ MyAdapter.changeState = function (id, value, ack, always) {
     always = always === undefined ? false : !!always;
     ack = ack === undefined ? true : !!ack;
     return MyAdapter.getState(id)
-        .then(st => st && !always && st.val == value && st.ack == ack ? Promise.resolve() : MyAdapter.setState(id, value, ack))
+        .then(st => st && !always && st.val === value && st.ack === ack ? Promise.resolve() : MyAdapter.setState(id, value, ack))
         .catch(err => MyAdapter.W(`Error in MyAdapter.setState(${id},${value},${ack}): ${err}`, MyAdapter.setState(id, value, ack)));
 };
 
-MyAdapter.makeState = function (ido, value, ack) {
+MyAdapter.makeState = function (ido, value, ack, always) {
     //        MyAdapter.D(`Make State ${MyAdapter.O(ido)} and set value to:${MyAdapter.O(value)} ack:${ack}`); ///TC
     ack = ack === undefined || !!ack;
     let id = ido;
@@ -357,7 +357,7 @@ MyAdapter.makeState = function (ido, value, ack) {
         id = id.id;
     } else return Promise.reject(MyAdapter.W(`Invalid makeState id: ${MyAdapter.O(id)}`));
     if (MyAdapter.states[id])
-        return MyAdapter.changeState(id, value, ack);
+        return MyAdapter.changeState(id, value, ack, always);
     //    MyAdapter.D(`Make State ${id} and set value to:${MyAdapter.O(value)} ack:${ack}`); ///TC
     const st = {
         common: {
@@ -381,7 +381,7 @@ MyAdapter.makeState = function (ido, value, ack) {
     //    MyAdapter.I(`will create state:${id} with ${MyAdapter.O(st)}`);
     return MyAdapter.extendObject(id, st, null)
         .then(x => MyAdapter.states[id] = x)
-        .then(() => st.common.state == 'state' ? MyAdapter.changeState(id, value, ack) : true)
+        .then(() => st.common.state == 'state' ? MyAdapter.changeState(id, value, ack, always) : true)
         .catch(err => MyAdapter.D(`MS ${MyAdapter.O(err)}`, id));
 };
 
