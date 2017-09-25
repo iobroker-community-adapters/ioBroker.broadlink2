@@ -3,7 +3,7 @@
  *      (c) 2016- <frankjoke@hotmail.com>
  *      MIT License
  */
-// jshint es6: true, node: true, esversion: 6, strict: global, undef: true, unused: true
+// jshint  node: true, esversion: 6, strict: global, undef: true, unused: true
 "use strict";
 const util = require('util'),
     http = require('http'),
@@ -22,7 +22,7 @@ const slog = (adapter, log, text) => adapter && adapter.log && typeof adapter.lo
 
 function processMessage(obj) {
     return (obj.command === 'debug' ? Promise.resolve(`debug set to '${inDebug = MyAdapter.parseLogic(obj.message)}'`) : messages(obj))
-        .then(res => MyAdapter.I(`Message from '${obj.from}', command '${obj.command}', message '${MyAdapter.S(obj.message)}' executed with result:'${MyAdapter.S(res)}'`, res),
+        .then(res => MyAdapter.D(`Message from '${obj.from}', command '${obj.command}', message '${MyAdapter.S(obj.message)}' executed with result:"${MyAdapter.S(res)}"`, res),
             err => MyAdapter.W(`invalid Message ${MyAdapter.O(obj)} caused error ${MyAdapter.O(err)}`, err))
         .then(res => obj.callback ? adapter.sendTo(obj.from, obj.command, res, obj.callback) : undefined)
         .then(() => MyAdapter.c2p(adapter.getMessage)().then(obj => obj ? processMessage(obj) : true));
@@ -33,6 +33,7 @@ function initAdapter() {
     MyAdapter.D(`Adapter ${MyAdapter.ains} starting.`);
     MyAdapter.getObjectList = MyAdapter.c2p(adapter.objects.getObjectList);
     MyAdapter.getForeignState = MyAdapter.c2p(adapter.getForeignState);
+    MyAdapter.setForeignState = MyAdapter.c2p(adapter.setForeignState);
     MyAdapter.getState = MyAdapter.c2p(adapter.getState);
     MyAdapter.setState = MyAdapter.c2p(adapter.setState);
 
@@ -44,7 +45,8 @@ function initAdapter() {
                 startkey: MyAdapter.ain,
                 endkey: MyAdapter.ain + '\u9999'
             }))
-        .then(res => MyAdapter.seriesOf(res.rows, (i) => MyAdapter.removeState(MyAdapter.D('deleteState: ' + i.doc.common.name, i.doc.common.name)), 2))
+        .then(res => res.rows.length>0 ? MyAdapter.D(`will remove ${res.rows.length} old states!`,res) : res)
+        .then(res => MyAdapter.seriesOf(res.rows, (i) => MyAdapter.removeState(i.doc.common.name), 2))
         .then(res => res, err => MyAdapter.E('err from MyAdapter.series: ' + err))
         .then(() => MyAdapter.getObjectList({
             include_docs: true
@@ -72,7 +74,7 @@ function initAdapter() {
 
 function MyAdapter(adapter, main) {
     if (adapter && main)
-        MyAdapter.init(adapter, main)
+        MyAdapter.init(adapter, main);
     return MyAdapter;
 }
 
@@ -99,10 +101,12 @@ MyAdapter.init = function MyAdapterInit(ori_adapter, ori_main) {
     adapter.on('message', (obj) => !!obj ? processMessage(
             MyAdapter.D(`received Message ${MyAdapter.O(obj)}`, obj)) : true)
         .on('unload', (callback) => MyAdapter.stop(false, callback))
-        .on('ready', () => initAdapter().then(() => main()))
+        .on('ready', () => initAdapter().then(main))
         .on('objectChange', (id, obj) => obj && obj._id && objChange ? objChange(id, obj) : null)
         .on('stateChange', (id, state) => state && state.from != 'system.adapter.' + MyAdapter.ains && stateChange ?
-            stateChange(MyAdapter.D(`stateChange called for ${id} = ${MyAdapter.O(state)}`, id), state) : null);
+            stateChange(MyAdapter.D(`stateChange called for ${id} = ${MyAdapter.O(state)}`, id), state).then(() => true,
+                err => MyAdapter.W(`Error in StateChange for ${id} = ${MyAdapter.O(err)}`)
+            ) : null);
 
     return that;
 };
@@ -121,6 +125,8 @@ MyAdapter.J = function ( /** string */ str, /** function */ reviewer) {
 };
 
 MyAdapter.nop = obj => obj;
+MyAdapter.split = (x,s) => MyAdapter.trim((typeof x === 'string' ? x : `${x}`).split(s));
+MyAdapter.trim = (x) => Array.isArray(x) ? x.map(MyAdapter.trim) : typeof x === 'string' ? x.trim() : `${x}`.trim();
 MyAdapter.D = (str, val) => (inDebug ?
     slog(adapter, 'info', `<span style="color:darkblue;">debug: ${str}</span>`) :
     slog(adapter, 'debug', str), val !== undefined ? val : str);
@@ -181,7 +187,7 @@ Object.defineProperty(MyAdapter, "C", {
     get: () => adapter.config
 });
 
-MyAdapter.parseLogic = (obj) => MyAdapter.includes(['0', 'off', 'aus', 'false', 'inactive'], obj.toString().trim().toLowerCase()) ? 
+MyAdapter.parseLogic = (obj) => MyAdapter.includes(['0', 'off', 'aus', 'false', 'inactive'], obj.toString().trim().toLowerCase()) ?
     false : MyAdapter.includes(['1', '-1', 'on', 'ein', 'true', 'active'], obj.toString().trim().toLowerCase());
 MyAdapter.clone = (obj) => JSON.parse(JSON.stringify(obj));
 MyAdapter.wait = (time, arg) => new Promise(res => setTimeout(res, time, arg));
@@ -189,14 +195,14 @@ MyAdapter.F = (obj) => obj;
 MyAdapter.O = (obj, level) => util.inspect(obj, false, level || 2, false).replace(/\n/g, ' ');
 MyAdapter.S = (obj, level) => typeof obj === 'string' ? obj : MyAdapter.O(obj, level);
 MyAdapter.N = (fun) => setTimeout.apply(null, [fun, 0].concat(Array.prototype.slice.call(arguments, 1))); // move fun to next schedule keeping arguments
-MyAdapter.T = (i) => {
+MyAdapter.T = (i,j) => {
     let t = typeof i;
     if (t === 'object') {
         if (Array.isArray(i)) t = 'array';
         else if (i instanceof RegExp) t = 'regexp';
         else if (i === null) t = 'null';
     } else if (t === 'number' && isNaN(i)) t = 'NaN';
-    return t;
+    return j === undefined ? t : MyAdapter.T(j) == t;
 };
 MyAdapter.locDate = (date) => date instanceof Date ?
     new Date(date.getTime() - date.getTimezoneOffset() * 60000) :
@@ -207,18 +213,8 @@ MyAdapter.locDate = (date) => date instanceof Date ?
     new Date(Date.now() - (new Date().getTimezoneOffset()) * 60000);
 MyAdapter.dateTime = (date) => MyAdapter.locDate(date).toISOString().slice(0, -5).replace('T', '@');
 MyAdapter.obToArray = (obj) => (Object.keys(obj).map(i => obj[i]));
-MyAdapter.includes = function (obj, value) {
-    switch (MyAdapter.T(obj)) {
-        case 'object':
-            return obj[value] !== undefined;
-        case 'array':
-            for (var i of obj)
-                if (i === value)
-                    return true;
-        default:
-            return obj === value;
-    }
-}
+MyAdapter.includes = (obj, value) => MyAdapter.T(obj,{}) ? obj[value] !== undefined : 
+    MyAdapter.T(obj,[]) ? obj.find(x => x === value) !== undefined : obj === value;
 
 MyAdapter.stop = (dostop, callback) => {
     if (stopping) return;

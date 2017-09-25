@@ -1,17 +1,17 @@
 {
   "common": {
     "name": "broadlink2",
-    "version": "1.1.0",
-    "title": "Broadlink2 (RM2++,SP1,SP2,SP3,...) Adapter for multiple W-Lan devices",
+    "version": "1.5.2",
+    "title": "Broadlink2 (RM++, SP++, A1) Adapter for multiple W-Lan devices",
     "news": {
-      "0.4.4": {
-        "en": "Adapter handles RM and SP",
-        "de": "Adapter verarbeitet RM- und SP-Geräte"
+      "1.1.1": {
+        "en": "Adapter handles RM, SP and A1 devices and can rescan them",
+        "de": "Adapter verarbeitet RM-, SP- und A1-Geräte"
       }
     },
     "desc": {
-      "en": "Broadlink2 Adapter for multiple BroadLink wireless devices (RM2++,SP1,SP2,SP3,...)",
-      "de": "Broadlink2 Adapter für verschiedene Broadlink WLan-Geräte (RM2++,SP1,SP2,SP3,...)"
+      "en": "Broadlink2 Adapter for multiple BroadLink wireless devices (RM++, SP++, A1)",
+      "de": "Broadlink2 Adapter für verschiedene Broadlink WLan-Geräte (RM++, SP++, A1)"
     },
     "platform": "Javascript/Node.js",
     "mode": "daemon",
@@ -34,7 +34,17 @@
   },
   "native": {
     "ip": ".fritz.box",
+    "scenes": [{
+      "name": "Fernsehen",
+      "scene": "SP:sd1=1, 500, RM:xxx.L.FernseherAn, RM:xxx.L.FernsehLichtAn"
+    }],
     "poll": "30"
   },
-  "objects": []
+  "objects": [],
+  "config": {
+    "minWidth": 800,
+    "width ": 1024,
+    "minHeight": 800,
+    "height": 900
+  }
 }

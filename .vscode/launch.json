@@ -13,7 +13,7 @@
             "port": 5858,
             "localRoot": "${workspaceRoot}",
             "remoteRoot": "/opt/iobroker/node_modules/iobroker.broadlink2",
-            "smartStep": true,
+            "smartStep": true
         }
     ]
 }
