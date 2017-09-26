@@ -43,22 +43,21 @@ A.objChange = function (obj) { //	This is needed for name changes
 			.then(oobj => {
 				const nst = oobj.common,
 					ncn = nst.name,
+					nid = ncn.replace(/[\ \.\,\;]/g, '_'),
 					dev = obj.split('.'),
-					fnn = dev.slice(2, -1).concat(ncn).join('.');
-				if (ncn == dev[4] || ncn.startsWith(defaultName)) // no need to rename!
+					fnn = dev.slice(2, -1).concat(nid).join('.');
+				if (nid == dev[4] || nid.startsWith(defaultName)) // no need to rename!
 					return null;
-				if (!A.states[fnn] ? (ncn.match(/[\ \.\,\;]/g) || !oobj.native.code ?
-						A.W(`Cannot rename to ${oobj.common.name} because it includes charaters like " .,;" or does not have a learned code: ${obj}`, true) :
-						false) :
+				if (!A.states[fnn] ? (!oobj.native.code ? A.W(`Cannot rename to ${oobj.common.name} because it does not have a learned code: ${obj}`, true) : false) :
 					A.W(`Cannot rename to ${ncn} because the name is already used: ${obj}`, true)) {
 					oobj.common.name = dev[4];
 					return A.setObject(obj, oobj)
 						.catch(e => A.W(`rename back err ${e} on ${A.O(oobj)}!`));
 				}
-				nst.id = (dev[2] + learnedName + ncn);
+				nst.id = (dev[2] + learnedName + nid);
 				nst.native = oobj.native;
 				//				nst.val = codeName + oobj.native.code;
-				if (oobj.common.name != dev[4])
+				if (nid != dev[4])
 					return A.makeState(nst, false, true)
 						.then(() => A.removeState(A.I(`rename ${obj} to ${fnn}!`, obj)).catch(() => true));
 			})
@@ -174,7 +173,7 @@ function deviceScan() {
 			role: 'button',
 			type: typeof true,
 		}, currentDevice.scanning = true, true)
-		.then(() => A.wait(6000)) // 6s for the scan of ip' should be OKs
+		.then(() => A.wait(5000)) // 6s for the scan of ip' should be OKs
 		.then(() => A.makeState(scanName, currentDevice.scanning = false, true))
 		.catch(err => A.W(`Error in deviceScan: ${currentDevice.scanning = true, A.O(err)}`));
 }
@@ -259,16 +258,15 @@ function doPoll() {
 	A.seriesOf(A.obToArray(scanList), device => {
 		if (!device.fun) return Promise.resolve(device.checkRequest = 0);
 		device.fun(++device.checkRequest);
-		A.wait(2000).then(() => device.checkRequest>1 ? A.W(`Device ${device.name} not reachable`, true) : false)
+		A.wait(2000).then(() => device.checkRequest > 1 ? (device.checkRequest % 50 === 2 ? A.W(`Device ${device.name} not reachable`, true) : true) : false)
+			.then(res => device.checkRequest > 10 ? (currentDevice.discover(device.host), res) : res)
 			.then(res => A.makeState({
-					id: device.name + reachName,
-					write: false,
-					role: 'indicator.unreach',
-					type: typeof true,
-				}, res ?
-				(currentDevice.discover(device.host.address), res) :
-				res, !(device.checkRequest = 0)))
-			.catch(err => (device.checkRequest = 0, A.W(`Error in polling of ${device.name}: ${A.O(err)}`)));
+				id: device.name + reachName,
+				write: false,
+				role: 'indicator.unreach',
+				type: typeof true,
+			}, res, true))
+			.catch(err => A.W(`Error in polling of ${device.name}: ${A.O(err)}`));
 		return Promise.resolve(device.fun);
 	}, 50);
 }
@@ -492,7 +490,8 @@ function main() {
 					name: id,
 					fun: A.nop,
 					host: dev.native.host,
-					dummy: true
+					dummy: true,
+					checkRequest: 1,
 				};
 				A.W(`device ${id} not found, please rescan later again or delete it! It was: ${A.obToArray(device.host)}`);
 				scanList[id] = device;

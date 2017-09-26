@@ -20,6 +20,8 @@ The adapter has fixed states to send codes from RM-devices or to learn them It c
 
 If devices which are configured on a certain IP are not found again they will be flagged 'notReachable'! If they are connected again they will be useable normally.
 
+If a device is not answering 2 times in a row it's set to unreachable. ***notReachable*** devices will give a log warning message every 50 scans. After 10 scans the adapter will try to find them again on the same IP like before. If you changed IP please do a rescan.
+
 Please delete devices from admin.objects in case you remove them permanentely or renamed them in your router!
 
 ### Note
@@ -64,7 +66,7 @@ Der Adapter versteht jetzt auch 'sendTo' Kommandos.
 * Requires node >=v4.2
 
 ## Changelog
-### 1.5.2
+### 1.5.3
 * Added ***notReachable*** states to devices which can return values (SP,RM,A1)
 * Added info when SP's are switched manually
 * devices which are disconnected will be stated as such and reconeccted automatically
