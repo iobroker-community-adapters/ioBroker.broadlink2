@@ -3,7 +3,8 @@
  *      (c) 2016- <frankjoke@hotmail.com>
  *      MIT License
  */
-// jshint  node: true, esversion: 6, strict: global, undef: true, unused: true
+/*jshint -W089 */
+// jshint  node: true, esversion: 6, strict: true, undef: true, unused: true
 "use strict";
 const util = require('util'),
     http = require('http'),
@@ -92,9 +93,9 @@ class MyAdapter {
         this.setForeignObject = this.c2p(adapter.setForeignObject);
         this.getForeignObjects = this.c2p(adapter.getForeignObjects);
         this.getObject = this.c2p(adapter.getObject);
-        this.deleteState = (id) => this.c1pe(adapter.deleteState)(id).catch(res => res == 'Not exists' ? Promise.resolve() : Promise.reject(res));
-        this.delObject = (id, opt) => this.c1pe(adapter.delObject)(id, opt).catch(res => res == 'Not exists' ? Promise.resolve() : Promise.reject(res));
-        this.delState = (id, opt) => this.c1pe(adapter.delState)(id, opt).catch(res => res == 'Not exists' ? Promise.resolve() : Promise.reject(res));
+        this.deleteState = (id) => this.c1pe(adapter.deleteState)(id).catch(res => res === 'Not exists' ? Promise.resolve() : Promise.reject(res));
+        this.delObject = (id, opt) => this.c1pe(adapter.delObject)(id, opt).catch(res => res === 'Not exists' ? Promise.resolve() : Promise.reject(res));
+        this.delState = (id, opt) => this.c1pe(adapter.delState)(id, opt).catch(res => res === 'Not exists' ? Promise.resolve() : Promise.reject(res));
         this.removeState = (id, opt) => this.delState(id, opt).then(() => this.delObject((delete this.states[id], id), opt));
         this.setObject = this.c2p(adapter.setObject);
         this.createState = this.c2p(adapter.createState);
@@ -105,7 +106,7 @@ class MyAdapter {
             .on('unload', (callback) => this.stop(false, callback))
             .on('ready', () => this.initAdapter().then(main))
             .on('objectChange', (id, obj) => obj && obj._id && objChange ? objChange(id, obj) : null)
-            .on('stateChange', (id, state) => state && state.from != 'system.adapter.' + this.ains && stateChange ?
+            .on('stateChange', (id, state) => state && state.from !== 'system.adapter.' + this.ains && stateChange ?
                 stateChange(this.D(`stateChange called for ${id} = ${this.O(state)}`, id), state).then(() => true,
                     err => this.W(`Error in StateChange for ${id} = ${this.O(err)}`)
                 ) : null);
@@ -217,6 +218,65 @@ class MyAdapter {
     static F(obj) {
         return obj;
     }
+
+    static P(pv, res, rej) {
+        if (pv instanceof Promise)
+            return pv;
+        if (pv && typeof pv.then === 'function')
+            return new Promise((rs, rj) => pv.then(rs, rj));
+        if (pv)
+            return Promise.resolve(res || pv);
+        return Promise.reject(rej || pv);
+    }
+
+    static pTimeout(pr, time) {
+        return new Promise((res, rej) => {
+            let timer = setTimeout(() => rej(`timer ${time} run out`), parseInt(time));
+            this.P(pr).then(rs => {
+                clearTimeout(timer);
+                return res(rs);
+            }, err => {
+                clearTimeout(timer);
+                return rej(err);
+            });
+        });
+    }
+
+
+    static until(finish, time, err) {
+        let e = (typeof err !== 'function') ? (() => err) : err;
+        let t = parseInt(time);
+        let st = setTimeout(() => {
+            st = null;
+            finish = null;
+            return e(ok);
+        }, t);
+        let ok = (res) => {
+            if (st) {
+                clearTimeout(st);
+                st = null;
+            }
+            return finish && finish(res);
+        };
+        return ok;
+    }
+
+    static pUntil(finish, time, err) {
+        let e1 = err;
+        let e = (typeof err !== 'function') ? (() => e1) : err;
+        let t = parseInt(time);
+        return new Promise((res, rej) => {
+            let st = setTimeout(() => {
+                st = null;
+                finish = null;
+                return rej(e(`timeout ${t}`));
+            }, t);
+            //        A.D(`------------${A.O(err)}`);
+            this.P(finish).then(r => res(r), er => rej(e(er)));
+        });
+    }
+
+
     static O(obj, level) {
         return util.inspect(obj, false, level || 2, false).replace(/\n/g, ' ');
     }
@@ -233,7 +293,7 @@ class MyAdapter {
             else if (i instanceof RegExp) t = 'regexp';
             else if (i === null) t = 'null';
         } else if (t === 'number' && isNaN(i)) t = 'NaN';
-        return j === undefined ? t : this.T(j) == t;
+        return j === undefined ? t : this.T(j) === t;
     }
     static locDate(date) {
         return date instanceof Date ?
@@ -360,7 +420,7 @@ class MyAdapter {
 
     static get(url, retry) { // get a web page either with http or https and return a promise for the data, could be done also with request but request is now an external package and http/https are part of nodejs.
         const fun = typeof url === 'string' && url.trim().toLowerCase().startsWith('https') ||
-            url.protocol == 'https' ? https.get : http.get;
+            url.protocol === 'https' ? https.get : http.get;
         return (new Promise((resolve, reject) => {
             fun(url, (res) => {
                 if (res.statusCode !== 200) {
@@ -412,16 +472,16 @@ class MyAdapter {
             _id: id
         };
         for (let i in ido)
-            if (i == 'native') {
+            if (i === 'native') {
                 st.native = st.native || {};
                 for (let j in ido[i])
                     st.native[j] = ido[i][j];
-            } else if (i != 'id' && i != 'val')
+            } else if (i !== 'id' && i !== 'val')
             st.common[i] = ido[i];
         //    this.I(`will create state:${id} with ${this.O(st)}`);
         return this.extendObject(id, st, null)
             .then(x => this.states[id] = x)
-            .then(() => st.common.state == 'state' ? this.changeState(id, value, ack, always) : true)
+            .then(() => st.common.state === 'state' ? this.changeState(id, value, ack, always) : true)
             .catch(err => this.D(`MS ${this.O(err)}`, id));
     }
 }

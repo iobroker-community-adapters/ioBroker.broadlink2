@@ -66,6 +66,12 @@ Der Adapter versteht jetzt auch 'sendTo' Kommandos.
 * Requires node >=v4.2
 
 ## Changelog
+### 1.6.0
+* Added RF learning for RM-Plus devices
+* Changed Learn states to LearnRF and LearnIR to differentiate
+* a lot of code change to improve error handling and renaming
+
+
 ### 1.5.3
 * Added ***notReachable*** states to devices which can return values (SP,RM,A1)
 * Added info when SP's are switched manually
