@@ -35,7 +35,7 @@ const scanList = {},
 	reIsCODE = /^CODE_[a-f0-9]{16}/,
 	defaultName = '>>>Rename learned ';
 
-var currentDevice, adapterObjects, firstCreate;
+let currentDevice, adapterObjects, firstCreate, pollerr = 2;
 
 A.init(adapter, main); // associate adapter and main with MyAdapter
 
@@ -153,9 +153,9 @@ A.stateChange = function (id, state) {
 
 		return A.makeState(name, thisDevice.learning = true, true)
 			.then(() => A.retry(learned, () => --learned <= 0 ? Promise.resolve() :
-				A.wait(A.D(`Learning for ${thisDevice.name} wait ${learned} `, 1000))
+				A.wait(A.D(`Learning ${type} for ${thisDevice.name} wait ${learned} `, 1000))
 				.then(() => Promise.reject(thisDevice.checkData()))))
-			.then(() => A.I(`Stop learning for ${name}!`), () => A.I(`Stop learning for ${name}!`))
+			.then(() => A.I(`Stop learning ${type} for ${name}!`), () => A.I(`Stop learning ${type} for ${name}!`))
 			.then(() => A.makeState(name, false, true)).then(A.nop, A.nop)
 			.then(() => A.wait(2000))
 			.then(() => {
@@ -309,7 +309,7 @@ function doPoll() {
 	A.seriesOf(A.obToArray(scanList), device => {
 		if (!device.fun) return Promise.resolve(device.checkRequest = 0);
 		device.fun(++device.checkRequest);
-		A.wait(2000).then(() => device.checkRequest > 1 ? (device.checkRequest % 50 === 2 ? A.W(`Device ${device.name} not reachable`, true) : true) : false)
+		A.wait(2000).then(() => device.checkRequest > pollerr ? (device.checkRequest % 50 === pollerr + 1 ? A.W(`Device ${device.name} not reachable`, true) : true) : false)
 			.then(res => device.checkRequest > 10 ? (currentDevice.discover(device.host), res) : res)
 			.then(res => A.makeState({
 				id: device.name + reachName,
@@ -324,7 +324,7 @@ function doPoll() {
 
 
 function main() {
-	let notFound = 0;
+	let didFind, notFound = [];
 
 	A.I('Discover UDP devices for 10sec on ' + A.ains);
 	currentDevice = new broadlink();
@@ -407,9 +407,6 @@ function main() {
 								write: true,
 								role: 'button',
 								type: typeof true,
-								native: {
-									host: device.host
-								}
 							}, false, true))
 							.then(() => A.makeState({
 								id: x + sendName,
@@ -422,9 +419,6 @@ function main() {
 								write: true,
 								role: 'button',
 								type: typeof true,
-								native: {
-									host: device.host
-								}
 							}, false, true) : null);
 						break;
 					case 'A1':
@@ -545,6 +539,7 @@ function main() {
 			endkey: A.ain + '\u9999'
 		}))
 		.then(res => adapterObjects = res.rows.length > 0 ? A.D(`Adapter has  ${res.rows.length} old states!`, adapterObjects = res.rows.map(x => x.doc)) : [])
+		.then(() => didFind = Object.keys(scanList))
 		.then(() => A.seriesOf(adapterObjects.filter(x => x.native && x.native.host), dev => {
 			let id = dev._id.slice(A.ain.length);
 			if (!scanList[id] && !id.endsWith(learnName + learnRf) && !id.endsWith(learnName + learnIr)) {
@@ -557,7 +552,7 @@ function main() {
 				};
 				A.W(`device ${id} not found, please rescan later again or delete it! It was: ${A.obToArray(device.host)}`);
 				scanList[id] = device;
-				notFound++;
+				notFound.push(id);
 			}
 			return Promise.resolve(true);
 		}, 1))
@@ -575,6 +570,7 @@ function main() {
 				A.D(`Poll every ${p} secods.`);
 			}
 		})
-		.then(() => A.I(`Adapter ${A.ains} started and found ${Object.keys(scanList).length - notFound} devices named '${Object.keys(scanList).join("', '")}'.`), e => A.W(`Error in main: ${e}`))
+		.then(() => (A.I(`Adapter ${A.ains} started and found ${didFind.length} devices named '${didFind.join("', '")}'.`),
+			notFound.length > 0 ? A.I(`${notFound.length} were not found: ${notFound}`) : null), e => A.W(`Error in main: ${e}`))
 		.catch(e => A.W(`Unhandled error in main: ${e}`));
 }

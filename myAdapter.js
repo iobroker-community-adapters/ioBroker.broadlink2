@@ -229,53 +229,30 @@ class MyAdapter {
         return Promise.reject(rej || pv);
     }
 
-    static pTimeout(pr, time) {
-        return new Promise((res, rej) => {
-            let timer = setTimeout(() => rej(`timer ${time} run out`), parseInt(time));
-            this.P(pr).then(rs => {
-                clearTimeout(timer);
-                return res(rs);
-            }, err => {
-                clearTimeout(timer);
-                return rej(err);
-            });
-        });
-    }
-
-
-    static until(finish, time, err) {
-        let e = (typeof err !== 'function') ? (() => err) : err;
+    static pTimeout(pr, time, callback) {
         let t = parseInt(time);
-        let st = setTimeout(() => {
-            st = null;
-            finish = null;
-            return e(ok);
-        }, t);
-        let ok = (res) => {
-            if (st) {
-                clearTimeout(st);
+        assert(typeof t === 'number' && t>0,`pTimeout requires a positive number as second argument for the ms`); 
+        let st = null;
+        assert(callback && typeof callback === 'function',`pTimeout requires optionally a function for callback as third argument`); 
+        return new Promise((resolve, reject) => {
+            let rs = res => {
+                    if (st) clearTimeout(st);
+                    st = null;
+                    return resolve(res);
+                },
+                rj = err => {
+                    if (st) clearTimeout(st);
+                    st = null;
+                    return reject(err);
+                };
+            st = setTimeout(() => {
                 st = null;
-            }
-            return finish && finish(res);
-        };
-        return ok;
-    }
-
-    static pUntil(finish, time, err) {
-        let e1 = err;
-        let e = (typeof err !== 'function') ? (() => e1) : err;
-        let t = parseInt(time);
-        return new Promise((res, rej) => {
-            let st = setTimeout(() => {
-                st = null;
-                finish = null;
-                return rej(e(`timeout ${t}`));
+                reject(`timer ${t} run out`);
             }, t);
-            //        A.D(`------------${A.O(err)}`);
-            this.P(finish).then(r => res(r), er => rej(e(er)));
+            if (callback) callback(rs, rj);
+            this.P(pr).then(rs, rj);
         });
     }
-
 
     static O(obj, level) {
         return util.inspect(obj, false, level || 2, false).replace(/\n/g, ' ');
