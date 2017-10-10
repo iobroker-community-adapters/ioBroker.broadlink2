@@ -55,7 +55,7 @@ Der Adapter versteht jetzt auch 'sendTo' Kommandos.
 * `switch`: schaltet Steckdose ein/aus je nach Text: `sendTo('broadlink2.0','switch','SP:your device id=on')`
 * `switch_on`/`switch_off`:  sendTo('broadlink2.0','switch_on','SP:your device id')`
 * `send`: `sendTo('broadlink2.0','send','RM:yourdev.Learn')` würde lernen starten und `sendTo('broadlink2.0','send','RM:yourdev.L.yourid')` würde den code (oder eine Scene) senden.
-* `send_scene`: `sendTo('broadlink2.0','send_scene','scene xxx ')` würde den al message angegebenen Text als Szene ausführen 
+* `send_scene`: `sendTo('broadlink2.0','send_scene','scene xxx ')` würde den als message angegebenen Text als Szene ausführen 
 * `send_code`: `sendTo('broadlink2.0','send_code','RM:your remote.CODE_xxxxx')` würde den CODE_xxxx vom R:your name senden. 
 
 ## Known-Issues
@@ -66,6 +66,9 @@ Der Adapter versteht jetzt auch 'sendTo' Kommandos.
 * Requires node >=v4.2
 
 ## Changelog
+### 1.7.0
+* Changed and corrected states which are created by A1-devices
+
 ### 1.6.0
 * Added RF learning for RM-Plus devices
 * Changed Learn states to LearnRF and LearnIR to differentiate

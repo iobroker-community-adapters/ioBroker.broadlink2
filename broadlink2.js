@@ -16,11 +16,8 @@ const scanList = {},
 	tempName = '.Temperature',
 	humName = '.Humidity',
 	lightName = '.Light',
-	lightRAWName = '.LightRAW',
 	airQualityName = '.AirQuality',
-	airQualityRAWName = '.AirQualityRAW',
 	noiseName = '.Noise',
-	noiseRAWName = '.NoiseRAW',
 	learnRf = 'RF',
 	learnIr = 'IR',
 	learnName = '.Learn',
@@ -28,7 +25,7 @@ const scanList = {},
 	sceneName = 'SendScene',
 	scenesName = 'Scenes',
 	learnedName = '.L.',
-	scanName = 'NewDeviceScan',
+	scanName = '_NewDeviceScan',
 	reachName = '.notReachable',
 	codeName = "CODE_",
 	reCODE = /^CODE_|^/,
@@ -430,25 +427,6 @@ function main() {
 							var param = payload[0];
 							switch (param) {
 								case 1:
-
-									var nnLight = {
-										0: "dunkel",
-										1: "dämerung",
-										2: "normal",
-										3: "hell"
-									};
-									var nnair = {
-										0: "sehr gut",
-										1: "gut",
-										2: "normal",
-										3: "schlecht"
-									};
-									var nnnoise = {
-										0: "ruhig",
-										1: "normal",
-										2: "laut"
-									};
-
 									data = {
 										temperature: (payload[0x4] * 10 + payload[0x5]) / 10.0,
 										humidity: (payload[0x6] * 10 + payload[0x7]) / 10.0,
@@ -456,52 +434,54 @@ function main() {
 										air_quality: payload[0x0a],
 										noise: payload[0xc],
 									};
-									A.makeState(x + tempName, data.temperature, {
-										name: device.name,
-										host: device.host,
+									A.makeState({
+										id: x + tempName,
+										name: x + tempName,
 										type: typeof 1.1,
 										role: "value.temperature",
 										write: false,
-										unit: "°C"
-									});
-									A.makeState(x + humName, data.humidity, {
-										name: device.name,
-										host: device.host,
+										unit: "°C",
+										native: {
+											host: device.host
+										}
+									}, data.temperature,true);
+									A.makeState({
+										id: x + humName,
+										name: x + humName,
 										type: typeof 1.1,
-										role: "value.temperature",
+										role: "value.humidity",
 										write: false,
-										unit: "°C"
-									});
-									A.makeState(x + lightName, nnLight[data.light], {
-										name: device.name,
-										host: device.host,
-										type: typeof "string"
-									});
-									A.makeState(x + lightRAWName, data.light, {
-										name: device.name,
-										host: device.host,
-										type: typeof 1
-									});
-									A.makeState(x + airQualityName, nnair[data.air_quality], {
-										name: device.name,
-										host: device.host,
-										type: typeof "string"
-									});
-									A.makeState(x + airQualityRAWName, data.air_quality, {
-										name: device.name,
-										host: device.host,
-										type: typeof 1
-									});
-									A.makeState(x + noiseName, nnnoise[data.noise], {
-										name: device.name,
-										host: device.host,
-										type: typeof "string"
-									});
-									A.makeState(x + noiseRAWName, data.noise, {
-										name: device.name,
-										host: device.host,
-										type: typeof 1
-									});
+										min: 0,
+										max: 100,
+										unit: "%"
+									}, data.humidity, true );
+									A.makeState({
+										id: x + lightName, 
+										name: x + lightName,
+										type: typeof 0,
+										role: "value",
+										min: 0,
+										max: 3,
+										states: "0:finster;1:dunkel;2:normal;3:hell"
+									},data.light,true);
+									A.makeState({
+										id: x + airQualityName,
+										name: x + airQualityName,
+										type: typeof 0,
+										role: "value",
+										min: 0,
+										max: 3,
+										states: "0:sehr gut;1:gut;2:normal;3:schlecht"
+									}, data.air_quality, true);
+									A.makeState({
+										id: x + noiseName,
+										name: x + noiseName,
+										type: typeof 0,
+										role: "value",
+										min: 0,
+										max: 3,
+										states: "0:ruhig;1:normal;2:laut;3:sehr laut"
+									}, data.noise, true);
 
 									break;
 								case 4: //get from check_data
@@ -541,7 +521,7 @@ function main() {
 		.then(res => adapterObjects = res.rows.length > 0 ? A.D(`Adapter has  ${res.rows.length} old states!`, adapterObjects = res.rows.map(x => x.doc)) : [])
 		.then(() => didFind = Object.keys(scanList))
 		.then(() => A.seriesOf(adapterObjects.filter(x => x.native && x.native.host), dev => {
-			let id = dev._id.slice(A.ain.length);
+			let id =  dev.native.host.name; // dev._id.slice(A.ain.length);
 			if (!scanList[id] && !id.endsWith(learnName + learnRf) && !id.endsWith(learnName + learnIr)) {
 				let device = {
 					name: id,

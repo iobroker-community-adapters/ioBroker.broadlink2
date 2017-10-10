@@ -1,6 +1,6 @@
 {
   "name": "iobroker.broadlink2",
-  "version": "1.6.0",
+  "version": "1.7.0",
   "description": "ioBroker Broadlink2 Adapter",
   "author": "Frank Joke <frankjoke@hotmail.com>",
   "contributors": [
@@ -12,6 +12,7 @@
     "ioBroker",
     "broadlink",
     "RM3",
+    "A1",
     "SP1",
     "SP2",
     "SP3",
@@ -23,7 +24,7 @@
     "url": "git+https://github.com/frankjoke/ioBroker.broadlink2.git"
   },
   "engines": {
-    "node": ">=0.12.0"
+    "node": ">=4.3.0"
   },
   "dependencies": {},
   "devDependencies": {

@@ -3,12 +3,13 @@
  *      (c) 2016- <frankjoke@hotmail.com>
  *      MIT License
  */
-/*jshint -W089 */
+/*jshint -W089, -W030 */
 // jshint  node: true, esversion: 6, strict: true, undef: true, unused: true
 "use strict";
 const util = require('util'),
     http = require('http'),
     https = require('https'),
+    url = require('url'),
     exec = require('child_process').exec,
     assert = require('assert');
 
@@ -116,6 +117,10 @@ class MyAdapter {
 
     static J( /** string */ str, /** function */ reviewer) {
         let res;
+        if (!str)
+            return null;
+        if (this.T(str) !== 'string')
+            str = str.toString();
         try {
             res = JSON.parse(str, reviewer);
         } catch (e) {
@@ -155,6 +160,12 @@ class MyAdapter {
     }
     static set debug(y) {
         inDebug = y;
+    }
+    static get timer() {
+        return timer;
+    }
+    static set timer(y) {
+        timer = y;
     }
     static get messages() {
         return messages;
@@ -215,9 +226,6 @@ class MyAdapter {
     static wait(time, arg) {
         return new Promise(res => setTimeout(res, time, arg));
     }
-    static F(obj) {
-        return obj;
-    }
 
     static P(pv, res, rej) {
         if (pv instanceof Promise)
@@ -231,9 +239,9 @@ class MyAdapter {
 
     static pTimeout(pr, time, callback) {
         let t = parseInt(time);
-        assert(typeof t === 'number' && t>0,`pTimeout requires a positive number as second argument for the ms`); 
+        assert(typeof t === 'number' && t > 0, `pTimeout requires a positive number as second argument for the ms`);
         let st = null;
-        assert(callback && typeof callback === 'function',`pTimeout requires optionally a function for callback as third argument`); 
+        assert(callback && typeof callback === 'function', `pTimeout requires optionally a function for callback as third argument`);
         return new Promise((resolve, reject) => {
             let rs = res => {
                     if (st) clearTimeout(st);
@@ -356,11 +364,7 @@ class MyAdapter {
     static retry(nretry, fn, arg) {
         assert(typeof fn === 'function', 'retry (,fn,) error: fn is not a function!');
         nretry = parseInt(nretry);
-        return fn(arg).catch(err => {
-            if (nretry <= 0)
-                throw err;
-            return this.retry(nretry - 1, fn, arg);
-        });
+        return fn(arg).catch(err => nretry <= 0 ? Promise.reject(err) : this.retry(nretry - 1, fn, arg));
     }
 
     static
@@ -395,6 +399,80 @@ class MyAdapter {
         });
     }
 
+    static url(turl, opt) {
+        //        this.D(`mup start: ${this.O(turl)}: ${this.O(opt)}`);
+        if (this.T(turl) === 'string')
+            turl = url.parse(turl.trim(), true);
+        if (this.T(opt) === 'object')
+            for (var i of Object.keys(opt))
+                if (i !== 'url') turl[i] = opt[i];
+        //        this.D(`mup ret: ${this.O(turl)}`);
+        return turl;
+    }
+
+    static request(opt, value, transform) {
+        if (this.T(opt) === 'string')
+            opt = this.url(opt.trim());
+        if (this.T(opt) !== 'object' && !(opt instanceof url.Url))
+            return Promise.reject(this.W(`Invalid opt or Url for request: ${this.O(opt)}`));
+        if (opt.url > '')
+            opt = this.url(opt.url, opt);
+        if (opt.json)
+            if (opt.headers) opt.headers.Accept = 'application/json';
+            else opt.headers = {
+                Accept: 'application/json'
+            };
+        if (!opt.protocol)
+            opt.protocol = 'http:';
+        let fun = opt.protocol.startsWith('https') ? https.request : http.request;
+        //                this.D(`opt: ${this.O(opt)}`);
+        return new Promise((resolve, reject) => {
+            let data = new Buffer(''),
+                res;
+            const req = fun(opt, function (result) {
+                res = result;
+                //                MyAdapter.D(`status: ${MyAdapter.O(res.statusCode)}/${http.STATUS_CODES[res.statusCode]}`);
+                res.setEncoding(opt.encoding ? opt.encoding : 'utf8');
+                if (MyAdapter.T(opt.status) === 'array' && opt.status.indexOf(res.statusCode) < 0)
+                    return reject(MyAdapter.D(`request for ${url.format(opt)} had status ${res.statusCode}/${http.STATUS_CODES[res.statusCode]} other than supported ${opt.status}`));
+                res.on('data', chunk => data += chunk)
+                    .on('end', () => {
+                        res.removeAllListeners();
+                        req.removeAllListeners();
+                        if (MyAdapter.T(transform) === 'function')
+                            data = transform(data);
+                        if (opt.json) {
+                            try {
+                                return resolve(JSON.parse(data));
+                            } catch (e) {
+                                return err(`request JSON error ${MyAdapter.O(e)}`);
+                            }
+                        }
+                        return resolve(data);
+                    })
+                    .on('close', () => err(`Connection closed before data was received!`));
+            });
+
+            function err(e, msg) {
+                if (!msg)
+                    msg = e;
+                res && res.removeAllListeners();
+                //                req && req.removeAllListeners();
+                req && !req.aborted && req.abort();
+                //                res && res.destroy();
+                MyAdapter.D('err in response:' + msg);
+                return reject(msg);
+            }
+
+            if (opt.timeout)
+                req.setTimeout(opt.timeout, () => err('request timeout Error: ' + opt.timeout + 'ms'));
+            req.on('error', (e) => err('request Error: ' + MyAdapter.O(e)))
+                .on('aborted', (e) => err('request aborted: ' + MyAdapter.O(e)));
+            // write data to request body
+            return req.end(value, opt.encoding ? opt.encoding : 'utf8');
+        });
+    }
+
     static get(url, retry) { // get a web page either with http or https and return a promise for the data, could be done also with request but request is now an external package and http/https are part of nodejs.
         const fun = typeof url === 'string' && url.trim().toLowerCase().startsWith('https') ||
             url.protocol === 'https' ? https.get : http.get;
@@ -413,12 +491,26 @@ class MyAdapter {
         })).catch(err => !retry ? Promise.reject(err) : this.wait(100, retry - 1).then(a => this.get(url, a)));
     }
 
+    static equal(a, b) {
+        if (a === b)
+            return true;
+        let ta = this.T(a),
+            tb = this.T(b);
+        if (ta === tb) {
+            if (ta === 'array' || ta === 'function' || ta === 'object')
+                return JSON.stringify(a) === JSON.stringify(b);
+        } else if (ta === 'string' && (tb === 'array' || tb === 'function' || tb === 'object') && a === this.O(b))
+            return true;
+        return false;
+    }
+
     static changeState(id, value, ack, always) {
         assert(typeof id === 'string', 'changeState (id,,,) error: id is not a string!');
         always = always === undefined ? false : !!always;
         ack = ack === undefined ? true : !!ack;
         return this.getState(id)
-            .then(st => st && !always && st.val === value && st.ack === ack ? Promise.resolve() : this.setState(id, value, ack))
+            .then(st => st && !always && this.equal(st.val, value) && st.ack === ack ? Promise.resolve() :
+                this.setState(this.D(`Change ${id} to ${this.O(value)} with ack: ${ack}`, id), value, ack))
             .catch(err => this.W(`Error in MyAdapter.setState(${id},${value},${ack}): ${err}`, this.setState(id, value, ack)));
     }
 
@@ -448,13 +540,15 @@ class MyAdapter {
             type: 'state',
             _id: id
         };
-        for (let i in ido)
+        for (let i in ido) {
             if (i === 'native') {
                 st.native = st.native || {};
                 for (let j in ido[i])
                     st.native[j] = ido[i][j];
-            } else if (i !== 'id' && i !== 'val')
-            st.common[i] = ido[i];
+            } else if (i !== 'id' && i !== 'val') st.common[i] = ido[i];
+        }
+        if (st.common.write)
+            st.common.role = st.common.role.replace(/^value/, 'level');
         //    this.I(`will create state:${id} with ${this.O(st)}`);
         return this.extendObject(id, st, null)
             .then(x => this.states[id] = x)

@@ -1,9 +1,13 @@
 {
   "common": {
     "name": "broadlink2",
-    "version": "1.6.0",
+    "version": "1.7.0",
     "title": "Broadlink2 (RM++, SP++, A1) Adapter for multiple W-Lan devices",
     "news": {
+      "1.7.0": {
+        "en": "A1 devices fields changed to correct original mistakes in unit and type",
+        "de": "Verarbeitung von A1-Geräten geändert um Daten besser anzuzeigen."
+      },
       "1.6.0": {
         "en": "Adapter handles RM, SP and A1 devices and can rescan them, it should be able to learn RF codes frr RM-Plus devices",
         "de": "Adapter verarbeitet RM-, SP- und A1-Geräte und sollte auch Funkbefehle von RM-Plus lernen können"
@@ -30,7 +34,7 @@
       "IR/RF",
       "Remote",
       "Switch",
-      "RM2", "RM3", "SP1", "SP2"
+      "A1", "RM2", "RM3", "SP1", "SP2"
     ],
     "readme": "https://github.com/frankjoke/ioBroker.broadlink2/blob/master/README.md",
     "loglevel": "info",
