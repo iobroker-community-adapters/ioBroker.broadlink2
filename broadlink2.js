@@ -245,6 +245,9 @@ function sendScene(scene, st) {
 	return A.seriesOf(sn, i => {
 		if (typeof i === 'number')
 			return A.wait(i);
+		const mm = i.match(/^\s*(\d+)\s*\(\s*(\S+)\s*\)\s*(\d*)\s*$/);
+		if (mm) 
+			return A.repeat(mm[1],() => sendScene(mm[2]).then(() => A.wait(mm[3]? mm[3] : 300)));
 		if (i.split('=').length === 2) {
 			let s = A.trim(i.split('='));
 			i = s[0];
