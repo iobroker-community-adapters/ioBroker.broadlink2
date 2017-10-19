@@ -380,8 +380,8 @@ class MyAdapter {
     static repeat( /** number */ nretry, /** function */ fn, arg) {
         assert(typeof fn === 'function', 'repeat (,fn,) error: fn is not a function!');
         nretry = parseInt(nretry);
-        return fn(arg).
-        then(res => Promise.reject(res))
+        return fn(arg)
+            .then(res => Promise.reject(res))
             .catch(res => nretry <= 0 ? Promise.resolve(res) : this.repeat(nretry - 1, fn, arg));
     }
 
