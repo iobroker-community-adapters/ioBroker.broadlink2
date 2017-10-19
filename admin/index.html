@@ -49,13 +49,29 @@
 		"Scene setup": {
 			"de": "Szenen-Definition:"
 		},
-		"name": {
+		"scname": {
 			de: "Name der Szene",
 			en: "Scene Name"
 		},
+		"stname": {
+			de: "Name des States",
+			en: "State Name"
+		},
+		"on": {
+			de: "Ein-Signale",
+			en: "On-signals"
+		},
+		"off": {
+			de: "Aus-Signale",
+			en: "Off-signals"
+		},
+		"Switch setup": {
+			de: "States die mit gelernten Daten oder Sequenzen Ein/Aus geschaltet werden. Kann eine Liste mit ',' getrennt sein wo das 1. signal gesendet wird aber alle schalten",
+			en: "States which will be switched on/off with learned states or sequences. THey can be lists where the first will be sent but the others will switch as well!"
+		},
 		"scene": {
 			de: "Szene, Kommandos mit ',' getrennt",
-			en: "Scene"
+			en: "Scene, this are commands separated with ','"
 		},
 	};
 
@@ -91,11 +107,13 @@
 		});
 
 		onChange(false);
-		if (typeof values2table === 'function') {
-			values2table('values', settings.scenes, onChange);
-		} else {
-			_values2table('values', settings.scenes, onChange);
-		}
+//		if (typeof values2table === 'function') {
+//			values2table('scenes', settings.scenes, onChange);
+//			values2table('switches', settings.switches, onChange);
+//		} else {
+			_values2table('scenes', settings.scenes, onChange);
+			_values2table('switches', settings.switches, onChange);
+//		}
 	}
 
 	function _table2values(id) {
@@ -143,10 +161,11 @@
 		}
 
 		var names = [];
-		var $div;
+		var $div,mid;
 		if (!id) {
 			$div = $('body');
 		} else {
+			mid = id;
 			$div = $('#' + id);
 		}
 		var $add = $div.find('.table-button-add');
@@ -300,10 +319,10 @@
 
 				text += '</tr>';
 			}
-			var $lines = $('.table-lines');
+			var $lines = $div.find('.table-lines');
 			if (!$lines.length) {
 				$table.append('<tbody class="table-lines"></tbody>');
-				$lines = $('.table-lines');
+				$lines = $div.find('.table-lines');
 			}
 
 			$lines.html(text);
@@ -326,7 +345,7 @@
 							values.splice(id, 1);
 							onChange();
 							setTimeout(function () {
-								_values2table(id, values, onChange);
+								_values2table(mid ? mid : id, values, onChange);
 							}, 100);
 						});
 				} else if (command === 'up') {
@@ -347,7 +366,7 @@
 							values.splice(id - 1, 0, elem);
 							onChange();
 							setTimeout(function () {
-								_values2table(id, values, onChange);
+								_values2table(mid ? mid : id, values, onChange);
 							}, 100);
 						});
 				} else if (command === 'down') {
@@ -368,7 +387,7 @@
 							values.splice(id + 1, 0, elem);
 							onChange();
 							setTimeout(function () {
-								_values2table(id, values, onChange);
+								_values2table(mid ? mid : id, values, onChange);
 							}, 100);
 						});
 				}
@@ -401,13 +420,11 @@
 				obj[$this.attr('id')] = $this.val();
 			}
 		});
-		obj.scenes = (typeof table2values === 'function') ? table2values() : _table2values();
-
+		obj.scenes = /* (typeof table2values === 'function') ? table2values('scenes') : */ _table2values('scenes');
+		obj.switches = /* (typeof table2values === 'function') ? table2values('switches') : */ _table2values('switches');
 		callback(obj);
 	}
 </script>
-
-</style>
 
 <div id="adapter-container">
 	<table>
@@ -424,14 +441,29 @@
 	<p>
 		<span class="translate">Poll switches every x seconds (0 = no polling)</span> <input class="value" id="poll" /><br>
 	</p>
-	<div id="values" style="width: 100%; height: calc(100% - 210px)">
-		<span class="translate">Scene setup</span><button class="table-button-add" style="margin-left: 10px; width: 1.5em; height: 1.5em"></button>
+	<div id="scenes" style="width: 100%; height: calc(50% - 60px)">
+		<button class="table-button-add" style="margin-left: 10px; width: 1.5em; height: 1.5em"></button>&nbsp;<span class="translate">Scene setup</span>
 		<div style="width: 100%; height: calc(100% - 30px); overflow: auto;">
 			<table class="table-values" style="width: 100%;">
 				<thead>
 					<tr>
-						<th data-name="name" style="width: 120px" class="translate">name</th>
+						<th data-name="name" style="width: 120px" class="translate">scname</th>
 						<th data-name="scene" style="width: 80%" class="translate">scene</th>
+						<th data-buttons="delete" style="width: 25px"></th>
+					</tr>
+				</thead>
+			</table>
+		</div>
+	</div>
+	<div id="switches" style="width: 100%; height: calc(50% - 60px)">
+		<button class="table-button-add" style="margin-left: 10px; width: 1.5em; height: 1.5em"></button>&nbsp;<span class="translate">Switch setup</span>
+		<div style="width: 100%; height: calc(100% - 60px); overflow: auto;">
+			<table class="table-values" style="width: 100%;">
+				<thead>
+					<tr>
+						<th data-name="name" style="width: 120px" class="translate">stname</th>
+						<th data-name="on" style="width: 40%" class="translate">on</th>
+						<th data-name="off" style="width: 40%" class="translate">off</th>
 						<th data-buttons="delete" style="width: 25px"></th>
 					</tr>
 				</thead>

@@ -19,11 +19,12 @@ const scanList = {},
 	airQualityName = '.AirQuality',
 	noiseName = '.Noise',
 	learnRf = 'RF',
-	learnIr = 'IR',
+	learnIr = '',
 	learnName = '.Learn',
 	sendName = '.SendCode',
 	sceneName = 'SendScene',
 	scenesName = 'Scenes',
+	statesName = 'States',
 	learnedName = '.L.',
 	scanName = '_NewDeviceScan',
 	reachName = '.notReachable',
@@ -32,7 +33,8 @@ const scanList = {},
 	reIsCODE = /^CODE_[a-f0-9]{16}/,
 	defaultName = '>>>Rename learned ';
 
-let currentDevice, adapterObjects, firstCreate, pollerr = 2;
+let currentDevice, adapterObjects, firstCreate, pollerr = 2,
+	states = {};
 
 A.init(adapter, main); // associate adapter and main with MyAdapter
 
@@ -59,8 +61,13 @@ A.objChange = function (obj) { //	This is needed for name changes
 				if (nid !== dev[4])
 					return A.makeState(nst, false, true)
 						.then(() => A.removeState(A.I(`rename ${obj} to ${fnn}!`, obj)).catch(() => true));
-			})
-			.catch(err => A.W(`objChange error: ${obj}} ${err}`));
+			}).then(() => A.wait(20))
+			.then(() => A.getObjectList({
+				startkey: A.ain,
+				endkey: A.ain + '\u9999'
+			}))
+			.then(res => adapterObjects = (res.rows.length > 0 ? adapterObjects = res.rows.map(x => x.doc) : []))
+			.catch(err => A.W(`objChange error: ${obj} ${err}`));
 };
 
 function sendCode(device, value) {
@@ -184,6 +191,12 @@ A.stateChange = function (id, state) {
 					obj && obj.native && obj.native.scene ?
 					sendScene(obj.native.scene, state) :
 					Promise.reject(A.D(`Invalid command "${id}" in scenes`)));
+		if (id0 === statesName)
+			return A.getObject(id)
+				.then((obj) =>
+					obj && obj.native && obj.native.state ?
+					sendState(obj.native.state, state.val) :
+					Promise.reject(A.D(`Invalid command "${id}" in states`)));
 		let device = scanList[id0];
 		if (!device) return Promise.reject(A.W(`stateChange error no device found: ${id} ${A.O(state)}`));
 		switch (id0.split(':')[0]) {
@@ -203,7 +216,7 @@ A.stateChange = function (id, state) {
 					A.getObject(id)
 					.then((obj) =>
 						obj && obj.native && obj.native.code ?
-						sendCode(device, obj.native.code) :
+						setState(obj.common.name).then(() => sendCode(device, obj.native.code)) :
 						Promise.reject(A.W(`cannot get code to send for: ${id}=${id0} ${A.O(state)}`)));
 			default:
 				return Promise.reject(A.W(`stateChange error invalid id type: ${id}=${id0} ${A.O(state)}`));
@@ -237,6 +250,11 @@ function sendScene(scene, st) {
 			i = s[0];
 			st.val = s[1];
 		} else st.val = true;
+		const f = adapterObjects.filter(x => x.common.name === i);
+		if (f.length === 1)
+			i = f[0]._id;
+		else if (f.length > 1)
+			A.W(`Multiple states with name '${i}: ${f.map(x => x._id)}`);
 		if (i.startsWith(A.ain))
 			i = i.slice(A.ain.length);
 
@@ -249,10 +267,12 @@ function sendScene(scene, st) {
 		if (id.startsWith('RM:') || id.startsWith('SP:') || i.startsWith(scenesName + '.'))
 			return A.stateChange(i, st);
 
+		if (i.startsWith(statesName + '.'))
+			return A.stateChange(i,{val: st.val});
+
 		return A.getState(i).then(() =>
 			A.setForeignState(i, st, false),
-			(err) =>
-			A.W(`id ${i[0]} not found in scene ${scene} with err: ${A.O(err)}`));
+			(err) => A.W(`id ${i[0]} not found in scene ${scene} with err: ${A.O(err)}`));
 	}, 100);
 }
 
@@ -319,6 +339,94 @@ function doPoll() {
 	}, 50);
 }
 
+function setState(name) {
+	name = name.trim();
+	let str = null;
+	for (let k in states) {
+		const st = states[k];
+		let where = A.includes(st.on, name) ? st.on : A.includes(st.off, name) ? st.off : null;
+		if (where) {
+			str = {
+				state: st,
+				index: (where === st.off ? -1 : st.on.indexOf(name))
+			};
+			break;
+		}
+	}
+	if (!str)
+		return Promise.resolve();
+	if (str.index < 0) // was found in off so switch state off!
+		return A.changeState(str.state.id, false, true);
+	return A.changeState(str.state.id, str.state ? true : str.index);
+}
+
+function sendState(state, val) {
+	var send = A.T(val, 0) && state.on[val];
+	if (A.T(val, true))
+		send = val ? state.on[0] : state.off[0];
+	if (state.mult && val>9) {
+		const vals = val.toString().split('').map(x => parseInt(x));
+		return A.seriesOf(vals, num => sendState(state,num), 300);
+	}
+	const sobj = adapterObjects.filter(x => x.common.name === send);
+	if (sobj.length > 1)
+		A.W(`sendState error: multiple commands for name ${send}, ill use only first instance: ${sobj[0]._id}!`);
+	return (sobj && sobj.length ? A.getObject(sobj[0]._id.slice(A.ain.length)) : Promise.resolve(null)).catch(() => null)
+		.then(obj => {
+			if (!obj)
+				return A.W(`sendState could not find command or scene named '${send}'`);
+			return A.stateChange(obj._id, {
+				val: true,
+				ack: false
+			});
+		})
+		.then(() => A.makeState(state.id, val, true));
+}
+
+function genStates(array) {
+
+	return A.seriesOf(array, state => {
+			let name = state.name && state.name.trim(),
+				on = state.on && state.on.trim(),
+				off = state.off && state.off.trim();
+			assert(name && on, `Invalid State without name or 'on' string: ${A.O(state)}`);
+			if (!off || off === '')
+				off = null;
+			const mult = (off === '+');
+			if (mult)
+				off = null;
+			on = A.trim(A.split(on, ','));
+			const option = {
+				id: statesName + '.' + name,
+				name: name,
+				type: off ? typeof true : typeof 0,
+				role: off ? "switch" : "level",
+				write: true,
+			};
+			if (!off) {
+				option.min = 0;
+				option.max = mult ? 9999 : on.length - 1;
+				if (mult) 
+					option.states = null;
+				else
+					option.states = on.map((s, i) => `${i}:${s.trim()}`).join(';');
+			}
+			option.native = {
+				state: {
+					id: option.id,
+					name: option.name,
+					on: on,
+					off: off ? A.trim(A.split(off, ',')) : null,
+					mult: mult
+				}
+			};
+			if (states[option.name])
+				return Promise.resolve(A.W(`double state name will be ignored: ${option.name}`));
+			states[option.name] = option.native.state;
+			return A.makeState(option, undefined, true);
+		}, 1)
+		.catch(err => A.W(`genState generation error: ${err}`));
+}
 
 function main() {
 	let didFind, notFound = [];
@@ -444,7 +552,7 @@ function main() {
 										native: {
 											host: device.host
 										}
-									}, data.temperature,true);
+									}, data.temperature, true);
 									A.makeState({
 										id: x + humName,
 										name: x + humName,
@@ -454,16 +562,16 @@ function main() {
 										min: 0,
 										max: 100,
 										unit: "%"
-									}, data.humidity, true );
+									}, data.humidity, true);
 									A.makeState({
-										id: x + lightName, 
+										id: x + lightName,
 										name: x + lightName,
 										type: typeof 0,
 										role: "value",
 										min: 0,
 										max: 3,
 										states: "0:finster;1:dunkel;2:normal;3:hell"
-									},data.light,true);
+									}, data.light, true);
 									A.makeState({
 										id: x + airQualityName,
 										name: x + airQualityName,
@@ -514,6 +622,7 @@ function main() {
 				}
 			}), 100)
 		.then(() => deviceScan())
+		.then(() => genStates(adapter.config.switches))
 		.then(() => A.getObjectList({
 			startkey: A.ain,
 			endkey: A.ain + '\u9999'
@@ -521,7 +630,7 @@ function main() {
 		.then(res => adapterObjects = res.rows.length > 0 ? A.D(`Adapter has  ${res.rows.length} old states!`, adapterObjects = res.rows.map(x => x.doc)) : [])
 		.then(() => didFind = Object.keys(scanList))
 		.then(() => A.seriesOf(adapterObjects.filter(x => x.native && x.native.host), dev => {
-			let id =  dev.native.host.name; // dev._id.slice(A.ain.length);
+			let id = dev.native.host.name; // dev._id.slice(A.ain.length);
 			if (!scanList[id] && !id.endsWith(learnName + learnRf) && !id.endsWith(learnName + learnIr)) {
 				let device = {
 					name: id,

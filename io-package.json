@@ -1,9 +1,13 @@
 {
     "common": {
         "name": "broadlink2",
-        "version": "1.7.0",
+        "version": "1.8.0",
         "title": "Broadlink2 (RM++, SP++, A1) Adapter for multiple W-Lan devices",
         "news": {
+            "1.8.0": {
+                "en": "Added states which you can set with on/off or level values",
+                "de": "States können erzeugt werden welche ein/aus simulieren oder levels können"
+            },
             "1.7.0": {
                 "en": "A1 devices fields changed to correct original mistakes in unit and type",
                 "de": "Verarbeitung von A1-Geräten geändert um Daten besser anzuzeigen."
@@ -52,7 +56,23 @@
         "scenes": [
             {
                 "name": "Fernsehen",
-                "scene": "SP:sd1=1, 500, RM:xxx.L.FernseherAn, RM:xxx.L.FernsehLichtAn"
+                "scene": "FernseherAn, FernsehLichtAn, 500, TVWZKanal=12"
+            }
+        ],
+        "switches": [
+            {
+                "name": "Steckdose_A",
+                "on": "Steckdose_A_Ein",
+                "off:": "Steckdose_A_Aus"
+            },
+            {
+                "name": "Lüfter_A",
+                "on": "Lüfter_A_Aus, Lüfter_A_Mittel, Lüfter_A_Stark"
+            },
+            {
+                "name": "TVWZKanal",
+                "on": "TVWZK0, TVWZK1, TVWZK2, TVWZK3, TVWZK4, TVWZK5, TVWZK6, TVWZK7, TVWZK8, TVWZK9",
+                "off": "+"
             }
         ],
         "poll": "30"

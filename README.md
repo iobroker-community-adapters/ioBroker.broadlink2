@@ -34,7 +34,8 @@ SP1 devices cannot be polled.
 * Enter the number of seconds between polls. On each poll all SP* devices expluding SP1 are asked what the switch status is. This feature can be disabled by setting the poll delay to 0. On some RM devices with temperature readout the temperature will be updated as well.
 
 ## How-To learn codes
-* In Objects of ioBroker you can find "broadlink2.[n].[devicename].Learn".
+* In Objects of ioBroker you can find "broadlink2.[devicename].Learn or LearnRF for '+' type of devices".
+* For RM(x)+ (Plus) devices you get also a special RS-sweep-lear button which can learn more devices than on normal 433MHz. 
 * Set this object to true. (you can click on the button in object view)
 * Now press some button on your remote control within 30 seconds.
 * An new Object should now appear within the Object "broadlink.[n].[devicename].LearnedState" with the name ">>> Rename learned @ YYYYMMDDTHHmmSS"
@@ -46,6 +47,14 @@ Just create an object (state, type button) with value where you prepend "CODE_" 
 
 ## Use scenes
 * Szenen bestehen aus ID's oder Zahlen mit `,` aneinandergereiht. Normal werden sie einfach im Abstand von 100ms hintereinander ausgelöst. Wird eine Zahl gefunden wird dort so viele ms gewartet bis zum nächsten Auslösen. Also `,SP:dose1, RM:your.L.StereoEin, 1000, RM:your.L.TVEin` würde die Steckdose einschalten, dann den Fernseher  1100ms nachher die Stereoanlage. Man kann auch Werte bei anderen (auch fremde) States durch Angabe des kompletten id's schalten: `hm-rpc.0.MEQ1435726.1.STATE` würde diesen einschalten! Übrigens, Bei boolschen Stateskann kann beim Einschalten das '=1/=on/=true/=ein' weggelassen werden da true der default-Wert ist. Beim Ausschalten wäre ein '=0/=false/=aus/=off' undbedingt notwendig!
+
+## Use states
+* Sie können states anlegen welche mittels gelernten Signale ein- oder ausgeschaltet werden.
+* Damit geben sie den State-Namen an und die Signale (listem mit ',' getrennt) die das Gerät einschalten und auch solche die es ausschalten.
+* Bei boolschen States wird nur der erste Wert gesendet aber beim Senden von allen Werten wird der State gesetzt. Das ist von Vorteil wenn mehrere Tasten ein Gerät einschalten (oder Ausschalten)
+* Es kännen zum Ausschalten auch keine Signale gelistet werden dann werden die zum Einschalten verwendeten Werte in einer Liste 
+* wird als Aus-Signal nur '+' angegeben werden die Werte im Ein-Bereich (hoffentlich 10 Signale) als Zehnertastatur verwendet die Wete bis zu 9999 senden kann. Wenn dann der State mit Wert 123 beschrieben wird wird dann '1' , '2' und dann '3' mit jeweils nach 1/3 Sekunde Verzögerung gesendet!
+Die Liste muss mit dem 0-Befehl beginnen und mit dem 9-Befehl enden!
 
 ## Use send messages to adapter
 

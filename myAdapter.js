@@ -505,6 +505,7 @@ class MyAdapter {
     }
 
     static changeState(id, value, ack, always) {
+        if (value === undefined) return Promise.resolve();
         assert(typeof id === 'string', 'changeState (id,,,) error: id is not a string!');
         always = always === undefined ? false : !!always;
         ack = ack === undefined ? true : !!ack;
