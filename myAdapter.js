@@ -10,6 +10,7 @@ const util = require('util'),
     http = require('http'),
     https = require('https'),
     url = require('url'),
+    fs = require('fs'),
     exec = require('child_process').exec,
     assert = require('assert');
 
@@ -90,6 +91,8 @@ class MyAdapter {
         main = typeof ori_main === 'function' ? ori_main : () => this.W(`No 'main() defined for ${adapter.name}!`);
         messages = (mes) => Promise.resolve(this.W(`Message ${this.O(mes)} received and no handler defined!`));
 
+        this.writeFile = this.c2p(fs.writeFile);
+        this.readFile = this.c2p(fs.readFile);
         this.getForeignObject = this.c2p(adapter.getForeignObject);
         this.setForeignObject = this.c2p(adapter.setForeignObject);
         this.getForeignObjects = this.c2p(adapter.getForeignObjects);
