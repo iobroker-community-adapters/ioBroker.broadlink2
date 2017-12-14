@@ -491,6 +491,7 @@ class Broadlink extends EventEmitter {
             0x272a: 'RM2 Pro Plus',
             0x2787: 'RM2 Pro Plus2',
             0x278b: 'RM2 Pro Plus BL',
+            0x279d: 'RM3 Pro Plus',
         };
         const a1 = {
             name: 'a1',
