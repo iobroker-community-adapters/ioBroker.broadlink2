@@ -6,7 +6,7 @@
 // jshint node:true, esversion:6, strict:true, undef:true, unused:true
 "use strict";
 const utils = require('./lib/utils'),
-	adapter = utils.adapter('broadlink2'),
+	adapter = utils.Adapter('broadlink2'),
 	broadlink = require('./broadlink_fj'),
 	dns = require('dns'),
 	assert = require('assert'),
