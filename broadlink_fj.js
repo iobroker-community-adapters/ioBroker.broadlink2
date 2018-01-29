@@ -29,11 +29,11 @@ class Device extends EventEmitter {
             type: 'udp4',
             reuseAddr: true
         });
-        this.cs.on('listening', function() {
+        this.cs.on('listening', function () {
             //this.cs.setBroadcast(true);
         });
 
-        this.cs.on("message", function(response /* , rinfo */ ) {
+        this.cs.on("message", function (response /* , rinfo */ ) {
             var enc_payload = Buffer.alloc(response.length - 0x38, 0);
             response.copy(enc_payload, 0, 0x38);
 
@@ -165,7 +165,7 @@ class Device extends EventEmitter {
 
     mp1() {
         this.type = "MP1";
-        this.prototype.set_power_mask = function(sid_mask, state) {
+        this.prototype.set_power_mask = function (sid_mask, state) {
             //"""Sets the power state of the smart power strip."""
 
             var packet = Buffer.alloc(16, 0);
@@ -184,12 +184,12 @@ class Device extends EventEmitter {
             this.sendPacket(0x6a, packet);
         };
 
-        this.set_power = function(sid, state) {
+        this.set_power = function (sid, state) {
             //"""Sets the power state of the smart power strip."""
             var sid_mask = 0x01 << (sid - 1);
             this.set_power_mask(sid_mask, state);
         };
-        this.check_power_raw = function() {
+        this.check_power_raw = function () {
             //"""Returns the power state of the smart power strip in raw format."""
             var packet = Buffer.alloc(16, 0);
             packet[0x00] = 0x0a;
@@ -217,7 +217,7 @@ class Device extends EventEmitter {
              */
         };
 
-        this.check_power = function() {
+        this.check_power = function () {
             //"""Returns the power state of the smart power strip."""
             /*
              state = this.check_power_raw();
@@ -233,7 +233,7 @@ class Device extends EventEmitter {
 
     sp1() {
         this.type = "SP1";
-        this.set_power = function(state) {
+        this.set_power = function (state) {
             var packet = Buffer.alloc(4, 4);
             packet[0] = state;
             this.sendPacket(0x66, packet);
@@ -242,7 +242,7 @@ class Device extends EventEmitter {
 
     sp2() {
         this.type = "SP2";
-        this.set_power = function(state) {
+        this.set_power = function (state) {
             //"""Sets the power state of the smart plug."""
             var packet = Buffer.alloc(16, 0);
             packet[0] = 2;
@@ -250,7 +250,7 @@ class Device extends EventEmitter {
             this.sendPacket(0x6a, packet);
         };
 
-        this.fun = this.check_power = function() {
+        this.fun = this.check_power = function () {
             //"""Returns the power state of the smart plug."""
             var packet = Buffer.alloc(16, 0);
             packet[0] = 1;
@@ -266,9 +266,63 @@ class Device extends EventEmitter {
         };
     }
 
+    sp3s(isPlus) {
+        this.type = "SP3";
+        this.isPlus = isPlus;
+        this.set_power = function (state) {
+            //"""Sets the power state of the smart plug."""
+            var packet = Buffer.alloc(16, 0);
+            packet[0] = 2;
+            packet[4] = state ? 1 : 0;
+            this.sendPacket(0x6a, packet);
+        };
+
+        this.fun = this.check_power = function () {
+            //"""Returns the power state of the smart plug."""
+            var packet = Buffer.alloc(16, 0);
+            packet[0] = 1;
+            this.sendPacket(0x6a, packet);
+            /*
+             err = response[0x22] | (response[0x23] << 8);
+             if(err == 0){
+             aes = AES.new(bytes(this.key), AES.MODE_CBC, bytes(self.iv));
+             payload = aes.decrypt(bytes(response[0x38:]));
+             return bool(payload[0x4]);
+             }
+             */
+        };
+        if (isPlus) {
+            this.type = "SP3S";
+            this.get_energy = function () {
+                //"""Returns the power state of the smart plug."""
+                var packet = Buffer.alloc(16, 0);
+                packet[0] = 8;
+                packet[2] = 254;
+                packet[3] = 1;
+                packet[4] = 5;
+                packet[5] = 1;
+                packet[9] = 45;
+                this.sendPacket(0x6a, packet);
+                /*
+                 err = response[0x22] | (response[0x23] << 8);
+                 if(err == 0){
+                 aes = AES.new(bytes(this.key), AES.MODE_CBC, bytes(self.iv));
+                 payload = aes.decrypt(bytes(response[0x38:]));
+                 return bool(payload[0x4]);
+                 }
+                 */
+            };
+        }
+        //        console.log(`${this.name} had payload: ${payload.toString('hex')}`)
+
+    }
+
+
+
+
     a1() {
         this.type = "A1";
-        this.fun = this.check_sensors = function() {
+        this.fun = this.check_sensors = function () {
             var packet = Buffer.alloc(16, 0);
             packet[0] = 1;
             this.sendPacket(0x6a, packet);
@@ -327,7 +381,7 @@ class Device extends EventEmitter {
              */
         };
 
-        this.check_sensors_raw = function() {
+        this.check_sensors_raw = function () {
             var packet = Buffer.alloc(16, 0);
             packet[0] = 1;
             this.sendPacket(0x6a, packet);
@@ -360,57 +414,57 @@ class Device extends EventEmitter {
     rm(isPlus) {
         this.type = "RM2";
         this.isPlus = isPlus;
-        this.checkData = function() {
+        this.checkData = function () {
             var packet = Buffer.alloc(16, 0);
             packet[0] = 4;
             this.sendPacket(0x6a, packet);
         };
 
         if (isPlus) {
-            this.enterRFSweep = function() {
+            this.enterRFSweep = function () {
                 var packet = Buffer.alloc(16, 0);
                 packet[0] = 0x19;
                 this.sendPacket(0x6a, packet);
             };
 
-            this.checkRFData = function() {
+            this.checkRFData = function () {
                 var packet = Buffer.alloc(16, 0);
                 packet[0] = 0x1a;
                 this.sendPacket(0x6a, packet);
             };
 
-            this.checkRFData2 = function() {
+            this.checkRFData2 = function () {
                 var packet = Buffer.alloc(16, 0);
                 packet[0] = 0x1b;
                 this.sendPacket(0x6a, packet);
             };
 
-            this.cancelRFSweep = function() {
+            this.cancelRFSweep = function () {
                 var packet = Buffer.alloc(16, 0);
                 packet[0] = 0x1e;
                 this.sendPacket(0x6a, packet);
             };
         }
 
-        this.sendData = function(data) {
+        this.sendData = function (data) {
             var packet = new Buffer([0x02, 0x00, 0x00, 0x00]);
             packet = Buffer.concat([packet, data]);
             this.sendPacket(0x6a, packet);
         };
 
-        this.enterLearning = function() {
+        this.enterLearning = function () {
             var packet = Buffer.alloc(16, 0);
             packet[0] = 3;
             this.sendPacket(0x6a, packet);
         };
 
-        this.fun = this.checkTemperature = function() {
+        this.fun = this.checkTemperature = function () {
             var packet = Buffer.alloc(16, 0);
             packet[0] = 1;
             this.sendPacket(0x6a, packet);
         };
 
-        this.on("payload", function(err, payload) {
+        this.on("payload", function (err, payload) {
             if (!payload)
                 return;
             var param = payload[0],
@@ -456,11 +510,10 @@ class Broadlink extends EventEmitter {
         var dev = new Device(host, mac, devtype);
         dev.dummy = false;
 
-        const sp1 = {
+        const devlist = [{
             0x0000: 'SP1',
             name: 'sp1'
-        };
-        const sp2 = {
+        }, {
             name: 'sp2',
             0x2711: 'SP2',
             0x2719: 'SP2?',
@@ -473,9 +526,11 @@ class Broadlink extends EventEmitter {
             0x2733: 'SPmini2?',
             0x273e: 'OEM branded SPMini',
             0x2736: 'SPMiniPlus',
-        };
-
-        const rm = {
+        }, {
+            name: 'sp3s',
+            isPlus: true,
+            0x947A: 'SP3Spower',
+        }, {
             name: 'rm',
             0x2712: 'RM2',
             0x2737: 'RM Mini',
@@ -484,29 +539,26 @@ class Broadlink extends EventEmitter {
             0x277c: 'RM2 Home Plus GDT',
             0x278f: 'RM Mini Shate',
             0x2797: 'RM Pro (OEM),'
-        };
-        const rmp = {
+        }, {
             name: 'rm',
             isPlus: true,
             0x272a: 'RM2 Pro Plus',
             0x2787: 'RM2 Pro Plus2',
             0x278b: 'RM2 Pro Plus BL',
             0x279d: 'RM3 Pro Plus',
-        };
-        const a1 = {
+        }, {
             name: 'a1',
             0x2714: 'A1'
-        };
-        const mp1 = {
+        }, {
             name: 'mp1',
             0x4EB5: 'MP1'
-        };
+        }];
 
         host.devtype = devtype;
         host.type = 'unknown';
         host.name = 'unknown';
 
-        for (let typ of[sp1, sp2, rm, a1, mp1, rmp])
+        for (let typ of devlist)
             if (typ[devtype] || (typ.name === 'sp2' && devtype >= 0x7530 && devtype <= 0x7918)) {
                 dev[typ.name](typ.isPlus);
                 host.type = typ.name;
@@ -551,7 +603,7 @@ class Broadlink extends EventEmitter {
                 self._devices[what.mac] = undefined;
 
         }
-        cs.on('listening', function() {
+        cs.on('listening', function () {
             cs.setBroadcast(!what);
 
             var port = cs.address().port;
@@ -597,11 +649,15 @@ class Broadlink extends EventEmitter {
             checksum = checksum & 0xffff;
             packet[0x20] = checksum & 0xff;
             packet[0x21] = checksum >> 8;
-
-            cs.sendto(packet, 0, packet.length, 80, self._ip || (what && what.address) || '255.255.255.255');
+            if (self._ip)
+                cs.sendto(packet, 0, packet.length, 80, self._ip);
+            if (what && what.address)
+                cs.sendto(packet, 0, packet.length, 80, what.address);
+            cs.sendto(packet, 0, packet.length, 80, '255.255.255.255');
+            cs.sendto(packet, 0, packet.length, 80, '224.0.0.251');
         });
 
-        cs.on("message", function(msg, rinfo) {
+        cs.on("message", function (msg, rinfo) {
             var host = rinfo;
             var mac = Buffer.alloc(6, 0);
 
@@ -616,7 +672,7 @@ class Broadlink extends EventEmitter {
             if (!self._devices[mac]) {
                 var dev = self.genDevice(devtype, host, mac);
                 self._devices[mac] = dev;
-                dev.on("deviceReady", function() {
+                dev.on("deviceReady", function () {
                     self.emit("deviceReady", dev);
                 });
                 dev.auth();
@@ -629,7 +685,7 @@ class Broadlink extends EventEmitter {
 }
 
 if (Buffer.alloc === undefined) {
-    Buffer.alloc = function(size /* , fill */ ) {
+    Buffer.alloc = function (size /* , fill */ ) {
         var buf = new Buffer(size);
         for (var i = 0; i < size; i++)
             buf[i] = 0;

@@ -1,9 +1,13 @@
 {
     "common": {
         "name": "broadlink2",
-        "version": "1.8.0",
+        "version": "1.9",
         "title": "Broadlink2 (RM++, SP++, A1) Adapter for multiple W-Lan devices",
         "news": {
+            "1.9.0": {
+                "en": "Added SP3S support with power meter reading and changed config page to work with admin 3.0",
+                "de": "Broadlink SP3S Steckdosen mit Power-Meter funktionieren nun und Adapter-Konfig funktioniert in Admin-3"
+            },
             "1.8.0": {
                 "en": "Added states which you can set with on/off or level values",
                 "de": "States können erzeugt werden welche ein/aus simulieren oder levels können"
@@ -26,6 +30,7 @@
             "de": "Broadlink2 Adapter für verschiedene Broadlink WLan-Geräte (RM++, SP++, A1)"
         },
         "platform": "Javascript/Node.js",
+        "materialize": true,
         "mode": "daemon",
         "icon": "broadlink.png",
         "enabled": true,

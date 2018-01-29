@@ -246,8 +246,8 @@ function sendScene(scene, st) {
 		if (typeof i === 'number')
 			return A.wait(i);
 		const mm = i.match(/^\s*(\d+)\s*\(\s*(\S+)\s*\)\s*(\d*)\s*$/);
-		if (mm) 
-			return A.repeat(mm[1],() => sendScene([mm[2]],st).then(() => A.wait(mm[3]? mm[3] : 300)));
+		if (mm)
+			return A.repeat(mm[1], () => sendScene([mm[2]], st).then(() => A.wait(mm[3] ? mm[3] : 300)));
 		if (i.split('=').length === 2) {
 			let s = A.trim(i.split('='));
 			i = s[0];
@@ -271,7 +271,9 @@ function sendScene(scene, st) {
 			return A.stateChange(i, st);
 
 		if (i.startsWith(statesName + '.'))
-			return A.stateChange(i,{val: st.val});
+			return A.stateChange(i, {
+				val: st.val
+			});
 
 		return A.getState(i).then(() =>
 			A.setForeignState(i, st, false),
@@ -367,9 +369,9 @@ function sendState(state, val) {
 	var send = A.T(val, 0) && state.on[val];
 	if (A.T(val, true))
 		send = val ? state.on[0] : state.off[0];
-	if (state.mult && val>9) {
+	if (state.mult && val > 9) {
 		const vals = val.toString().split('').map(x => parseInt(x));
-		return A.seriesOf(vals, num => sendState(state,num), 300);
+		return A.seriesOf(vals, num => sendState(state, num), 300);
 	}
 	const sobj = adapterObjects.filter(x => x.common.name === send);
 	if (sobj.length > 1)
@@ -409,7 +411,7 @@ function genStates(array) {
 			if (!off) {
 				option.min = 0;
 				option.max = mult ? 9999 : on.length - 1;
-				if (mult) 
+				if (mult)
 					option.states = null;
 				else
 					option.states = on.map((s, i) => `${i}:${s.trim()}`).join(';');
@@ -466,8 +468,12 @@ function main() {
 						device.oval = undefined;
 						device.on('payload', (err, payload) => {
 							let res = !!payload[4];
+//							if (device.type === 'SP3S')
+//								A.W(`Device ${x} sent err:${err}/${err.toString(16)} with ${payload.toString('hex')}`);
+							device.checkRequest = 0;
 							if (payload !== null && (payload[0] === 1 || payload[0] === 2)) {
-								device.checkRequest = 0;
+								if (device.get_energy)
+									setTimeout(() => device.get_energy(), 2);
 								if (device.oval !== res) {
 									if (device.oval !== undefined)
 										A.I(`Switch ${device.name} changed to ${res} most probably manually!`);
@@ -482,6 +488,30 @@ function main() {
 										}
 									}, res, true);
 								}
+							} else if (payload !== null && payload[0] === 8) {
+								var a = parseFloat(payload[7].toString(16) + payload[6].toString(16) + payload[5].toString(16)) / 100.0;
+//								var b = /* payload[11] * 256.0 + payload[10] + */ !!(payload[9] && 0x80);
+
+								if (device.lpower !== a) {
+									device.lpower = a;
+									A.makeState({
+										id: x + '.CurrentPower',
+										role: "level",
+										write: false,
+										unit: "W",
+										type: typeof 1.1
+									}, a, true);
+								}
+								// if (device.lmeasure !== b) {
+									// device.lmeasure = b;
+									// A.makeState({
+										// id: x + '.Measuring',
+										// role: "switch",
+										// write: false,
+										// type: typeof true
+									// }, b, true);
+								// }
+								//								A.W(`Device ${x} has current power a=${a}, b=${b.toString(2)} b1=${(b & 0x7f)-50} b2= ${(!!(b & 0x80))}`);
 							} else A.W(`Device ${x} sent err:${err}/${err.toString(16)} with ${payload.toString('hex')}`);
 						});
 						break;

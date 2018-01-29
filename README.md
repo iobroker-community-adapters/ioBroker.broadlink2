@@ -75,6 +75,9 @@ Der Adapter versteht jetzt auch 'sendTo' Kommandos.
 * Requires node >=v4.2
 
 ## Changelog
+### 1.8.1
+* Changed util.js and tests and added new devices
+
 ### 1.7.0
 * Changed and corrected states which are created by A1-devices
 
