@@ -1,7 +1,7 @@
 {
     "common": {
         "name": "broadlink2",
-        "version": "1.9",
+        "version": "1.9.0",
         "title": "Broadlink2 (RM++, SP++, A1) Adapter for multiple W-Lan devices",
         "news": {
             "1.9.0": {
