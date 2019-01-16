@@ -86,6 +86,10 @@ Der Adapter versteht jetzt auch 'sendTo' Kommandos.
 
 ## Changelog
 
+### 1.9.1
+
+* (SchumyHao) Add Chinese support
+
 ### 1.8.1
 
 * Changed util.js and tests and added new devices

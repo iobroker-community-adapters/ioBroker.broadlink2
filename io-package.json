@@ -1,9 +1,21 @@
 {
     "common": {
         "name": "broadlink2",
-        "version": "1.9.0",
+        "version": "1.9.1",
         "title": "Broadlink2 (RM++, SP++, A1) Adapter for multiple W-Lan devices",
         "news": {
+            "1.9.1": {
+                "en": "Add Chinese support",
+                "de": "Chinesische Unterstützung hinzufügen",
+                "ru": "Добавить поддержку китайцев",
+                "pt": "Adicionar suporte chinês",
+                "nl": "Voeg Chinese ondersteuning toe",
+                "fr": "Ajouter un support chinois",
+                "it": "Aggiungi supporto cinese",
+                "es": "Añadir soporte chino",
+                "pl": "Dodaj chińskie wsparcie",
+                "zh-cn": "添加中文支持"
+            },
             "1.9.0": {
                 "en": "Added SP3S support with power meter reading and changed config page to work with admin 3.0",
                 "de": "Broadlink SP3S Steckdosen mit Power-Meter funktionieren nun und Adapter-Konfig funktioniert in Admin-3"
@@ -27,7 +39,8 @@
         },
         "desc": {
             "en": "Broadlink2 Adapter for multiple BroadLink wireless devices (RM++, SP++, A1)",
-            "de": "Broadlink2 Adapter für verschiedene Broadlink WLan-Geräte (RM++, SP++, A1)"
+            "de": "Broadlink2 Adapter für verschiedene Broadlink WLan-Geräte (RM++, SP++, A1)",
+            "zh-cn": "Broadlink2适配器. 可以适配许多Broadlink无线产品, 比如(RM++, SP++, A1)"
         },
         "platform": "Javascript/Node.js",
         "materialize": true,
