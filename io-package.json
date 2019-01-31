@@ -1,9 +1,13 @@
 {
     "common": {
         "name": "broadlink2",
-        "version": "1.9.0",
+        "version": "1.9.1",
         "title": "Broadlink2 (RM++, SP++, A1) Adapter for multiple W-Lan devices",
         "news": {
+            "1.9.1": {
+                "en": "Added RM Mini new support with",
+                "de": "Broadlink RM Mini unterstützung"
+            },
             "1.9.0": {
                 "en": "Added SP3S support with power meter reading and changed config page to work with admin 3.0",
                 "de": "Broadlink SP3S Steckdosen mit Power-Meter funktionieren nun und Adapter-Konfig funktioniert in Admin-3"

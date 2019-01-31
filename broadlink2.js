@@ -445,7 +445,7 @@ function main() {
 	adapter.config.ip = adapter.config.ip.trim().toLowerCase();
 
 	currentDevice.on("deviceReady", function (device) {
-		const typ = device.getType.slice(0, 2);
+		const typ = device.type.slice(0, 2);
 		device.typ = typ;
 		device.removeListener('error', A.D);
 		device.on('error', A.D);
@@ -638,6 +638,8 @@ function main() {
 							}
 						});
 						break;
+					default:
+						A.D(`Unknown ${device.typ} with ${A.O(device)}`);
 				}
 			}).catch(e => A.W(`Error in device dedect: "${e}"`));
 		return false;

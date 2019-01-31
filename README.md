@@ -86,8 +86,10 @@ Der Adapter versteht jetzt auch 'sendTo' Kommandos.
 
 ## Changelog
 
-### 1.8.1
+### 1.9.1
+* added anothe RM Mini code
 
+### 1.8.1
 * Changed util.js and tests and added new devices
 
 ### 1.7.0

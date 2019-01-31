@@ -20,6 +20,7 @@ class Device extends EventEmitter {
         this.host = host;
         this.mac = mac;
         this.devtype = devtype;
+        this.devhex = '0x' + devtype.toString(16);
 
         this.count = Math.random() & 0xffff;
         this.key = new Buffer([0x09, 0x76, 0x28, 0x34, 0x3f, 0xe9, 0x9e, 0x23, 0x76, 0x5c, 0x15, 0x13, 0xac, 0xcf, 0x8b, 0x02]);
@@ -99,10 +100,6 @@ class Device extends EventEmitter {
         payload[0x36] = '1'.charCodeAt(0);
 
         this.sendPacket(0x65, payload);
-    }
-
-    get getType() {
-        return this.type;
     }
 
     closeConnection() {
@@ -317,7 +314,56 @@ class Device extends EventEmitter {
 
     }
 
+    t1(isPlus) {
+        this.type = "T1";
+        this.isPlus = isPlus = true; // test
+        this.set_power = function (state) {
+            //"""Sets the power state of the smart plug."""
+            var packet = Buffer.alloc(16, 0);
+            packet[0] = 2;
+            packet[4] = state ? 1 : 0;
+            this.sendPacket(0x6a, packet);
+        };
 
+        this.fun = this.check_power = function () {
+            //"""Returns the power state of the smart plug."""
+            var packet = Buffer.alloc(16, 0);
+            packet[0] = 1;
+            this.sendPacket(0x6a, packet);
+            /*
+             err = response[0x22] | (response[0x23] << 8);
+             if(err == 0){
+             aes = AES.new(bytes(this.key), AES.MODE_CBC, bytes(self.iv));
+             payload = aes.decrypt(bytes(response[0x38:]));
+             return bool(payload[0x4]);
+             }
+             */
+        };
+        if (isPlus) {
+            this.type = "T1P";
+            this.get_energy = function () {
+                //"""Returns the power state of the smart plug."""
+                var packet = Buffer.alloc(16, 0);
+                packet[0] = 8;
+                packet[2] = 254;
+                packet[3] = 1;
+                packet[4] = 5;
+                packet[5] = 1;
+                packet[9] = 45;
+                this.sendPacket(0x6a, packet);
+                /*
+                 err = response[0x22] | (response[0x23] << 8);
+                 if(err == 0){
+                 aes = AES.new(bytes(this.key), AES.MODE_CBC, bytes(self.iv));
+                 payload = aes.decrypt(bytes(response[0x38:]));
+                 return bool(payload[0x4]);
+                 }
+                 */
+            };
+        }
+        //        console.log(`${this.name} had payload: ${payload.toString('hex')}`)
+
+    }
 
 
     a1() {
@@ -530,6 +576,10 @@ class Broadlink extends EventEmitter {
             name: 'sp3s',
             isPlus: true,
             0x947A: 'SP3Spower',
+        }, {
+            name: 't1',
+            isPlus: true,
+            0x4ead: 'T1 Floureon',
         }, {
             name: 'rm',
             0x2712: 'RM2',
