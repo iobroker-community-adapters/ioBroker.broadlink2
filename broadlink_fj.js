@@ -424,14 +424,11 @@ class Device extends EventEmitter {
              }
              return data;
              }
-             */
         };
-
         this.check_sensors_raw = function () {
             var packet = Buffer.alloc(16, 0);
             packet[0] = 1;
             this.sendPacket(0x6a, packet);
-            /*
              err = response[0x22] | (response[0x23] << 8);
              if(err == 0){
              data = {};
@@ -452,8 +449,8 @@ class Device extends EventEmitter {
              }
              return data;
              }
-             */
-        };
+        */
+    };
     }
 
 
