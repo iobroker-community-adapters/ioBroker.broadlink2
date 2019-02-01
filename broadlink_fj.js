@@ -588,7 +588,8 @@ class Broadlink extends EventEmitter {
             0x2783: 'RM2 Home Plus',
             0x277c: 'RM2 Home Plus GDT',
             0x278f: 'RM Mini Shate',
-            0x2797: 'RM Pro (OEM),'
+            0x2797: 'RM Pro (OEM)',
+            0x27C2: 'RM Mini'
         }, {
             name: 'rm',
             isPlus: true,
