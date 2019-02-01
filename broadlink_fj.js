@@ -160,9 +160,9 @@ class Device extends EventEmitter {
         this.cs.sendto(packet, 0, packet.length, this.host.port, this.host.address);
     }
 
-    mp1() {
+    mp1() {   // I believe it's not working but have no device to test!
         this.type = "MP1";
-        this.prototype.set_power_mask = function (sid_mask, state) {
+        this.set_power_mask = function (sid_mask, state) {
             //"""Sets the power state of the smart power strip."""
 
             var packet = Buffer.alloc(16, 0);
