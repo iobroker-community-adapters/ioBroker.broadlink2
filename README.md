@@ -85,6 +85,8 @@ Der Adapter versteht jetzt auch 'sendTo' Kommandos.
 * Requires node >=v4.2
 
 ## Changelog
+### 1.9.9
+* will be git-only-beta of V2.0.0! 
 
 ### 1.9.1
 * added anothe RM Mini code

@@ -5,12 +5,13 @@
  */
 // jshint node:true, esversion:6, strict:true, undef:true, unused:true
 "use strict";
-const utils = require('./lib/utils'),
-	adapter = utils.Adapter('broadlink2'),
-	broadlink = require('./broadlink_fj'),
+const
+	//	utils = require('./lib/utils'),
+	//	adapter = utils.Adapter('broadlink2'),
+	Broadlink = require('./broadlink_fj'),
 	dns = require('dns'),
 	assert = require('assert'),
-	A = require('./myAdapter');
+	A = require('./myAdapter').MyAdapter;
 
 const scanList = {},
 	tempName = '.Temperature',
@@ -36,9 +37,11 @@ const scanList = {},
 let currentDevice, adapterObjects, firstCreate, pollerr = 2,
 	states = {};
 
-A.init(adapter, main); // associate adapter and main with MyAdapter
+//A.I('Adapter starting...');
 
-A.objChange = function (obj) { //	This is needed for name changes
+A.objChange = function (obj,val) { //	This is needed for name changes
+//	A.I(A.F(obj,' =O> ',val));
+	val = val || A.D(' objChange val not defined');
 	if (typeof obj === 'string' && obj.indexOf(learnedName) > 0)
 		return A.getObject(obj)
 			.then(oobj => {
@@ -68,17 +71,19 @@ A.objChange = function (obj) { //	This is needed for name changes
 			}))
 			.then(res => adapterObjects = (res.rows.length > 0 ? adapterObjects = res.rows.map(x => x.doc) : []))
 			.catch(err => A.W(`objChange error: ${obj} ${err}`));
+	return A.resolve();
 };
 
 function sendCode(device, value) {
 	let buffer = new Buffer(value.replace(reCODE, ''), 'hex'); //var buffer = new Buffer(value.substr(5), 'hex'); // substr(5) removes CODE_ from string
 
 	device.sendData(buffer);
-	return Promise.resolve(device.name + ' sent ' + value);
+	return A.resolve(device.name + ' sent ' + value);
 	//	return Promise.resolve(A.D('sendData to ' + device.name + ', Code: ' + value));
 }
 
 A.stateChange = function (id, state) {
+//	A.I(A.F(id,' =S> ',state));
 
 	let thisDevice, isLearning, learned, rawData, raw1Data, raw2Data;
 
@@ -221,7 +226,7 @@ A.stateChange = function (id, state) {
 			default:
 				return Promise.reject(A.W(`stateChange error invalid id type: ${id}=${id0} ${A.O(state)}`));
 		}
-	}
+	} else return A.resolve();
 };
 
 function deviceScan() {
@@ -236,7 +241,7 @@ function deviceScan() {
 		}, currentDevice.scanning = true, true)
 		.then(() => A.wait(5000)) // 6s for the scan of ip' should be OKs
 		.then(() => A.makeState(scanName, currentDevice.scanning = false, true))
-		.catch(err => A.W(`Error in deviceScan: ${currentDevice.scanning = true, A.O(err)}`));
+		.catch(err => A.W(`Error in deviceScan: ${currentDevice.scanning = false, A.O(err)}`));
 }
 
 function sendScene(scene, st) {
@@ -331,7 +336,7 @@ function doPoll() {
 	A.seriesOf(A.obToArray(scanList), device => {
 		if (!device.fun) return Promise.resolve(device.checkRequest = 0);
 		device.fun(++device.checkRequest);
-		A.wait(2000).then(() => device.checkRequest > pollerr ? (device.checkRequest % 50 === pollerr + 1 ? A.W(`Device ${device.name} not reachable`, true) : true) : false)
+		A.wait(500).then(() => device.checkRequest > pollerr ? (device.checkRequest % 50 === pollerr + 1 ? A.W(`Device ${device.name} not reachable`, true) : true) : false)
 			.then(res => device.checkRequest > 10 ? (currentDevice.discover(device.host), res) : res)
 			.then(res => A.makeState({
 				id: device.name + reachName,
@@ -433,16 +438,19 @@ function genStates(array) {
 		.catch(err => A.W(`genState generation error: ${err}`));
 }
 
+A.onStop = () => currentDevice.closeConnections(A.I('Close all connections...'));
+
+A.init(module, 'broadlink2', main); // associate adapter and main with MyAdapter
+
 function main() {
 	let didFind, notFound = [];
 
-	A.I('Discover UDP devices for 10sec on ' + A.ains);
-	currentDevice = new broadlink();
+	currentDevice = new Broadlink();
 
-	if ((A.debug = adapter.config.ip.startsWith('debug!')))
-		adapter.config.ip = adapter.config.ip.slice(A.D(`Debug mode on!`, 6));
+	if ((A.debug = A.C.ip.endsWith('!')))
+		A.C.ip = A.C.ip.slice(A.D(`Debug mode on!`, 0), -1);
 
-	adapter.config.ip = adapter.config.ip.trim().toLowerCase();
+	A.C.ip = A.C.ip.trim().toLowerCase();
 
 	currentDevice.on("deviceReady", function (device) {
 		const typ = device.type.slice(0, 2);
@@ -450,28 +458,27 @@ function main() {
 		device.removeListener('error', A.D);
 		device.on('error', A.D);
 		A.c2p(dns.reverse)(device.host.address)
-			.then(x => A.T(x, []) ? x[0].toString().trim() : x.toString().trim(), () => device.host.address)
-			.then(x =>
-				x.toLowerCase().endsWith(adapter.config.ip) ? x.slice(0, -adapter.config.ip.length) : x)
-			.then(x => device.name = typ + ':' + x.split('.').join('-'))
+			.then(x => A.T(x, []) ? x[0].toString().trim() : x.toString().trim(), () => device.host.mac)
 			.then(x => {
-				if (scanList[x] && !scanList[x].dummy) {
+				if (x.toLowerCase().endsWith(A.C.ip))
+					x = x.slice(0, -A.C.ip.length);
+				x = device.name = typ + ':' + x.split('.').join('-');
+				if (scanList[x] && !scanList[x].dummy)
 					return A.W(`Device found already: ${x} with ${A.O(device.host)}`);
-				}
 				device.checkRequest = 0;
 				device.host.name = x;
-				device.host.mac = Array.prototype.slice.call(device.mac, 0).map(s => s.toString(16)).join(':');
-				A.I(`Device ${x} dedected: ${A.obToArray(device.host)}`);
+				A.I(`Device ${x} dedected: ${A.O(device.host)}`);
 				scanList[x] = device;
 				switch (device.typ) {
 					case 'SP':
 						device.oval = undefined;
 						device.on('payload', (err, payload) => {
-							let res = !!payload[4];
-//							if (device.type === 'SP3S')
-//								A.W(`Device ${x} sent err:${err}/${err.toString(16)} with ${payload.toString('hex')}`);
+//							console.log(err,payload);
+							//							if (device.type === 'SP3S')
+							//								A.W(`Device ${x} sent err:${err}/${err.toString(16)} with ${payload.toString('hex')}`);
 							device.checkRequest = 0;
 							if (payload !== null && (payload[0] === 1 || payload[0] === 2)) {
+								let res = !!payload[4];
 								if (device.get_energy)
 									setTimeout(() => device.get_energy(), 2);
 								if (device.oval !== res) {
@@ -490,7 +497,7 @@ function main() {
 								}
 							} else if (payload !== null && payload[0] === 8) {
 								var a = parseFloat(payload[7].toString(16) + payload[6].toString(16) + payload[5].toString(16)) / 100.0;
-//								var b = /* payload[11] * 256.0 + payload[10] + */ !!(payload[9] && 0x80);
+								//								var b = /* payload[11] * 256.0 + payload[10] + */ !!(payload[9] && 0x80);
 
 								if (device.lpower !== a) {
 									device.lpower = a;
@@ -503,16 +510,16 @@ function main() {
 									}, a, true);
 								}
 								// if (device.lmeasure !== b) {
-									// device.lmeasure = b;
-									// A.makeState({
-										// id: x + '.Measuring',
-										// role: "switch",
-										// write: false,
-										// type: typeof true
-									// }, b, true);
+								// device.lmeasure = b;
+								// A.makeState({
+								// id: x + '.Measuring',
+								// role: "switch",
+								// write: false,
+								// type: typeof true
+								// }, b, true);
 								// }
 								//								A.W(`Device ${x} has current power a=${a}, b=${b.toString(2)} b1=${(b & 0x7f)-50} b2= ${(!!(b & 0x80))}`);
-							} else A.W(`Device ${x} sent err:${err}/${err.toString(16)} with ${payload.toString('hex')}`);
+							} else A.W(`Device ${x} sent err:${A.F(err)}} with ${payload ? payload.toString('hex') : null}`);
 						});
 						break;
 					case 'RM':
@@ -645,8 +652,8 @@ function main() {
 		return false;
 	});
 
-	A.D('Config IP-Address end to remove: ' + adapter.config.ip);
-	A.seriesOf(adapter.config.scenes, scene =>
+	A.D('Config IP-Address end to remove: ' + A.C.ip);
+	A.seriesOf(A.C.scenes, scene =>
 			A.makeState({
 				id: scenesName + '.' + scene.name.trim(),
 				write: true,
@@ -656,13 +663,13 @@ function main() {
 					scene: scene.scene
 				}
 			}), 100)
-		.then(() => deviceScan())
-		.then(() => genStates(adapter.config.switches))
+		.then(() => deviceScan(A.I('Discover Broadlink devices for 10sec on ' + A.ains)))
+		.then(() => genStates(A.C.switches))
 		.then(() => A.getObjectList({
 			startkey: A.ain,
 			endkey: A.ain + '\u9999'
 		}))
-		.then(res => adapterObjects = res.rows.length > 0 ? A.D(`Adapter has  ${res.rows.length} old states!`, adapterObjects = res.rows.map(x => x.doc)) : [])
+		.then(res => adapterObjects = res.rows.length > 0 ? A.D(A.name+` has  ${res.rows.length} old states!`, adapterObjects = res.rows.map(x => x.doc)) : [])
 		.then(() => didFind = Object.keys(scanList))
 		.then(() => A.seriesOf(adapterObjects.filter(x => x.native && x.native.host), dev => {
 			let id = dev.native.host.name; // dev._id.slice(A.ain.length);
@@ -688,13 +695,13 @@ function main() {
 			type: typeof '',
 		}, ' ', true))
 		.then(() => {
-			const p = parseInt(adapter.config.poll);
+			const p = parseInt(A.C.poll);
 			if (p) {
 				setInterval(doPoll, p * 1000);
 				A.D(`Poll every ${p} secods.`);
 			}
 		})
-		.then(() => (A.I(`Adapter ${A.ains} started and found ${didFind.length} devices named '${didFind.join("', '")}'.`),
+		.then(() => (A.I(`${A.ains} started and found ${didFind.length} devices named '${didFind.join("', '")}'.`),
 			notFound.length > 0 ? A.I(`${notFound.length} were not found: ${notFound}`) : null), e => A.W(`Error in main: ${e}`))
 		.catch(e => A.W(`Unhandled error in main: ${e}`));
 }

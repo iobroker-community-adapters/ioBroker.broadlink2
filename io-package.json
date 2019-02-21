@@ -1,9 +1,13 @@
 {
     "common": {
         "name": "broadlink2",
-        "version": "1.9.1",
+        "version": "1.9.9",
         "title": "Broadlink2 (RM++, SP++, A1) Adapter for multiple W-Lan devices",
         "news": {
+            "1.9.9": {
+                "en": "Beta testing for V 2.0!",
+                "de": "Beta-Test für 2.0"
+            },
             "1.9.1": {
                 "en": "Added RM Mini new support with",
                 "de": "Broadlink RM Mini unterstützung"
@@ -33,6 +37,7 @@
             "en": "Broadlink2 Adapter for multiple BroadLink wireless devices (RM++, SP++, A1)",
             "de": "Broadlink2 Adapter für verschiedene Broadlink WLan-Geräte (RM++, SP++, A1)"
         },
+        "license": "MIT",
         "platform": "Javascript/Node.js",
         "materialize": true,
         "mode": "daemon",
@@ -58,7 +63,9 @@
         "type": "iot-systems",
         "authors": [
             "Frank Joke <frankjoke@hotmail.com>"
-        ]
+        ],
+        "compact": false
+
     },
     "native": {
         "ip": ".fritz.box",
