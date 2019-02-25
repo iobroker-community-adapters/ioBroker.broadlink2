@@ -1,7 +1,7 @@
 {
   "name": "iobroker.broadlink2",
   "version": "1.9.1",
-  "description": "ioBroker Broadlink2 Adapter",
+  "description": "ioBroker interface for Broadlink devices ",
   "author": "Frank Joke <frankjoke@hotmail.com>",
   "contributors": [
     "Reinhard Hiebl <reinhard@hieblmedia.com>"
