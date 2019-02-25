@@ -2,7 +2,7 @@
     "common": {
         "name": "broadlink2",
         "version": "1.9.1",
-        "title": "Broadlink2 (RM++, SP++, A1) Adapter for multiple W-Lan devices",
+        "title": "Broadlink2 (RM++, SP++, A1) for multiple Broadlink-protocol W-Lan devices",
         "news": {
             "1.9.1": {
                 "en": "Added RM Mini new support with",
@@ -33,6 +33,7 @@
             "en": "Broadlink2 Adapter for multiple BroadLink wireless devices (RM++, SP++, A1)",
             "de": "Broadlink2 Adapter für verschiedene Broadlink WLan-Geräte (RM++, SP++, A1)"
         },
+        "license": "MIT",
         "platform": "Javascript/Node.js",
         "materialize": true,
         "mode": "daemon",
