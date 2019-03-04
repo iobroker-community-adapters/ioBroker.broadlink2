@@ -26,12 +26,13 @@
   "engines": {
     "node": ">=4.3.0"
   },
-  "dependencies": {},
+  "dependencies": {
+    "@iobroker/adapter-core": "^1.0.3"
+  },
   "devDependencies": {
     "gulp": "^3.9.1",
     "mocha": "^4.1.0",
-    "chai": "^4.1.2",
-    "@iobroker/adapter-core": "^1.0.3"
+    "chai": "^4.1.2"
   },
   "main": "broadlink2.js",
   "scripts": {
