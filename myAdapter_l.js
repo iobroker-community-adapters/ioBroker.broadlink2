@@ -3,7 +3,7 @@
  *      (c) 2019- <frankjoke@hotmail.com>
  *      MIT License
  * 
- *  V 1.2 March 2019
+ *  V 1.1 Feb 2019
  */
 // jshint  node: true, esversion: 6, strict: true, undef: true, unused: true
 "use strict";
@@ -85,7 +85,6 @@ let messages, timer, unload, aname, stopping = false,
     onStop = null,
     objects = {},
     states = {},
-    systemconf = null,
     stq = new Sequence();
 const
     sstate = {},
@@ -193,10 +192,6 @@ class Hrtime {
 
     }
 
-    get sec() {
-        return Number(this.text);
-    }
-
     set time(t) {
         this._stime = t;
     }
@@ -207,10 +202,6 @@ class MyAdapter {
         if (adapter && main)
             MyAdapter.init(adapter, main);
         return MyAdapter;
-    }
-
-    static get config() {
-        return systemconf;
     }
 
     static processMessage(obj) {
@@ -228,7 +219,7 @@ class MyAdapter {
         this.getObjectList = this.c2p(adapter.objects.getObjectList);
         this.getForeignState = this.c2p(adapter.getForeignState);
         this.setForeignState = this.c2p(adapter.setForeignState);
-        this.getState = adapter.getStateAsync;
+        this.getState = this.c2p(adapter.getState);
         this.setState = this.c2p(adapter.setState);
         this.getStates = this.c2p(adapter.getStates);
 
@@ -255,7 +246,6 @@ class MyAdapter {
                         if (o.type === 'state' && o.common.name && !i.doc._id.startsWith('system.adapter.'))
                             addSState(o.common.name, i.doc._id);
                     }
-                    systemconf = objects['system.config'];
                     if (objects['system.config'] && objects['system.config'].common.language)
                         adapter.config.lang = objects['system.config'].common.language;
                     if (objects['system.config'] && objects['system.config'].common.latitude) {
@@ -332,7 +322,7 @@ class MyAdapter {
                     .then(() => states[id] = state);
             }, 0, id, state));
 
-        return adapter;
+        return this;
     }
 
     static idName(id) {
@@ -378,15 +368,8 @@ class MyAdapter {
         if (!inDebug || curDebug > Number(inDebug))
             return val !== undefined ? val : str;
         return (inDebug ?
-            slog(adapter, 'info', `debug: ${str}`) :
+            slog(adapter, 'info', `info: ${str}`) :
             slog(adapter, 'debug', str), val !== undefined ? val : str);
-    }
-    static Dr(str) {
-        if (!inDebug || curDebug > Number(inDebug))
-            return str;
-        else
-            this.f.apply(null, Array.prototype.slice.call(arguments, 1));
-        return str;
     }
     static Df(str) {
         str = this.f.apply(null, arguments);
@@ -584,11 +567,9 @@ class MyAdapter {
         });
     }
 
-    static Ptime(promise,arg) {
+    static Ptime(promise) {
         var start = Date.now();
-        if (typeof promise === 'function')
-            promise = promise(arg);
-        return Promise.resolve(promise).then(() => {
+        return promise.then(() => {
             var end = Date.now();
             return end - start;
         });
@@ -743,7 +724,8 @@ class MyAdapter {
         return fn(arg).catch(err => nretry <= 0 ? this.reject(err) : this.retry(nretry - 1, fn, arg));
     }
 
-    static while ( /** function */ fw, /** function */ fn, /** number */ time) {
+    static
+    while ( /** function */ fw, /** function */ fn, /** number */ time) {
         assert(typeof fw === 'function' && typeof fn === 'function', 'retry (fw,fn,) error: fw or fn is not a function!');
         time = parseInt(time) || 0;
         return !fw() ? this.resolve(true) :
@@ -844,7 +826,7 @@ class MyAdapter {
                 //                req && req.removeAllListeners();
                 if (req && !req.aborted) req.abort();
                 //                res && res.destroy();
-//                MyAdapter.Df('err in response: %s = %O', msg);
+                MyAdapter.D('err in response:' + msg);
                 return reject(msg);
             }
 

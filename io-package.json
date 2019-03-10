@@ -64,7 +64,7 @@
         "authors": [
             "Frank Joke <frankjoke@hotmail.com>"
         ],
-        "compact": false
+        "compact": true
 
     },
     "native": {

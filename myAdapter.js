@@ -3,7 +3,7 @@
  *      (c) 2019- <frankjoke@hotmail.com>
  *      MIT License
  * 
- *  V 1.1 Feb 2019
+ *  V 1.2 March 2019
  */
 // jshint  node: true, esversion: 6, strict: true, undef: true, unused: true
 "use strict";
@@ -23,9 +23,9 @@ function startAdapter(options) {
             name: options
         };
     try {
-        adapter = new require(__dirname + '/lib/utils').Adapter(options);
+        adapter = new require('@iobroker/adapter-core').Adapter(options);
     } catch (e) {
-        console.log('cannot find ioBroker...');
+        MyAdapter.E('cannot find ioBroker...');
     }
     return adapter;
 }
@@ -42,20 +42,37 @@ const util = require('util'),
 
 class Sequence {
     constructor(p) {
-        this._p = p ? p : Promise.resolve();
+        this._p = p ? (typeof p === 'function' ? p() : p) : Promise.resolve();
         return this;
     }
     get p() {
         return this._p;
     }
     set p(val) {
-        this._p = this._p.catch(() => null).then(() => val);
+        this.ap = val;
         return this;
     }
 
+    set ap(val) {
+        let fun = typeof val === 'function' ? val : () => val;
+        return this._p = this._p.then(() => fun(),() => fun());
+    }
+
+    then(res,rej) {
+        return this._p = this._p.then(res,rej);
+    }
+
+    catch(rej) {
+        return this._p = this._p.then(x => x,rej);
+    }
+
     add(val) {
-        this.p = val;
-        return this;
+        return this.p = val;
+    }
+
+    addp(val) {
+        this.ap = val;
+        return this._p;
     }
 }
 
@@ -68,6 +85,7 @@ let messages, timer, unload, aname, stopping = false,
     onStop = null,
     objects = {},
     states = {},
+    systemconf = null,
     stq = new Sequence();
 const
     sstate = {},
@@ -77,6 +95,7 @@ function slog(adapter, log, text) {
     if (inDebug === undefined)
         return text;
     return adapter && adapter.log && typeof adapter.log[log] === 'function' ?
+        // eslint-disable-next-line no-console
         adapter.log[log](text) : console.log(log + ': ' + text);
 }
 
@@ -157,11 +176,41 @@ function addSState(n, id) {
     }
 }
 
+
+class Hrtime {
+    constructor(time) {
+        this._stime = time ? time : process.hrtime();
+    }
+
+    get diff() {
+        return process.hrtime(this._stime);
+    }
+
+    get text() {
+        const t = this.diff;
+        let ns = t[1].toString(10);
+        return t[0].toString(10) + '.' + ('0'.repeat(9-ns.length) +ns).slice(0,6);
+
+    }
+
+    get sec() {
+        return Number(this.text);
+    }
+
+    set time(t) {
+        this._stime = t;
+    }
+}
+
 class MyAdapter {
     constructor(adapter, main) {
         if (adapter && main)
             MyAdapter.init(adapter, main);
         return MyAdapter;
+    }
+
+    static get config() {
+        return systemconf;
     }
 
     static processMessage(obj) {
@@ -175,11 +224,11 @@ class MyAdapter {
     static initAdapter() {
 
 
-        this.D(`Adapter ${this.ains} starting.`);
+        this.Df('Adapter %s starting.', this.ains);
         this.getObjectList = this.c2p(adapter.objects.getObjectList);
         this.getForeignState = this.c2p(adapter.getForeignState);
         this.setForeignState = this.c2p(adapter.setForeignState);
-        this.getState = this.c2p(adapter.getState);
+        this.getState = adapter.getStateAsync;
         this.setState = this.c2p(adapter.setState);
         this.getStates = this.c2p(adapter.getStates);
 
@@ -206,6 +255,7 @@ class MyAdapter {
                         if (o.type === 'state' && o.common.name && !i.doc._id.startsWith('system.adapter.'))
                             addSState(o.common.name, i.doc._id);
                     }
+                    systemconf = objects['system.config'];
                     if (objects['system.config'] && objects['system.config'].common.language)
                         adapter.config.lang = objects['system.config'].common.language;
                     if (objects['system.config'] && objects['system.config'].common.latitude) {
@@ -215,11 +265,11 @@ class MyAdapter {
                     return res.length;
                 }, err => this.E('err from getObjectList: ' + err, 0))
                 .then(len => MyAdapter.D(`${adapter.name} received ${len} objects and ${this.ownKeys(states).length} states, with config ${this.ownKeys(adapter.config)}`), (err => this.W(`Error in adapter.ready: ${err}`)))
-                .then(() => allStates  ? this.c2p(adapter.subscribeForeignStates)('*') : null)
+                .then(() => allStates ? this.c2p(adapter.subscribeForeignStates)('*') : null)
                 .then(() => stateChange ? MyAdapter.c2p(adapter.subscribeStates)('*') : null)
                 //                .then(() => objChange ? MyAdapter.c2p(adapter.subscribeObjects)('*').then(a => MyAdapter.I('eso '+a),a => MyAdapter.I('eso '+a)) : MyAdapter.resolve())
-                .then(() => objChange ? adapter.subscribeObjects('*') :  null)
-            ).then(() => this.I(aname +' initialization started...'), e => this.stop(this.E(aname+' Initialization Error:' + this.F(e))));
+                .then(() => objChange ? adapter.subscribeObjects('*') : null)
+            ).then(() => this.I(aname + ' initialization started...'), e => this.stop(this.E(aname + ' Initialization Error:' + this.F(e))));
     }
 
     static clearStates() {
@@ -269,20 +319,20 @@ class MyAdapter {
 
         adapter.removeAllListeners();
 
-        adapter.on('message', (obj) => !!obj ? this.processMessage(
+        adapter.on('message', (obj) => obj ? this.processMessage(
                 this.D(`received Message ${this.O(obj)}`, obj)) : true)
             .on('unload', (callback) => this.stop(false, callback))
-            .on('ready', () => this.resolve().then(() => this.initAdapter()).then(() => ori_main(this.I(aname+' starting main...')), e => this.A(this.E(` Adapter Error, stop:` + this.F(e)))))
-            .on('objectChange', (id, obj) => obj && obj._id &&  objChange ? setTimeout((id, obj) => objChange(id, obj), 0, id, obj) : null)
+            .on('ready', () => this.resolve().then(() => this.initAdapter()).then(() => ori_main(this.I(aname + ' starting main...')), e => this.A(this.E(` Adapter Error, stop:` + this.F(e)))))
+            .on('objectChange', (id, obj) => obj && obj._id && objChange ? setTimeout((id, obj) => objChange(id, obj), 0, id, obj) : null)
             .on('stateChange', (id, state) => setTimeout((id, state) => {
                 (state && stateChange && state.from !== 'system.adapter.' + this.ains ?
                     stateChange(id, state).catch(err => this.W(`Error in StateChange for ${id} = ${this.O(err)}`)) :
                     Promise.resolve())
-                .then(() => allStates ? allStates(id, state).catch(e => this.W(`Error in AllStates for ${id} = ${this.O(e)}`)): Promise.resolve())
+                .then(() => allStates ? allStates(id, state).catch(e => this.W(`Error in AllStates for ${id} = ${this.O(e)}`)) : Promise.resolve())
                     .then(() => states[id] = state);
             }, 0, id, state));
 
-        return this;
+        return adapter;
     }
 
     static idName(id) {
@@ -309,6 +359,7 @@ class MyAdapter {
         }
         return res;
     }
+
     static nop(obj) {
         return obj;
     }
@@ -324,23 +375,63 @@ class MyAdapter {
         return str;
     }
     static D(str, val) {
-        if (!inDebug || (curDebug > inDebug && typeof inDebug === 'number'))
+        if (!inDebug || curDebug > Number(inDebug))
             return val !== undefined ? val : str;
         return (inDebug ?
-            slog(adapter, 'info', `info: ${str}`) :
+            slog(adapter, 'info', `debug: ${str}`) :
             slog(adapter, 'debug', str), val !== undefined ? val : str);
+    }
+    static Dr(str) {
+        if (!inDebug || curDebug > Number(inDebug))
+            return str;
+        else
+            this.f.apply(null, Array.prototype.slice.call(arguments, 1));
+        return str;
+    }
+    static Df(str) {
+        str = this.f.apply(null, arguments);
+        if (inDebug && Number(inDebug) <= curDebug)
+            return inDebug ? slog(adapter, 'info', 'debug: ' + str) : slog(adapter, 'debug', str);
     }
     static F() {
         return util.format.apply(null, arguments);
     }
+    static f() {
+        return util.format.apply(null, arguments).replace(/\n\s+/g, ' ');
+    }
     static I(l, v) {
         return (slog(adapter, 'info', l), v === undefined ? l : v);
     }
+
+    static Ir(ret) {
+        slog(adapter, 'info', this.f.apply(null, Array.prototype.slice.call(arguments, 1)));
+        return ret;
+    }
+    static If() {
+        return slog(adapter, 'info', this.f.apply(null, arguments));
+    }
+
+    static Wf() {
+        return slog(adapter, 'warn', this.f.apply(null, arguments));
+    }
+    static Wr(ret) {
+        slog(adapter, 'warn', this.f.apply(null, Array.prototype.slice.call(arguments, 1)));
+        return ret;
+    }
+    static Er(ret) {
+        slog(adapter, 'error', this.f.apply(null, Array.prototype.slice.call(arguments, 1)));
+        return ret;
+    }
+
     static W(l, v) {
         return (slog(adapter, 'warn', l), v === undefined ? l : v);
     }
     static E(l, v) {
         return (slog(adapter, 'error', l), v === undefined ? l : v);
+    }
+
+    static Ef() {
+        return slog(adapter, 'error', this.f.apply(null, arguments));
     }
 
     static set addq(promise) {
@@ -493,9 +584,11 @@ class MyAdapter {
         });
     }
 
-    static Ptime(promise) {
+    static Ptime(promise,arg) {
         var start = Date.now();
-        return promise.then(() => {
+        if (typeof promise === 'function')
+            promise = promise(arg);
+        return Promise.resolve(promise).then(() => {
             var end = Date.now();
             return end - start;
         });
@@ -504,22 +597,22 @@ class MyAdapter {
         return util.inspect(obj, {
             depth: level || 2,
             colors: false
-        }).replace(/\n/g, '');
+        }).replace(/\n\s*/g, '');
     }
 
     static removeEmpty(obj) {
         if (this.T(obj) !== 'object')
             return obj;
         let a = this.clone(obj);
-        for(let n of Object.getOwnPropertyNames(a))
-            if(!a[n] && typeof a[n] !== 'boolean') delete a[n];
+        for (let n of Object.getOwnPropertyNames(a))
+            if (!a[n] && typeof a[n] !== 'boolean') delete a[n];
         return a;
     }
     static S(obj, level) {
         return typeof obj === 'string' ? obj : this.O(obj, level);
     }
     static N(fun) {
-        return setImmediate.apply(null, [fun].concat(Array.prototype.slice.call(arguments,  1)));
+        return setImmediate.apply(null, [fun].concat(Array.prototype.slice.call(arguments, 1)));
     } // move fun to next schedule keeping arguments
     static T(i, j) {
         let t = typeof i;
@@ -660,11 +753,11 @@ class MyAdapter {
     }
 
     static repeat( /** number */ nretry, /** function */ fn, arg, len) {
-        assert(typeof fn === 'function' , 'repeat (,fn,) error: fn is not a function!');
+        assert(typeof fn === 'function', 'repeat (,fn,) error: fn is not a function!');
         nretry = parseInt(nretry) || 0;
         return fn(arg)
             .then(res => this.reject(res))
-            .catch(res => nretry <= 0 ? this.resolve(res) : this.wait(len>0 ? len : 0).then(() => this.repeat(nretry - 1, fn, arg)));
+            .catch(res => nretry <= 0 ? this.resolve(res) : this.wait(len > 0 ? len : 0).then(() => this.repeat(nretry - 1, fn, arg)));
     }
 
     static exec(command) {
@@ -751,7 +844,7 @@ class MyAdapter {
                 //                req && req.removeAllListeners();
                 if (req && !req.aborted) req.abort();
                 //                res && res.destroy();
-                MyAdapter.D('err in response:' + msg);
+//                MyAdapter.Df('err in response: %s = %O', msg);
                 return reject(msg);
             }
 
@@ -900,7 +993,7 @@ class MyAdapter {
 
     }
 
-    static isApp(name) {
+    static isLinuxApp(name) {
         return this.exec('!which ' + name).then(x => x.length >= name.length, () => false);
     }
 }
@@ -908,4 +1001,5 @@ class MyAdapter {
 MyAdapter.Sequence = Sequence;
 MyAdapter.Setter = Setter;
 MyAdapter.CacheP = CacheP;
+MyAdapter.Hrtime = Hrtime;
 exports.MyAdapter = MyAdapter;

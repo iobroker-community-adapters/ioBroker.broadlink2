@@ -34,19 +34,19 @@ const scanList = {},
 	reIsCODE = /^CODE_[a-f0-9]{16}/,
 	defaultName = '>>>Rename learned ';
 
-let currentDevice, adapterObjects, firstCreate, pollerr = 2,
-	states = {};
+let brlink, adapterObjects, firstCreate, states = {};
 
 //A.I('Adapter starting...');
-
-A.objChange = function (obj,val) { //	This is needed for name changes
-//	A.I(A.F(obj,' =O> ',val));
+// eslint-disable-next-line
+A.objChange = function (obj, val) { //	This is needed for name changes
+	//	A.I(A.F(obj,' =O> ',val));
 	val = val || A.D(' objChange val not defined');
 	if (typeof obj === 'string' && obj.indexOf(learnedName) > 0)
 		return A.getObject(obj)
 			.then(oobj => {
 				const nst = oobj.common,
 					ncn = nst.name,
+					// eslint-disable-next-line
 					nid = ncn.replace(/[\ \.\,\;]/g, '_'),
 					dev = obj.split('.'),
 					fnn = dev.slice(2, -1).concat(nid).join('.');
@@ -83,98 +83,54 @@ function sendCode(device, value) {
 }
 
 A.stateChange = function (id, state) {
-//	A.I(A.F(id,' =S> ',state));
+	//	A.I(A.F(id,' =S> ',state));
 
-	let thisDevice, isLearning, learned, rawData, raw1Data, raw2Data;
-
-	const onRfData2 = (data) => {
-			const hex = data && data.toString('hex');
-			raw2Data = hex;
-			//		A.D(`Got RawRfData2 ${hex}`);
-		},
-		onRfData = (data) => {
-			const hex = data && data.toString('hex');
-			//		A.D(`Got RawRfData ${hex}`);
-			raw1Data = hex;
-			A.wait(300).then(() => {
-				thisDevice.on('rawRFData2', onRfData2);
-				thisDevice.checkRFData2();
-			});
-
-		},
-		onData = (data) => {
-			const hex = data && data.toString('hex');
-			//		A.D(`Got RawData ${hex}`);
-			rawData = hex;
-			learned = 0;
-			firstCreate = true;
-
-			if (thisDevice.isPlus && isLearning === 'RF') {
-				A.wait(300).then(() => {
-					thisDevice.on('rawRFData', onRfData);
-					thisDevice.checkRFData();
-					return A.wait(1000);
-				});
-			}
-			A.getObjectList({
-					startkey: A.ain + thisDevice.name + learnedName,
-					endkey: A.ain + thisDevice.name + learnedName + '\u9999'
-				})
-				.catch(() => ({
-					rows: []
-				}))
-				.then(res => {
-					for (let i of res.rows)
-						if (i.doc.native.code === hex) // ? i.doc.common.name
-							return Promise.reject(i.doc.common.name + ':' + i.doc._id);
-					return true;
-				})
-				.then(() => A.makeState({
-						id: thisDevice.name + learnedName + codeName + hex,
-						name: `${defaultName} ${isLearning} ${A.dateTime()}`,
-						write: true,
-						role: 'button',
-						type: typeof true,
-						native: {
-							code: hex
-						}
-					}, false, A.I(`Learned new ${isLearning} Code ${thisDevice.name} (hex): ${hex}`, true)),
-					nam => A.I(`Code alreadly learned from: ${thisDevice.name} with ${nam}`))
-				.catch(err => A.W(`learning makeState error: ${thisDevice.name}} ${err}`))
-				.then(() => A.wait(200))
-				.then(() => firstCreate = false);
-
-		};
-
+	let thisDevice;
 
 	function startLearning(name, type) {
 		thisDevice = scanList[name];
 		assert(!!thisDevice, `wrong name "${name}" in startLearning`);
-		if (thisDevice.learning || isLearning) return Promise.reject(A.W(`Device ${name} is still in learning mode and cannot start it again!`));
-		isLearning = type;
+		if (thisDevice.learning) return Promise.reject(A.W(`Device ${name} is still in learning mode and cannot start it again!`));
 		A.I(`Start ${type}-learning for device: ${name}`);
-		learned = 35;
-		thisDevice.once("rawData", onData);
-		if (type === learnRf)
-			thisDevice.enterRFSweep();
-		else
-			thisDevice.enterLearning();
 
 		return A.makeState(name, thisDevice.learning = true, true)
-			.then(() => A.retry(learned, () => --learned <= 0 ? Promise.resolve() :
-				A.wait(A.D(`Learning ${type} for ${thisDevice.name} wait ${learned} `, 1000))
-				.then(() => Promise.reject(thisDevice.checkData()))))
+			.then(() => thisDevice.learn(type === learnRf))
+			.then(l => {
+				if (l.data) {
+					const hex = l.data;
+					return A.getObjectList({
+							startkey: A.ain + thisDevice.name + learnedName,
+							endkey: A.ain + thisDevice.name + learnedName + '\u9999'
+						})
+						.catch(() => ({
+							rows: []
+						}))
+						.then(res => {
+							for (let i of res.rows)
+								if (i.doc.native.code === hex) // ? i.doc.common.name
+									return A.reject(i.doc.common.name + ':' + i.doc._id);
+							return true;
+						})
+						.then(() => A.makeState({
+								id: thisDevice.name + learnedName + codeName + hex,
+								name: `${defaultName} ${type} ${A.dateTime()}`,
+								write: true,
+								role: 'button',
+								type: typeof true,
+								native: {
+									code: hex
+								}
+							}, false, A.I(`Learned new ${type} Code ${thisDevice.name} (hex): ${hex}`, true)),
+							nam => A.I(`Code alreadly learned from: ${thisDevice.name} with ${nam}`))
+						.catch(err => A.W(`learning makeState error: ${thisDevice.name}} ${err}`))
+						.then(() => A.wait(200))
+						.then(() => firstCreate = false);
+				}
+				return Promise.resolve();
+			})
 			.then(() => A.I(`Stop learning ${type} for ${name}!`), () => A.I(`Stop learning ${type} for ${name}!`))
-			.then(() => A.makeState(name, false, true)).then(A.nop, A.nop)
-			.then(() => A.wait(2000))
-			.then(() => {
-				if (thisDevice.cancelRFSweep && type === learnRf) thisDevice.cancelRFSweep();
-				thisDevice.removeListener('rawData', onData);
-				thisDevice.removeListener('rawRFData', onRfData);
-				thisDevice.removeListener('rawRFData2', onRfData2);
-				isLearning = null;
-				thisDevice.learning = false;
-			});
+			.then(() => A.makeState(name, false, true))
+			.then(A.nop, A.nop);
 	}
 
 	//	A.D(`stateChange of "${id}": ${A.O(state)}`); 
@@ -230,18 +186,18 @@ A.stateChange = function (id, state) {
 };
 
 function deviceScan() {
-	if (!currentDevice) return Promise.reject(A.W(`No current driver to start discover!`));
-	if (currentDevice.scanning) return Promise.reject(A.W(`Scan operation in progress, no new scan can be started until it finished!`));
-	currentDevice.discover();
+	if (!brlink) return Promise.reject(A.W(`No current driver to start discover!`));
+	if (brlink.scanning) return Promise.reject(A.W(`Scan operation in progress, no new scan can be started until it finished!`));
+	brlink.discover();
 	return A.makeState({
 			id: scanName,
 			write: true,
 			role: 'button',
 			type: typeof true,
-		}, currentDevice.scanning = true, true)
+		}, brlink.scanning = true, true)
 		.then(() => A.wait(5000)) // 6s for the scan of ip' should be OKs
-		.then(() => A.makeState(scanName, currentDevice.scanning = false, true))
-		.catch(err => A.W(`Error in deviceScan: ${currentDevice.scanning = false, A.O(err)}`));
+		.then(() => A.makeState(scanName, brlink.scanning = false, true))
+		.catch(err => A.W(`Error in deviceScan: ${brlink.scanning = false, A.O(err)}`));
 }
 
 function sendScene(scene, st) {
@@ -294,7 +250,8 @@ A.messages = (msg) => {
 		ack: false,
 		from: msg.from
 	};
-	var id = msg.message.startsWith(A.ain) ? msg.message.trim() : A.ain + (msg.message.trim());
+	let id = msg.message.startsWith(A.ain) ? msg.message.trim() : A.ain + (msg.message.trim());
+	let ids, idx, code;
 
 	switch (msg.command) {
 		case 'switch_off':
@@ -310,11 +267,13 @@ A.messages = (msg) => {
 				.then(() => A.D(`got message sent: ${msg.message}`));
 		case 'send_scene':
 			return sendScene(msg.message, st);
+
 		case 'send_code':
+
 			if (msg.message.startsWith(A.ain))
 				msg.message = msg.message.slice(A.ain.length);
-			let ids = msg.message.split('.'),
-				code = ids[1];
+			ids = msg.message.split('.');
+			code = ids[1];
 			id = ids[0];
 			if (!id.startsWith('RM:') || !scanList[id] || !code.startsWith(codeName))
 				return Promise.reject(A.D(`Invalid message "${msg.message}" for "send" to ${id}${sendName}`));
@@ -322,7 +281,7 @@ A.messages = (msg) => {
 		case 'get':
 			return A.getState(id);
 		case 'switch':
-			let idx = A.split(msg.message, '=');
+			idx = A.split(msg.message, '=');
 			if (idx.length !== 2 && !idx.startsWith('SP:'))
 				return Promise.reject(A.D(`Invalid message to "switch" ${msg.message}" to ${idx}`));
 			st.val = A.parseLogic(idx[1]);
@@ -333,20 +292,25 @@ A.messages = (msg) => {
 };
 
 function doPoll() {
-	A.seriesOf(A.obToArray(scanList), device => {
-		if (!device.fun) return Promise.resolve(device.checkRequest = 0);
-		device.fun(++device.checkRequest);
-		A.wait(500).then(() => device.checkRequest > pollerr ? (device.checkRequest % 50 === pollerr + 1 ? A.W(`Device ${device.name} not reachable`, true) : true) : false)
-			.then(res => device.checkRequest > 10 ? (currentDevice.discover(device.host), res) : res)
-			.then(res => A.makeState({
-				id: device.name + reachName,
-				write: false,
-				role: 'indicator.unreach',
-				type: typeof true,
-			}, res, true))
-			.catch(err => A.W(`Error in polling of ${device.name}: ${A.O(err)}`));
-		return Promise.resolve(device.fun);
-	}, 50);
+	let na = [];
+	return A.seriesOf(A.obToArray(scanList), device => {
+		if (!device.getAll || device.dummy) {
+			return A.resolve(na.push(device.host));
+		}
+		return device.getAll().then(x => x, () => {
+			if (device.lastResponse && device.lastResponse < Date.now() - 1000 * 60 * 2) {
+				device.dummy = true;
+				A.W(`Device ${device.name} not reachable`);
+				return A.makeState({
+					id: device.name + reachName,
+					write: false,
+					role: 'indicator.unreach',
+					type: typeof true,
+				}, true, true);
+			}
+			return A.resolve();
+		});
+	}, 1).catch(err => A.W(`Error in polling: ${A.O(err)}`)).then(() => na.length ? brlink.discover(na) : null);
 }
 
 function setState(name) {
@@ -438,24 +402,28 @@ function genStates(array) {
 		.catch(err => A.W(`genState generation error: ${err}`));
 }
 
-A.onStop = () => currentDevice.closeConnections(A.I('Close all connections...'));
+A.onStop = () => brlink.close(A.I('Close all connections...'));
 
-A.init(module, 'broadlink2', main); // associate adapter and main with MyAdapter
+const AA = A.init(module, 'broadlink2', main); // associate adapter and main with MyAdapter
 
 function main() {
 	let didFind, notFound = [];
 
-	currentDevice = new Broadlink();
+	for (let ai of A.ownKeysSorted(AA))
+		if (ai.endsWith('Async'))
+			A.If('found asynf cunction %s in adapter:', ai);
 
 	if ((A.debug = A.C.ip.endsWith('!')))
 		A.C.ip = A.C.ip.slice(A.D(`Debug mode on!`, 0), -1);
 
-	A.C.ip = A.C.ip.trim().toLowerCase();
+	let add = A.C.ip.split(',').map(x => x.split(':').map(s => s.trim()));
 
-	currentDevice.on("deviceReady", function (device) {
+	brlink = new Broadlink(add);
+
+	brlink.on("deviceReady", function (device) {
 		const typ = device.type.slice(0, 2);
 		device.typ = typ;
-		device.removeListener('error', A.D);
+		device.removeAllListeners('error');
 		device.on('error', A.D);
 		A.c2p(dns.reverse)(device.host.address)
 			.then(x => A.T(x, []) ? x[0].toString().trim() : x.toString().trim(), () => device.host.mac)
@@ -465,7 +433,6 @@ function main() {
 				x = device.name = typ + ':' + x.split('.').join('-');
 				if (scanList[x] && !scanList[x].dummy)
 					return A.W(`Device found already: ${x} with ${A.O(device.host)}`);
-				device.checkRequest = 0;
 				device.host.name = x;
 				A.I(`Device ${x} dedected: ${A.O(device.host)}`);
 				scanList[x] = device;
@@ -473,10 +440,9 @@ function main() {
 					case 'SP':
 						device.oval = undefined;
 						device.on('payload', (err, payload) => {
-//							console.log(err,payload);
+							//							console.log(err,payload);
 							//							if (device.type === 'SP3S')
 							//								A.W(`Device ${x} sent err:${err}/${err.toString(16)} with ${payload.toString('hex')}`);
-							device.checkRequest = 0;
 							if (payload !== null && (payload[0] === 1 || payload[0] === 2)) {
 								let res = !!payload[4];
 								if (device.get_energy)
@@ -526,7 +492,6 @@ function main() {
 						device.ltemp = undefined;
 						device.on('temperature', (val) => {
 							//							A.D(`Received temperature ${val} from ${x}`);
-							device.checkRequest = 0;
 							if (device.ltemp !== val) {
 								device.ltemp = val;
 								A.makeState({
@@ -570,7 +535,6 @@ function main() {
 						device.on("payload", function (err, payload) {
 							if (!payload)
 								return;
-							device.checkRequest = 0;
 
 							var param = payload[0];
 							switch (param) {
@@ -640,7 +604,7 @@ function main() {
 									break;
 								case 3:
 									break;
-								case 4:
+								default:
 									break;
 							}
 						});
@@ -669,17 +633,16 @@ function main() {
 			startkey: A.ain,
 			endkey: A.ain + '\u9999'
 		}))
-		.then(res => adapterObjects = res.rows.length > 0 ? A.D(A.name+` has  ${res.rows.length} old states!`, adapterObjects = res.rows.map(x => x.doc)) : [])
+		.then(res => adapterObjects = res.rows.length > 0 ? A.D(A.name + ` has  ${res.rows.length} old states!`, adapterObjects = res.rows.map(x => x.doc)) : [])
 		.then(() => didFind = Object.keys(scanList))
 		.then(() => A.seriesOf(adapterObjects.filter(x => x.native && x.native.host), dev => {
 			let id = dev.native.host.name; // dev._id.slice(A.ain.length);
 			if (!scanList[id] && !id.endsWith(learnName + learnRf) && !id.endsWith(learnName + learnIr)) {
 				let device = {
 					name: id,
-					fun: A.nop,
+					fun: Promise.reject,
 					host: dev.native.host,
-					dummy: true,
-					checkRequest: 1,
+					dummy: true
 				};
 				A.W(`device ${id} not found, please rescan later again or delete it! It was: ${A.obToArray(device.host)}`);
 				scanList[id] = device;
