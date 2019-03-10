@@ -82,7 +82,7 @@ Der Adapter versteht jetzt auch 'sendTo' Kommandos.
 
 ## Important/Wichtig
 
-* Requires node >=v4.2
+* Requires node >=V6
 
 ## Changelog
 ### 1.9.9
