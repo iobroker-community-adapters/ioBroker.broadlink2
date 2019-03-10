@@ -409,10 +409,6 @@ const AA = A.init(module, 'broadlink2', main); // associate adapter and main wit
 function main() {
 	let didFind, notFound = [];
 
-	for (let ai of A.ownKeysSorted(AA))
-		if (ai.endsWith('Async'))
-			A.If('found asynf cunction %s in adapter:', ai);
-
 	if ((A.debug = A.C.ip.endsWith('!')))
 		A.C.ip = A.C.ip.slice(A.D(`Debug mode on!`, 0), -1);
 
