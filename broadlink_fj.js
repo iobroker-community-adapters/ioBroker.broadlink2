@@ -67,7 +67,6 @@ class Device extends EventEmitter {
     constructor(host, mac, devtype, bl) {
         super();
         var self = this;
-        this.dummy = undefined;
         this._val = {};
         this.s = new A.Sequence();
         this.bl = bl;
@@ -101,6 +100,7 @@ class Device extends EventEmitter {
         } catch (e) {
             A.W(`could not bind socket for ${A.O(this.host)}`);
         }
+
     }
 
     close() {
@@ -111,6 +111,7 @@ class Device extends EventEmitter {
         if (this.bound) {
             this.cs.close();
             this.cs.removeAllListeners();
+            this.bound = false;
         }
         if (this.bl && this.bl._devices)
             this.bl._devices[this.host.mac] = null;
@@ -119,15 +120,27 @@ class Device extends EventEmitter {
         this.emit('close');
     }
 
+    get dummy() {
+        return !this.bound || this.type === "Unknown" || this.type === 'closed';
+    }
 
     get val() {
         return this._val;
     }
 
+    checkOff(fun, arg1, arg2, arg3) {
+        if (this.dummy)
+            return Promise.reject({
+                here: false,
+                err: 'closed'
+            });
+        return Promise.resolve(fun ? fun.bind(this)(arg1, arg2, arg3) : undefined);
+    }
+
     getAll() {
         if (A.T(this._val) === 'object')
             this._val.here = false;
-        return this.getVal().then(v => {
+        return this.checkOff(this.getVal).then(v => {
             return A.T(v) === 'object' ? v : {
                 val: v,
                 here: true
@@ -199,7 +212,11 @@ class Device extends EventEmitter {
                 //                A.Wf(`Got error %O from device %s`, obj,self.host.name)
                 return reject(obj);
             });
-            self.tout = setTimeout(() => reject(`timed out on ${A.O(self.host)}`), timeout);
+            self.tout = setTimeout(() => reject({
+                here: false,
+                err: `timed out on send`,
+                name: self.host.name
+            }), timeout);
             self.cs.send(packet, 0, packet.length, self.host.port, self.host.address, err => err ? reject(err) : null);
         }));
 
@@ -251,7 +268,7 @@ class Device extends EventEmitter {
                 return A.reject(what);
             }
             return A.resolve(self);
-        }).catch(e => A.Wf('catch auth error %s! on %s with mac %s', e, self.host.name, self.host.address));
+        }); // .catch(e => A.Df('catch auth error %s! on %s with mac %s', e, self.host.name, self.host.address));
     }
 
     sendPacket(command, payload, timeout) {
@@ -337,7 +354,7 @@ class MP1 extends Device {
         packet[0x06] = 0xae;
         packet[0x07] = 0xc0;
         packet[0x08] = 0x01;
-        return this.sendPacket(0x6a, packet).then(res => {
+        return this.checkOff(this.sendPacket, 0x6a, packet).then(res => {
             //            A.I(`getVal on '${this.constructor.name}' returned ${A.O(res)}`);
             if (res && res.payload && !res.err) {
                 let state = res.payload[0x0e];
@@ -349,8 +366,9 @@ class MP1 extends Device {
                 //                ret.nightlight = !!(payload[0x4] & 2);
                 return ret;
             } else return A.reject(ret);
+            // eslint-disable-next-line no-unused-vars
         }, e => {
-            A.I(`getVal on '${this.constructor.name}' had error ${A.O(e)} and returned ${A.O(ret)}`);
+            //            A.I(`getVal on '${this.host.name}' had error ${A.O(e)} and returned ${A.O(ret)}`);
             return ret;
         }); //.catch(e => A.I(`getVal on '${this.constructor.name}' had error ${A.O(e)} and returned ${A.O(self._val)}`, e));
     }
@@ -383,7 +401,7 @@ class MP1 extends Device {
         packet[0x0a] = 0x03;
         packet[0x0d] = sid_mask;
         packet[0x0e] = st ? sid_mask : 0;
-        return this.sendPacket(0x6a, packet).then(ret => ret.err || !!ret.payload ? A.resolve(vret['sw' + sw] = st) : A.reject(vret));
+        return this.checkOff(this.sendPacket, 0x6a, packet).then(ret => ret.err || !!ret.payload ? A.resolve(vret['sw' + sw] = st) : A.reject(vret));
     }
 }
 
@@ -403,7 +421,7 @@ class SP1 extends Device {
             st = !!state.state;
         var packet = Buffer.alloc(4, 4);
         packet[0] = st ? 1 : 0;
-        return this.sendPacket(0x66, packet).then(ret => ret.err || !!ret.payload ? A.reject(this._val) : (this._val = st));
+        return this.checkOff(this.sendPacket, 0x66, packet).then(ret => ret.err || !!ret.payload ? A.reject(this._val) : (this._val = st));
     }
 
 }
@@ -421,7 +439,7 @@ class SP2 extends Device {
         var packet = Buffer.alloc(16, 0);
         //        A.I(`getVal on '${this.constructor.name}' called! on ${A.O(this.host)}`);
         packet[0] = 1;
-        return this.sendPacket(0x6a, packet).then(res => {
+        return this.checkOff(this.sendPacket, 0x6a, packet).then(res => {
             //            A.I(`getVal on '${this.constructor.name}' returned ${A.O(res)}`);
             if (res && res.payload && !res.err) {
                 let payload = res.payload;
@@ -431,7 +449,7 @@ class SP2 extends Device {
                 return A.resolve(ret);
             } else return A.reject(ret);
         }, e => {
-            A.I(`getVal on '${this.constructor.name}' had error ${A.O(e)} and returned ${A.O(ret)}`);
+            A.D(`getVal on '${this.constructor.name}' had error ${A.O(e)} and returned ${A.O(ret)}`);
             return ret;
         }); //.catch(e => A.I(`getVal on '${this.constructor.name}' had error ${A.O(e)} and returned ${A.O(self._val)}`, e));
     }
@@ -453,7 +471,7 @@ class SP2 extends Device {
         packet[0] = 2;
         //        packet[4] = (st ? 1 : 0) + (nl ? 2 : 0);
         packet[4] = st ? 1 : 0;
-        return this.sendPacket(0x6a, packet).then(ret => ret.err || !!ret.payload ? A.resolve(self._val.state = st) : A.reject(self._val));
+        return this.checkOff(this.sendPacket, 0x6a, packet).then(ret => ret.err || !!ret.payload ? A.resolve(self._val.state = st) : A.reject(self._val));
     }
 }
 
@@ -492,7 +510,7 @@ class SP3P extends Device {
         var packet = Buffer.alloc(16, 0);
         //        A.I(`getVal on '${this.constructor.name}' called! on ${A.O(this.host)}`);
         packet[0] = 1;
-        return this.sendPacket(0x6a, packet).then(res => {
+        return this.checkOff(this.sendPacket, 0x6a, packet).then(res => {
             //            A.I(`getVal on '${this.constructor.name}' returned ${A.O(res)}`);
             if (res && res.payload && !res.err) {
                 let payload = res.payload;
@@ -532,7 +550,7 @@ class SP3P extends Device {
         packet[4] = 5;
         packet[5] = 1;
         packet[9] = 45;
-        return this.sendPacket(0x6a, packet).then(ret => {
+        return this.checkOff(this.sendPacket, 0x6a, packet).then(ret => {
             //            A.I(`payload get energy: ${A.O(ret)}`);
             if (ret && ret.payload && ret.payload[0] === 8)
                 return A.resolve(parseFloat(ret.payload[7].toString(16) + ret.payload[6].toString(16) + ret.payload[5].toString(16)) / 100.0);
@@ -554,7 +572,7 @@ class A1 extends Device {
         var packet = Buffer.alloc(16, 0);
         //        A.I(`getVal on '${this.constructor.name}' called! on ${A.O(this.host)}`);
         packet[0] = 1;
-        return this.sendPacket(0x6a, packet).then(res => {
+        return this.checkOff(this.sendPacket, 0x6a, packet).then(res => {
             //            A.I(`getVal on '${this.constructor.name}' returned ${A.O(res)}`);
             if (res && res.payload && !res.err) {
                 let payload = res.payload;
@@ -571,6 +589,58 @@ class A1 extends Device {
     }
 }
 
+class S1 extends Device {
+    constructor(host, mac, devtype, bl) {
+        super(host, mac, devtype, bl);
+        this.type = "S1";
+        this._val = {};
+        this._sensorTypes = {
+            0x31: 'DoorSensor', // 49 as hex
+            0x91: 'KeyFob', // 145 as hex, as serial on fob corpse
+            0x21: 'MotionSensor' // 33 as hex
+        };
+
+    }
+    getVal() {
+
+        function getSensor(pl, num) {
+            const val = {};
+            const buf = pl.slice(6 + num * 83, 5 + (num + 1) * 83);
+            //            val.payload = buf;
+            //            val.status = Number(buf[0]);
+            //            val.order = Number(buf[1]);
+            //            val.type = Number(buf[3]);
+            let name = buf.slice(4, 26);
+            let serial = buf[26] + buf[27] * 256 + buf[28] * 65536 + buf[29] * 16777216;
+            while (!name[name.length - 1])
+                name = name.slice(0, [name.length - 1]);
+            name = name.toString('utf8') + ' ' + serial.toString(16);
+            name = name.replace(/\s+/g,'_');
+            val[name] = Number(buf[0]);
+            return val;
+        }
+        //        const self = this;
+        const ret = this._val;
+        ret.here = false;
+        var packet = Buffer.alloc(16, 0);
+        //        A.I(`getVal on '${this.constructor.name}' called! on ${A.O(this.host)}`);
+        packet[0] = 6;
+        return this.checkOff(this.sendPacket, 0x6a, packet).then(res => {
+            //            A.I(`getVal on '${this.constructor.name}' returned ${A.O(res)}`);
+            if (res && res.payload && !res.err) {
+                //                A.If('S1 %s returned len &d %O', self.host.name, res.payload.length, res.payload);
+                let number = Number(res.payload[0x4]);
+                for (let i = 0; i < number; i++) {
+                    //                    Object.assign(ret,getSensor(res.payload,i));
+                    Object.assign(ret, getSensor(res.payload, i));
+                }
+                ret.here = true;
+                return ret;
+            }
+            return A.reject(res);
+        });
+    }
+}
 class RM extends Device {
     constructor(host, mac, devtype, bl) {
         super(host, mac, devtype, bl);
@@ -585,7 +655,7 @@ class RM extends Device {
         var packet = Buffer.alloc(16, 0);
         //        A.I(`getVal on '${this.constructor.name}' called! on ${A.O(this.host)}`);
         packet[0] = 1;
-        return this.sendPacket(0x6a, packet).then(res => {
+        return this.checkOff(this.sendPacket, 0x6a, packet).then(res => {
             //            A.I(`getVal on '${this.constructor.name}' returned ${A.O(res)}`);
             if (res && res.payload && !res.err) {
                 let payload = res.payload;
@@ -600,7 +670,7 @@ class RM extends Device {
         var packet = Buffer.alloc(16, 0);
         packet[0] = 4;
         //        A.I(`send checkData on '${this.constructor.name}'`);
-        return this.sendPacket(0x6a, packet, -1000).then(res => {
+        return this.checkOff(this.sendPacket, 0x6a, packet, -1000).then(res => {
             //             A.I(`checkData on '${this.constructor.name}' returned ${A.O(res)}`);
             if (res && res.payload && !res.err) {
                 let data = Buffer.alloc(res.payload.length - 4, 0);
@@ -625,13 +695,13 @@ class RM extends Device {
     setVal(data) {
         var packet = new Buffer([0x02, 0x00, 0x00, 0x00]);
         packet = Buffer.concat([packet, data]);
-        return this.sendPacket(0x6a, packet); //.then(x => A.I(`setVal/sendData for ${this.host.name} returned ${A.O(x)}`, x));
+        return this.checkOff(this.sendPacket, 0x6a, packet); //.then(x => A.I(`setVal/sendData for ${this.host.name} returned ${A.O(x)}`, x));
     }
 
     enterLearning() {
         var packet = Buffer.alloc(16, 0);
         packet[0] = 3;
-        return this.sendPacket(0x6a, packet); //.then(x => A.I(`enterLearning for ${this.host.name} returned ${A.O(x)}`, x));
+        return this.checkOff(this.sendPacket, 0x6a, packet); //.then(x => A.I(`enterLearning for ${this.host.name} returned ${A.O(x)}`, x));
     }
 
 }
@@ -653,13 +723,13 @@ class RMP extends RM {
         function enterRFSweep() {
             var packet = Buffer.alloc(16, 0);
             packet[0] = 0x19;
-            return self.sendPacket(0x6a, packet); //.then(x => A.I(`enterRFSweep for ${this.host.name} returned ${A.O(x)}`, x));
+            return this.checkOff(self.sendPacket, 0x6a, packet); //.then(x => A.I(`enterRFSweep for ${this.host.name} returned ${A.O(x)}`, x));
         }
 
         function checkRFData(check2) {
             var packet = Buffer.alloc(16, 0);
             packet[0] = check2 ? 0x1b : 0x1a;
-            return self.sendPacket(0x6a, packet).then(res => {
+            return self.checkOff(self.sendPacket, 0x6a, packet).then(res => {
                 //            A.I(`getVal on '${this.constructor.name}' returned ${A.O(res)}`);
                 if (res && res.payload && !res.err) {
                     if (res.payload[4] === 1)
@@ -672,7 +742,7 @@ class RMP extends RM {
         function cancelRFSweep() {
             var packet = Buffer.alloc(16, 0);
             packet[0] = 0x1e;
-            return self.sendPacket(0x6a, packet); // .then(x => A.I(`CancelRFSwwep for ${this.host.name} returned ${A.O(x)}`, x));
+            return self.checkOff(self.sendPacket, 0x6a, packet); // .then(x => A.I(`CancelRFSwwep for ${this.host.name} returned ${A.O(x)}`, x));
         }
 
         return self.checkData().catch(e => e).then(() => enterRFSweep())
@@ -731,7 +801,7 @@ class T1 extends Device {
         cc = (cc & 0xff) ^ 0xa5;
         payload[7] = cc;
         A.I(`sent payload to T1:` + A.F(payload));
-        return this.sendPacket(0x6a, payload).then(res => {
+        return this.checkOff(this.sendPacket, 0x6a, payload).then(res => {
             if (res && res.payload && !res.err) {
                 let pl = res.payload;
                 let size = pl[0];
@@ -748,7 +818,7 @@ class T1 extends Device {
         //        return this.sendT1packet(0xA0).then(x => {
         const buf = Buffer.alloc(4, 0);
         buf[0] = buf[1] = buf[2] = 1;
-        return this.sendT1packet(0xA0, buf).then(x => {
+        return this.checkOff(this.sendT1packet, 0xA0, buf).then(x => {
             ret.payload = x;
             ret.here = true;
         });
@@ -832,6 +902,11 @@ class Broadlink extends EventEmitter {
                 class: MP1,
                 name: 'mp1',
                 0x4EB5: 'MP1'
+            },
+            S1C: {
+                class: S1,
+                name: 's1',
+                0x2722: 'S1'
             }
         };
 
@@ -928,7 +1003,7 @@ class Broadlink extends EventEmitter {
 
 
     genDevice(devtype, host, mac) {
-
+        //        A.Df('got device type %s @host:%O', devtype.toString(16), host);
         host.devtype = devtype;
         host.type = 'unknown';
         host.name = 'unknown_' + host.mac;
@@ -956,7 +1031,6 @@ class Broadlink extends EventEmitter {
         }));
 
     }
-
 
     discover(what, ms) {
         const self = this;
@@ -990,7 +1064,7 @@ class Broadlink extends EventEmitter {
                                 .then(x => dev.host.name = dev.host.type.slice(0, 2).toUpperCase() + ':' + x)
                                 .then(() => self.emit("deviceReady", dev));
                         });
-                        A.retry(3, dev.auth.bind(dev));
+                        A.retry(3, dev.auth.bind(dev)).catch(A.nop);
                     }
                 }, m, r));
 
@@ -1052,7 +1126,8 @@ class Broadlink extends EventEmitter {
                             addr = addr.concat(what.map(x => x.address));
                         else if (what && what.address)
                             addr.push(addr);
-                        addr = addr.concat(this._addresses);
+                        if (!addr.length)
+                            addr = addr.concat(this._addresses);
                         A.Df('discover from %O , what: %O', addr, what && what.length);
                         return A.repeat(5, () => A.seriesOf(addr, a => self.send(packet, a), 10), null, 500)
                             .catch(e => A.I('error when sending scan messages: ' + e))
@@ -1082,7 +1157,7 @@ class Broadlink extends EventEmitter {
         return this._devices[mac].getAll();
     }
 
-    val(mac) {
+    valMac(mac) {
         if (!this._devices[mac])
             return A.resolve({
                 here: false

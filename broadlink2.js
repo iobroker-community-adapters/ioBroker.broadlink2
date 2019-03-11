@@ -21,18 +21,18 @@ const scanList = {},
 	noiseName = '.Noise',
 	learnRf = 'RF',
 	learnIr = '',
-	learnName = '.Learn',
-	sendName = '.SendCode',
-	sceneName = 'SendScene',
-	scenesName = 'Scenes',
-	statesName = 'States',
-	learnedName = '.L.',
+	learnName = '._Learn',
+	sendName = '._SendCode',
+	sceneName = '_SendScene',
+	scenesName = '_Scenes',
+	statesName = '_States',
+	learnedName = '.',
 	scanName = '_NewDeviceScan',
-	reachName = '.notReachable',
+	reachName = '._notReachable',
 	codeName = "CODE_",
 	reCODE = /^CODE_|^/,
 	reIsCODE = /^CODE_[a-f0-9]{16}/,
-	defaultName = '>>>Rename learned ';
+	defaultName = '_Rename_learned ';
 
 let brlink, adapterObjects, firstCreate, states = {};
 
@@ -77,8 +77,7 @@ A.objChange = function (obj, val) { //	This is needed for name changes
 function sendCode(device, value) {
 	let buffer = new Buffer(value.replace(reCODE, ''), 'hex'); //var buffer = new Buffer(value.substr(5), 'hex'); // substr(5) removes CODE_ from string
 
-	device.sendData(buffer);
-	return A.resolve(device.name + ' sent ' + value);
+	return device.setVal(buffer).then(x => device.name + ' sent ' + value + ', '+ x);
 	//	return Promise.resolve(A.D('sendData to ' + device.name + ', Code: ' + value));
 }
 
@@ -162,7 +161,7 @@ A.stateChange = function (id, state) {
 		if (!device) return Promise.reject(A.W(`stateChange error no device found: ${id} ${A.O(state)}`));
 		switch (id0.split(':')[0]) {
 			case 'SP':
-				device.set_power(A.parseLogic(state.val));
+				device.setVal(A.parseLogic(state.val));
 				A.I(`Change ${id} to ${state.val}`);
 				return Promise.resolve(device.oval = state.val);
 			case 'RM':
@@ -291,26 +290,38 @@ A.messages = (msg) => {
 	}
 };
 
+let discoverAll = 0;
+
 function doPoll() {
 	let na = [];
+	discoverAll = discoverAll >= 9 ? 0 : ++discoverAll;
 	return A.seriesOf(A.obToArray(scanList), device => {
 		if (!device.getAll || device.dummy) {
 			return A.resolve(na.push(device.host));
 		}
-		return device.getAll().then(x => x, () => {
-			if (device.lastResponse && device.lastResponse < Date.now() - 1000 * 60 * 2) {
-				device.dummy = true;
+		return device.getAll().then(x => {
+			A.Ir(x, 'Device %s returned %O', device.name, x);
+			if (x && x.here && device.update)
+				return device.update(x);
+			if (x && x.here) {
+				x.noUpdateFunction = 'do not know how to update';
+			} else if (!x)
+				x = {
+					here: false
+				};
+			//				A.Ir(x, 'Device %s will reject %O', device.name, x);
+			return Promise.reject(x);
+		}).catch(e => {
+			A.If('device %s rejected promise with %O', device.name, e);
+			if (device.lastResponse && device.lastResponse < Date.now() - 1000 * 60 * 10) {
+				if (device.close)
+					device.close();
 				A.W(`Device ${device.name} not reachable`);
-				return A.makeState({
-					id: device.name + reachName,
-					write: false,
-					role: 'indicator.unreach',
-					type: typeof true,
-				}, true, true);
+				return A.makeState(device.name + reachName, device.unreach = true, true);
 			}
 			return A.resolve();
 		});
-	}, 1).catch(err => A.W(`Error in polling: ${A.O(err)}`)).then(() => na.length ? brlink.discover(na) : null);
+	}, 1).catch(err => A.W(`Error in polling: ${A.O(err)}`)).then(() => na.length ? brlink.discover(discoverAll ? na : undefined) : null);
 }
 
 function setState(name) {
@@ -404,7 +415,19 @@ function genStates(array) {
 
 A.onStop = () => brlink.close(A.I('Close all connections...'));
 
+// eslint-disable-next-line no-unused-vars
 const AA = A.init(module, 'broadlink2', main); // associate adapter and main with MyAdapter
+
+function updateValues(device, val, values) {
+	return A.seriesOf(values, (item) => {
+		let i = Object.assign({}, item);
+		const name = i.name;
+		delete i.name;
+		i.id = device.host.name + i.id;
+		if (val[name] !== undefined)
+			return A.makeState(i, val[name], true);
+	}).catch(e => e);
+}
 
 function main() {
 	let didFind, notFound = [];
@@ -435,70 +458,69 @@ function main() {
 				switch (device.typ) {
 					case 'SP':
 						device.oval = undefined;
-						device.on('payload', (err, payload) => {
-							//							console.log(err,payload);
-							//							if (device.type === 'SP3S')
-							//								A.W(`Device ${x} sent err:${err}/${err.toString(16)} with ${payload.toString('hex')}`);
-							if (payload !== null && (payload[0] === 1 || payload[0] === 2)) {
-								let res = !!payload[4];
-								if (device.get_energy)
-									setTimeout(() => device.get_energy(), 2);
-								if (device.oval !== res) {
-									if (device.oval !== undefined)
-										A.I(`Switch ${device.name} changed to ${res} most probably manually!`);
-									device.oval = res;
-									return A.makeState({
-										id: x,
-										write: true,
-										role: 'switch',
-										type: typeof true,
-										native: {
-											host: device.host
-										}
-									}, res, true);
-								}
-							} else if (payload !== null && payload[0] === 8) {
-								var a = parseFloat(payload[7].toString(16) + payload[6].toString(16) + payload[5].toString(16)) / 100.0;
-								//								var b = /* payload[11] * 256.0 + payload[10] + */ !!(payload[9] && 0x80);
-
-								if (device.lpower !== a) {
-									device.lpower = a;
-									A.makeState({
-										id: x + '.CurrentPower',
-										role: "level",
-										write: false,
-										unit: "W",
-										type: typeof 1.1
-									}, a, true);
-								}
-								// if (device.lmeasure !== b) {
-								// device.lmeasure = b;
-								// A.makeState({
-								// id: x + '.Measuring',
-								// role: "switch",
-								// write: false,
-								// type: typeof true
-								// }, b, true);
-								// }
-								//								A.W(`Device ${x} has current power a=${a}, b=${b.toString(2)} b1=${(b & 0x7f)-50} b2= ${(!!(b & 0x80))}`);
-							} else A.W(`Device ${x} sent err:${A.F(err)}} with ${payload ? payload.toString('hex') : null}`);
-						});
+						device.update = (val) => {
+							//							A.If('Should update %s with %O', device.host.name, val);
+							return Promise.resolve().then(() => {
+									if (val.state !== undefined && device.oval !== val.state) {
+										if (device.oval !== undefined)
+											A.I(`Switch ${device.name} changed to ${val.state} most probably manually!`);
+										device.oval = val.state;
+										return A.makeState({
+											id: device.host.name,
+											write: true,
+											role: 'switch',
+											type: typeof true,
+											native: {
+												host: device.host
+											}
+										}, val.state, true);
+									}
+									return Promise.resolve();
+								})
+								.then(() => updateValues(device, val, [{
+									name: 'energy',
+									id: '.CurrentPower',
+									role: "level",
+									write: false,
+									unit: "W",
+									type: typeof 1.1
+								}, {
+									name: 'nightlight',
+									id: '.NightLight',
+									role: "switch",
+									write: true,
+									type: typeof true
+								}]))
+								.catch(e => A.Wf('Update device %s Error: %O', device.host.name, e));
+						};
+						break;
+					case 'S1':
+						device.update = (val) => {
+							return A.seriesOf(A.ownKeysSorted(val), (i) => i.length > 10 ? A.makeState({
+									id: device.host.name + '.' + i,
+									write: false,
+									role: 'value',
+									type: typeof 1,
+									native: {
+										host: device.host
+									}
+								}, val.state, true) : A.resolve(), 1)
+								.catch(e => A.Wf('Update device %s Error: %O', device.host.name, e));
+						};
 						break;
 					case 'RM':
 						device.ltemp = undefined;
-						device.on('temperature', (val) => {
-							//							A.D(`Received temperature ${val} from ${x}`);
-							if (device.ltemp !== val) {
-								device.ltemp = val;
-								A.makeState({
-									id: x + tempName,
-									role: "value.temperature",
+						device.update = (val) => {
+							//							A.If('Should update %s with %O', device.host.name, val);
+							return Promise.resolve()
+								.then(() => updateValues(device, val, [{
+									id: tempName,
+									role: "temperature",
 									write: false,
 									unit: "°C",
 									type: typeof 1.1
-								}, val, true);
-							}
-						});
+								}]));
+						};
 						A.makeState({
 								id: x,
 								role: "value",
@@ -528,86 +550,65 @@ function main() {
 							}, false, true) : null);
 						break;
 					case 'A1':
-						device.on("payload", function (err, payload) {
-							if (!payload)
-								return;
-
-							var param = payload[0];
-							switch (param) {
-								case 1:
-									data = {
-										temperature: (payload[0x4] * 10 + payload[0x5]) / 10.0,
-										humidity: (payload[0x6] * 10 + payload[0x7]) / 10.0,
-										light: payload[0x8],
-										air_quality: payload[0x0a],
-										noise: payload[0xc],
-									};
-									A.makeState({
-										id: x + tempName,
-										name: x + tempName,
-										type: typeof 1.1,
-										role: "value.temperature",
-										write: false,
-										unit: "°C",
-										native: {
-											host: device.host
-										}
-									}, data.temperature, true);
-									A.makeState({
-										id: x + humName,
-										name: x + humName,
-										type: typeof 1.1,
-										role: "value.humidity",
-										write: false,
-										min: 0,
-										max: 100,
-										unit: "%"
-									}, data.humidity, true);
-									A.makeState({
-										id: x + lightName,
-										name: x + lightName,
-										type: typeof 0,
-										role: "value",
-										min: 0,
-										max: 3,
-										states: "0:finster;1:dunkel;2:normal;3:hell"
-									}, data.light, true);
-									A.makeState({
-										id: x + airQualityName,
-										name: x + airQualityName,
-										type: typeof 0,
-										role: "value",
-										min: 0,
-										max: 3,
-										states: "0:sehr gut;1:gut;2:normal;3:schlecht"
-									}, data.air_quality, true);
-									A.makeState({
-										id: x + noiseName,
-										name: x + noiseName,
-										type: typeof 0,
-										role: "value",
-										min: 0,
-										max: 3,
-										states: "0:ruhig;1:normal;2:laut;3:sehr laut"
-									}, data.noise, true);
-
-									break;
-								case 4: //get from check_data
-									var data = Buffer.alloc(payload.length - 4, 0);
-									payload.copy(data, 0, 4);
-									//this.emit("rawData", data);
-									device.emit("rawData", data);
-									break;
-								case 3:
-									break;
-								default:
-									break;
-							}
-						});
+						device.update = (val) => {
+							//							A.If('Should update %s with %O', device.host.name, val);
+							return Promise.resolve()
+								.then(() => updateValues(device, val, [{
+									id: '',
+									name: 'temperature',
+									type: typeof 1.1,
+									role: "value.temperature",
+									write: false,
+									unit: "°C",
+									native: {
+										host: device.host
+									}
+								}, {
+									id: humName,
+									name: 'humidity',
+									type: typeof 1.1,
+									role: "value.humidity",
+									write: false,
+									min: 0,
+									max: 100,
+									unit: "%"
+								}, {
+									id: lightName,
+									name: 'light',
+									type: typeof 0,
+									role: "value",
+									min: 0,
+									max: 3,
+									states: "0:finster;1:dunkel;2:normal;3:hell"
+								}, {
+									id: airQualityName,
+									name: 'air_quality',
+									type: typeof 0,
+									role: "value",
+									min: 0,
+									max: 3,
+									states: "0:sehr gut;1:gut;2:normal;3:schlecht"
+								}, {
+									id: noiseName,
+									name: 'noise',
+									type: typeof 0,
+									role: "value",
+									min: 0,
+									max: 3,
+									states: "0:ruhig;1:normal;2:laut;3:sehr laut"
+								}]))
+								.catch(e => A.Wf('Update device %s Error: %O', device.host.name, e));
+						};
 						break;
 					default:
 						A.D(`Unknown ${device.typ} with ${A.O(device)}`);
 				}
+				return A.makeState({
+					id: device.name + reachName,
+					write: false,
+					role: 'indicator.unreach',
+					type: typeof true,
+				}, device.unreach = false, true);
 			}).catch(e => A.W(`Error in device dedect: "${e}"`));
 		return false;
 	});
