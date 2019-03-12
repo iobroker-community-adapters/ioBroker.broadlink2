@@ -26,13 +26,13 @@ const scanList = {},
 	sceneName = '_SendScene',
 	scenesName = '_Scenes',
 	statesName = '_States',
-	learnedName = '.',
+	learnedName = '.L.',
 	scanName = '_NewDeviceScan',
 	reachName = '._notReachable',
 	codeName = "CODE_",
 	reCODE = /^CODE_|^/,
 	reIsCODE = /^CODE_[a-f0-9]{16}/,
-	defaultName = '_Rename_learned ';
+	defaultName = '_Rename_learned_';
 
 let brlink, adapterObjects, firstCreate, states = {};
 
@@ -44,6 +44,7 @@ A.objChange = function (obj, val) { //	This is needed for name changes
 	if (typeof obj === 'string' && obj.indexOf(learnedName) > 0)
 		return A.getObject(obj)
 			.then(oobj => {
+				A.If('get object %O gets %O', obj, oobj);
 				const nst = oobj.common,
 					ncn = nst.name,
 					// eslint-disable-next-line
@@ -77,7 +78,7 @@ A.objChange = function (obj, val) { //	This is needed for name changes
 function sendCode(device, value) {
 	let buffer = new Buffer(value.replace(reCODE, ''), 'hex'); //var buffer = new Buffer(value.substr(5), 'hex'); // substr(5) removes CODE_ from string
 
-	return device.setVal(buffer).then(x => device.name + ' sent ' + value + ', '+ x);
+	return device.setVal(buffer).then(x => device.name + ' sent ' + value + ', ' + x);
 	//	return Promise.resolve(A.D('sendData to ' + device.name + ', Code: ' + value));
 }
 
@@ -542,7 +543,7 @@ function main() {
 								write: true,
 								type: typeof ''
 							}, ' ', true))
-							.then(() => device.enterRFSweep ? A.makeState({
+							.then(() => device.type === 'RMP' ? A.makeState({
 								id: x + learnName + learnRf,
 								write: true,
 								role: 'button',

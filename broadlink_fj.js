@@ -615,7 +615,7 @@ class S1 extends Device {
             while (!name[name.length - 1])
                 name = name.slice(0, [name.length - 1]);
             name = name.toString('utf8') + ' ' + serial.toString(16);
-            name = name.replace(/\s+/g,'_');
+            name = name.replace(/\s+/g, '_');
             val[name] = Number(buf[0]);
             return val;
         }
@@ -684,6 +684,7 @@ class RM extends Device {
     learn() {
         const self = this;
         this.learning = true;
+        A.If('Should learn on %s', this.host.name);
         return self.checkData().catch(e => e).then(() => self.enterLearning().then(() => A.retry(15, () => A.wait(2000).then(() => self.checkData())).catch(() => null).then(l => {
             self.learning = false;
             return l ? {
@@ -714,16 +715,14 @@ class RMP extends RM {
 
     learn(rf) {
         const self = this;
+        A.Df('Start learning with %s on %s',rf,self.host.name);
         this.learning = true;
         const l = {};
-
-        if (!rf)
-            return super.learn();
 
         function enterRFSweep() {
             var packet = Buffer.alloc(16, 0);
             packet[0] = 0x19;
-            return this.checkOff(self.sendPacket, 0x6a, packet); //.then(x => A.I(`enterRFSweep for ${this.host.name} returned ${A.O(x)}`, x));
+            return self.checkOff(self.sendPacket, 0x6a, packet); //.then(x => A.I(`enterRFSweep for ${this.host.name} returned ${A.O(x)}`, x));
         }
 
         function checkRFData(check2) {
@@ -745,6 +744,10 @@ class RMP extends RM {
             return self.checkOff(self.sendPacket, 0x6a, packet); // .then(x => A.I(`CancelRFSwwep for ${this.host.name} returned ${A.O(x)}`, x));
         }
 
+        if (!rf)
+            return super.learn();
+
+        A.If('Should learn RF-sweep on %s', this.host.name);
         return self.checkData().catch(e => e).then(() => enterRFSweep())
             .then(() => A.retry(30, () => A.wait(1000).then(() => self.checkData().then(ld => ld ? l.data = ld.toString('hex') : ld))).catch(() => null).then(() => {
                 self.learning = false;
@@ -885,7 +888,7 @@ class Broadlink extends EventEmitter {
             },
             RMP: {
                 class: RMP,
-                name: 'rm',
+                name: 'rmp',
                 isPlus: true,
                 0x272a: 'RM2 Pro Plus',
                 0x2787: 'RM2 Pro Plus2',
