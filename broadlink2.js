@@ -11,7 +11,7 @@ const
 	Broadlink = require('./broadlink_fj'),
 	dns = require('dns'),
 	assert = require('assert'),
-	A = require('./myAdapter').MyAdapter;
+    A = require('@frankjoke/myadapter').MyAdapter;
 
 const scanList = {},
 	tempName = '.Temperature',
@@ -448,6 +448,8 @@ function main() {
 	let add = A.C.ip.split(',').map(x => x.split(':').map(s => s.trim()));
 
 	brlink = new Broadlink(add);
+//	brlink.on('15001', m => A.If('Got 15001 with m:%O ', m));
+
 
 	brlink.on("deviceReady", function (device) {
 		const typ = device.type.slice(0, 2);
@@ -463,7 +465,7 @@ function main() {
 				if (scanList[x] && !scanList[x].dummy)
 					return A.W(`Device found already: ${x} with ${A.O(device.host)}`);
 				device.host.name = x;
-				A.I(`Device ${x} dedected: ${A.O(device.host)}`);
+				A.If('Device %s dedected: address=%s, mac=%s, typ=%s, id=%s devtype=%s', x, device.host.address, device.host.mac, device.host.type, device.host.devhex, device.host.devname);
 				scanList[x] = device;
 				switch (device.typ) {
 					case 'SP':
@@ -610,6 +612,9 @@ function main() {
 								.catch(e => A.Wf('Update device %s Error: %O', device.host.name, e));
 						};
 						break;
+					case 'T1':
+						device.update = (val) => A.Df('Update T1 %s with %O',device.name, val);
+						break;
 					default:
 						A.D(`Unknown ${device.typ} with ${A.O(device)}`);
 				}
@@ -634,6 +639,7 @@ function main() {
 					scene: scene.scene
 				}
 			}), 100)
+		.then(() => brlink.start15001())
 		.then(() => deviceScan(A.I('Discover Broadlink devices for 10sec on ' + A.ains)))
 		.then(() => genStates(A.C.switches))
 		.then(() => A.getObjectList({

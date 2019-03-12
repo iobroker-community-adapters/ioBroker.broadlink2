@@ -12,7 +12,7 @@ const EventEmitter = require('events'),
     dns = require('dns'),
     os = require('os'),
     crypto = require('crypto'),
-    A = require('./myAdapter').MyAdapter;
+    A = require('@frankjoke/myadapter').MyAdapter;
 
 /*
 	const crctab16 = new Uint16Array([
@@ -449,7 +449,7 @@ class SP2 extends Device {
                 return A.resolve(ret);
             } else return A.reject(ret);
         }, e => {
-            A.D(`getVal on '${this.constructor.name}' had error ${A.O(e)} and returned ${A.O(ret)}`);
+            A.D(`getVal on '${this.host.name}' had error ${A.O(e)} and returned ${A.O(ret)}`);
             return ret;
         }); //.catch(e => A.I(`getVal on '${this.constructor.name}' had error ${A.O(e)} and returned ${A.O(self._val)}`, e));
     }
@@ -519,8 +519,9 @@ class SP3P extends Device {
                 ret.nightlight = !!(payload[0x4] & 2);
                 return ret;
             } else return A.reject(ret);
+        // eslint-disable-next-line no-unused-vars
         }, e => {
-            A.I(`getVal on '${this.constructor.name}' had error ${A.O(e)} and returned ${A.O(ret)}`);
+//            A.D(`getVal on '${this.host.name}' had error ${A.O(e)} and returned ${A.O(ret)}`);
             return ret;
         }); //.catch(e => A.I(`getVal on '${this.constructor.name}' had error ${A.O(e)} and returned ${A.O(self._val)}`, e));
     }
@@ -534,8 +535,9 @@ class SP3P extends Device {
                     ret.energy = energy;
                 self._val = ret;
                 return ret;
+            // eslint-disable-next-line no-unused-vars
             }, e => {
-                A.I(`getAll on '${this.constructor.name}' had error ${A.O(e)} and returned ${A.O(ret)}`);
+//                A.D(`getAll on '${this.host.name}' had error ${A.O(e)} and returned ${A.O(ret)}`);
                 return ret;
             }); //.catch(e => A.I(`getAll on '${this.constructor.name}' had error ${A.O(e)} and returned ${A.O(self._val)}`,e));
     }
@@ -715,7 +717,7 @@ class RMP extends RM {
 
     learn(rf) {
         const self = this;
-        A.Df('Start learning with %s on %s',rf,self.host.name);
+        A.Df('Start learning with %s on %s', rf, self.host.name);
         this.learning = true;
         const l = {};
 
@@ -921,7 +923,10 @@ class Broadlink extends EventEmitter {
                     if (interfaces[k].hasOwnProperty(k2)) {
                         address = interfaces[k][k2];
                         if (address.family === 'IPv4' && !address.internal) {
-                            A.Df('list interfaces: %O:', address);
+                            const ipif = Object.assign({},address);
+                            delete ipif.family;
+                            delete ipif.internal;
+                            A.Df('interface to be used: %O:', ipif);
                             this._addresses.push(address.address);
                         }
                     }
@@ -968,11 +973,17 @@ class Broadlink extends EventEmitter {
             reuseAddr: true
         });
         socket.on("close", function () {
-            self._ls = null;
+            if (self._ls) {
+                self._ls = null;
+                self.start15001();
+            }
         });
         socket.on("message", function (message, rinfo) {
-            A.Df(`Message from: ${rinfo.address}:${rinfo.port} - %O`, message);
-            self.emit("15001", message, rinfo);
+            let host = self.parsePublic(message, rinfo);
+            //            A.Df(`15001 Message from: %O`, host);
+            //            self.emit("15001", host);
+            if (!self._devices[host.mac] || self._devices[host.mac].dummy)
+                self.discover(host);
         });
         return new Promise((res, rej) => {
             try {
@@ -1036,6 +1047,45 @@ class Broadlink extends EventEmitter {
 
     }
 
+    parsePublic(msg, rinfo) {
+        const self = this;
+        const host = Object.assign(rinfo);
+        let mac = Buffer.alloc(6, 0);
+        //                    self._cs.setMulticastInterface(this.lastaddr);
+        delete host.family;
+        delete host.size;
+        host.command = Number(msg[0x26]) + Number(msg[0x27]) * 256;
+        if (msg.length >= 0x40) {
+            //            mac = msg[0x3a:0x40];
+            msg.copy(mac, 0, 0x3a, 0x40);
+            mac = Array.prototype.map.call(new Uint8Array(mac), x => x.toString(16)).reverse().join(':');
+            host.devtype = Number(msg[0x34]) + Number(msg[0x35]) * 256;
+        } else {
+            msg.copy(mac, 0, 0x2a, 0x30);
+            mac = Array.prototype.map.call(new Uint8Array(mac), x => x.toString(16)).reverse().join(':');
+            }
+
+        if (!self._devices) {
+            self._devices = {};
+        }
+        //        mac = Array.prototype.map.call(new Uint8Array(mac), x => x.toString(16)).reverse().join(':');
+        host.mac = mac;
+        //        A.Df('parsePublic found %O with %O',host,msg);
+        //            console.log(mac);
+        if ((!self._devices[mac] || self._devices[mac].dummy) && host.devtype) {
+            var dev = self.genDevice(host.devtype, host, mac);
+            self._devices[mac] = dev;
+            dev.once("deviceReady", function () {
+                return A.c2p(dns.reverse)(dev.host.address)
+                    .then(x => Array.isArray(x) ? x[0].toString().trim().split('.')[0] : x.toString().trim(), () => dev.host.name)
+                    .then(x => dev.host.name = dev.host.type.slice(0, 2).toUpperCase() + ':' + x)
+                    .then(() => self.emit("deviceReady", dev));
+            });
+            A.retry(3, dev.auth.bind(dev)).catch(A.nop);
+        }
+        return host;
+    }
+
     discover(what, ms) {
         const self = this;
         ms = ms || 5000;
@@ -1046,31 +1096,7 @@ class Broadlink extends EventEmitter {
                 self._cs = dgram.createSocket({
                     type: 'udp4',
                     reuseAddr: true
-                }, (m, r) => A.N((msg, rinfo) => {
-                    var host = rinfo;
-                    var mac = Buffer.alloc(6, 0);
-                    //                    self._cs.setMulticastInterface(this.lastaddr);
-
-                    //mac = msg[0x3a:0x40];
-                    msg.copy(mac, 0, 0x34, 0x40);
-                    var devtype = msg[0x34] | msg[0x35] << 8;
-                    if (!self._devices) {
-                        self._devices = {};
-                    }
-                    mac = Array.prototype.map.call(new Uint8Array(mac), x => x.toString(16)).join(':');
-                    //            console.log(mac);
-                    if (!self._devices[mac] || self._devices[mac].dummy) {
-                        var dev = self.genDevice(devtype, host, mac);
-                        self._devices[mac] = dev;
-                        dev.once("deviceReady", function () {
-                            return A.c2p(dns.reverse)(dev.host.address)
-                                .then(x => Array.isArray(x) ? x[0].toString().trim().split('.')[0] : x.toString().trim(), () => dev.host.name)
-                                .then(x => dev.host.name = dev.host.type.slice(0, 2).toUpperCase() + ':' + x)
-                                .then(() => self.emit("deviceReady", dev));
-                        });
-                        A.retry(3, dev.auth.bind(dev)).catch(A.nop);
-                    }
-                }, m, r));
+                }, (m, r) => A.N(self.parsePublic.bind(self), m, r));
 
 
             self._cs.on('close', arg => self.emit('close', (self._bound = self._cs = null, rej(arg))));
@@ -1129,10 +1155,10 @@ class Broadlink extends EventEmitter {
                         if (Array.isArray(what))
                             addr = addr.concat(what.map(x => x.address));
                         else if (what && what.address)
-                            addr.push(addr);
+                            addr.push(what.address);
                         if (!addr.length)
                             addr = addr.concat(this._addresses);
-                        A.Df('discover from %O , what: %O', addr, what && what.length);
+                        A.Df('discover from %O', addr);
                         return A.repeat(5, () => A.seriesOf(addr, a => self.send(packet, a), 10), null, 500)
                             .catch(e => A.I('error when sending scan messages: ' + e))
                             .then(() => A.wait(ms))
@@ -1170,8 +1196,11 @@ class Broadlink extends EventEmitter {
     }
 
     close() {
-        if (this._ls)
-            this._ls.close();
+        const cl = this._ls;
+        this._ls = null;
+        if (cl)
+            cl.close();
+
         if (this.bound) {
             this._cs.close();
             this._cs.removeAllListeners();
