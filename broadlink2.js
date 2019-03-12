@@ -298,12 +298,21 @@ function doPoll() {
 	discoverAll = discoverAll >= 9 ? 0 : ++discoverAll;
 	return A.seriesOf(A.obToArray(scanList), device => {
 		if (!device.getAll || device.dummy) {
-			return A.resolve(na.push(device.host));
+			if (!device.searchc) {
+				device.searchm = 2;
+				device.searchc = 1;
+			}
+			if (++device.searchc % device.searchm === 0) {
+				na.push(device.host);
+				if (device.searchm < 256) device.searchm *= 2;
+			}
+			return A.resolve();
 		}
 		return device.getAll().then(x => {
 			A.Ir(x, 'Device %s returned %O', device.name, x);
-			if (x && x.here && device.update)
+			if (x && x.here && device.update) {
 				return device.update(x);
+			}
 			if (x && x.here) {
 				x.noUpdateFunction = 'do not know how to update';
 			} else if (!x)
@@ -311,13 +320,13 @@ function doPoll() {
 					here: false
 				};
 			//				A.Ir(x, 'Device %s will reject %O', device.name, x);
-			return Promise.reject(x);
+			return A.reject(x);
 		}).catch(e => {
-			A.If('device %s rejected promise with %O', device.name, e);
-			if (device.lastResponse && device.lastResponse < Date.now() - 1000 * 60 * 10) {
+			A.Df('device %s not reachable, waiting for it again %O', device.name, e);
+			if (device.lastResponse && device.lastResponse < Date.now() - 1000 * 60 * 5) {
 				if (device.close)
 					device.close();
-				A.W(`Device ${device.name} not reachable`);
+				A.W(`Device ${device.name} not reachable, switched it off and will search for it every while.`);
 				return A.makeState(device.name + reachName, device.unreach = true, true);
 			}
 			return A.resolve();

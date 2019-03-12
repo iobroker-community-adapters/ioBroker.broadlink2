@@ -1,10 +1,10 @@
+/* eslint-disable strict */
 /* eslint-disable brace-style */
 /* eslint-disable no-unused-expressions */
 /* eslint-disable no-sync */
 /* eslint-disable no-undef */
 /* eslint-disable complexity */
 /* eslint-disable no-console */
-
 'use strict';
 
 const expect = require('chai').expect;

@@ -971,7 +971,8 @@ class Broadlink extends EventEmitter {
             self._ls = null;
         });
         socket.on("message", function (message, rinfo) {
-            A.If(`Message from: ${rinfo.address}:${rinfo.port} - %O`, message);
+            A.Df(`Message from: ${rinfo.address}:${rinfo.port} - %O`, message);
+            self.emit("15001", message, rinfo);
         });
         return new Promise((res, rej) => {
             try {
