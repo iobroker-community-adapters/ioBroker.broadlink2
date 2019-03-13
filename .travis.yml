@@ -23,7 +23,3 @@ addons:
       - g++-4.9
       - libusb-1.0-0.dev
       - libudev-dev
-script:
-  - 'npm run test:package'
-#  - 'npm run test:unit'
-  - 'npm run test:integration'
