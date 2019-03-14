@@ -838,6 +838,7 @@ class Broadlink extends EventEmitter {
         this._cs = null;
         this._ls = null;
         this._addresses = [];
+        this._devnames = {};
         this._devlist = {
             SP1: {
                 0x0000: 'SP1',
@@ -1058,12 +1059,14 @@ class Broadlink extends EventEmitter {
         if (msg.length >= 0x40) {
             //            mac = msg[0x3a:0x40];
             msg.copy(mac, 0, 0x3a, 0x40);
-            mac = Array.prototype.map.call(new Uint8Array(mac), x => x.toString(16)).reverse().join(':');
+            mac = Array.prototype.map.call(new Uint8Array(mac), x => x.toString(16)).reverse();
             host.devtype = Number(msg[0x34]) + Number(msg[0x35]) * 256;
         } else {
             msg.copy(mac, 0, 0x2a, 0x30);
-            mac = Array.prototype.map.call(new Uint8Array(mac), x => x.toString(16)).reverse().join(':');
+            mac = Array.prototype.map.call(new Uint8Array(mac), x => x.toString(16)).reverse();
             }
+
+        mac = mac.map(x => x.length<2 ? '0'+x : x).join(':');
 
         if (!self._devices) {
             self._devices = {};
@@ -1078,12 +1081,23 @@ class Broadlink extends EventEmitter {
             dev.once("deviceReady", function () {
                 return A.c2p(dns.reverse)(dev.host.address)
                     .then(x => Array.isArray(x) ? x[0].toString().trim().split('.')[0] : x.toString().trim(), () => dev.host.name)
-                    .then(x => dev.host.name = dev.host.type.slice(0, 2).toUpperCase() + ':' + x)
-                    .then(() => self.emit("deviceReady", dev));
+                    .then(x => {
+                        dev.host.name = dev.host.type.slice(0, 2).toUpperCase() + ':' + x;
+                        dev.name = dev.host.name;
+                        self._devnames[dev.name] = dev;
+                    }).then(() => self.emit("deviceReady", dev));
             });
             A.retry(3, dev.auth.bind(dev)).catch(A.nop);
         }
         return host;
+    }
+
+    get devNames() {
+        return this._devnames;
+    }
+
+    getByName(name) {
+        return this._devnames && this._devnames[name.trim()];
     }
 
     discover(what, ms) {
