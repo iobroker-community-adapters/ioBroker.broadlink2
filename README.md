@@ -153,7 +153,7 @@ Mit ioBroker admin, npm install iobroker.broadlink2 oder von <https://github.com
 
 The MIT License (MIT)
 
-Copyright (c) 2014-2016, bluefox <dogafox@gmail.com>
+Copyright (c) 2014-2019 Frank Joke <frankjoke@hotmail.com>
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal

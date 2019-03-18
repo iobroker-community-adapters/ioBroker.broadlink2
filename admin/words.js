@@ -1,7 +1,7 @@
 var systemDictionary;
 systemDictionary= {
     "Broadlink2 adapter settings": {
-        "de": "Broadlink2 Adapter Einstellungen"
+        "de": "Broadlink2 Einstellungen"
     },
     "Settings": {
         "de": "Einstellungen"

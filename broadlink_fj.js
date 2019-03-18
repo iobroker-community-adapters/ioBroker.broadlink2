@@ -519,9 +519,9 @@ class SP3P extends Device {
                 ret.nightlight = !!(payload[0x4] & 2);
                 return ret;
             } else return A.reject(ret);
-        // eslint-disable-next-line no-unused-vars
+            // eslint-disable-next-line no-unused-vars
         }, e => {
-//            A.D(`getVal on '${this.host.name}' had error ${A.O(e)} and returned ${A.O(ret)}`);
+            //            A.D(`getVal on '${this.host.name}' had error ${A.O(e)} and returned ${A.O(ret)}`);
             return ret;
         }); //.catch(e => A.I(`getVal on '${this.constructor.name}' had error ${A.O(e)} and returned ${A.O(self._val)}`, e));
     }
@@ -535,9 +535,9 @@ class SP3P extends Device {
                     ret.energy = energy;
                 self._val = ret;
                 return ret;
-            // eslint-disable-next-line no-unused-vars
+                // eslint-disable-next-line no-unused-vars
             }, e => {
-//                A.D(`getAll on '${this.host.name}' had error ${A.O(e)} and returned ${A.O(ret)}`);
+                //                A.D(`getAll on '${this.host.name}' had error ${A.O(e)} and returned ${A.O(ret)}`);
                 return ret;
             }); //.catch(e => A.I(`getAll on '${this.constructor.name}' had error ${A.O(e)} and returned ${A.O(self._val)}`,e));
     }
@@ -924,7 +924,7 @@ class Broadlink extends EventEmitter {
                     if (interfaces[k].hasOwnProperty(k2)) {
                         address = interfaces[k][k2];
                         if (address.family === 'IPv4' && !address.internal) {
-                            const ipif = Object.assign({},address);
+                            const ipif = Object.assign({}, address);
                             delete ipif.family;
                             delete ipif.internal;
                             A.Df('interface to be used: %O:', ipif);
@@ -1059,18 +1059,14 @@ class Broadlink extends EventEmitter {
         if (msg.length >= 0x40) {
             //            mac = msg[0x3a:0x40];
             msg.copy(mac, 0, 0x3a, 0x40);
-            mac = Array.prototype.map.call(new Uint8Array(mac), x => x.toString(16)).reverse();
             host.devtype = Number(msg[0x34]) + Number(msg[0x35]) * 256;
         } else {
             msg.copy(mac, 0, 0x2a, 0x30);
-            mac = Array.prototype.map.call(new Uint8Array(mac), x => x.toString(16)).reverse();
-            }
-
-        mac = mac.map(x => x.length<2 ? '0'+x : x).join(':');
-
-        if (!self._devices) {
-            self._devices = {};
         }
+
+        mac = Array.prototype.map.call(new Uint8Array(mac), x => x.toString(16)).reverse();
+        mac = mac.map(x => x.length < 2 ? '0' + x : x).join(':');
+
         //        mac = Array.prototype.map.call(new Uint8Array(mac), x => x.toString(16)).reverse().join(':');
         host.mac = mac;
         //        A.Df('parsePublic found %O with %O',host,msg);

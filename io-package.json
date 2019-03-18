@@ -45,7 +45,7 @@
         "enabled": true,
         "messagebox": true,
         "subscribe": "messagebox",
-        "extIcon": "https://raw.githubusercontent.com/frankjoke/ioBroker.broadlink2/master/admin/broadlink.png",
+        "extIcon": "https://raw.githubusercontent.com/frankjoke/ioBroker.broadlink2/master/admin/broadlink2.png",
         "keywords": [
             "Broadlink",
             "W-Lan",
