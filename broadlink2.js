@@ -6,12 +6,12 @@
 // jshint node:true, esversion:6, strict:true, undef:true, unused:true
 "use strict";
 const
+	Broadlink = require('./broadlink_fj'),
+	A = require('@frankjoke/myadapter').MyAdapter,
 	//	utils = require('./lib/utils'),
 	//	adapter = utils.Adapter('broadlink2'),
-	Broadlink = require('./broadlink_fj'),
 	dns = require('dns'),
-	assert = require('assert'),
-    A = require('@frankjoke/myadapter').MyAdapter;
+	assert = require('assert');
 
 const scanList = {},
 	tempName = '.Temperature',
@@ -35,6 +35,9 @@ const scanList = {},
 	defaultName = '_Rename_learned_';
 
 let brlink, adapterObjects, firstCreate, states = {};
+
+// eslint-disable-next-line no-unused-vars
+const AA = A.init(module, 'broadlink2', main); // associate adapter and main with MyAdapter
 
 //A.I('Adapter starting...');
 // eslint-disable-next-line
@@ -82,6 +85,7 @@ function sendCode(device, value) {
 	//	return Promise.resolve(A.D('sendData to ' + device.name + ', Code: ' + value));
 }
 
+// eslint-disable-next-line complexity
 A.stateChange = function (id, state) {
 	//	A.I(A.F(id,' =S> ',state));
 
@@ -133,6 +137,33 @@ A.stateChange = function (id, state) {
 			.then(A.nop, A.nop);
 	}
 
+	function checkT1(device, state, id) {
+		if (id.endsWith('.time'))
+			return device.setTime();
+		if (id.endsWith('.autoMode'))
+			return device.setMode(state.val);
+		if (id.endsWith('.loopMode'))
+			return device.setMode(undefined, state.val);
+		if (id.endsWith('.sensor'))
+			return device.setMode(undefined, undefined, state.val);
+		if (id.endsWith('.thermostatTemp'))
+			return device.setTemp(state.val);
+		if (id.endsWith('.remoteLock'))
+			return device.setPower(undefined, state.val);
+		if (id.endsWith('.power'))
+			return device.setPower(state.val);
+		for (let e of ['.loopMode', '.sensor', '.osv', '.dif', '.svh', '.svl', '.roomTempAdj', '.fre', '.poweron'])
+			if (id.endsWith(e))
+				return device.setAdvanced(e.slice(1), state.val);
+		for (let e of ['.startHour', '.startMinute', '.temp'])
+			if (id.endsWith(e)) {
+				let i = id.split('.');
+				device._val[i[1]][parseInt(i[2].slice(1))-1][i[3]] = state.val;
+				return device.setSchedule(id, state.val);
+			}
+		return A.reject(A.Wf("checkT1 don't know how to set %s of %s to %O", id, device.name, state.val));
+	}
+
 	//	A.D(`stateChange of "${id}": ${A.O(state)}`); 
 	if (!state.ack) {
 		if (id.startsWith(A.ain))
@@ -179,6 +210,9 @@ A.stateChange = function (id, state) {
 						obj && obj.native && obj.native.code ?
 						setState(obj.common.name).then(() => sendCode(device, obj.native.code)) :
 						Promise.reject(A.W(`cannot get code to send for: ${id}=${id0} ${A.O(state)}`)));
+			case 'T1':
+				// eslint-disable-next-line no-fallthrough
+				return checkT1(device, state, id).then(() => device.getAll()).then(x => (x && x.here && device.update) ? device.update(x) : null).catch(A.pE);
 			default:
 				return Promise.reject(A.W(`stateChange error invalid id type: ${id}=${id0} ${A.O(state)}`));
 		}
@@ -309,7 +343,7 @@ function doPoll() {
 			return A.resolve();
 		}
 		return device.getAll().then(x => {
-			A.Ir(x, 'Device %s returned %O', device.name, x);
+			A.Dr(x, 'Device %s returned %O', device.name, x);
 			if (x && x.here && device.update) {
 				return device.update(x);
 			}
@@ -423,19 +457,20 @@ function genStates(array) {
 		.catch(err => A.W(`genState generation error: ${err}`));
 }
 
-A.onStop = () => brlink.close(A.I('Close all connections...'));
-
-// eslint-disable-next-line no-unused-vars
-const AA = A.init(module, 'broadlink2', main); // associate adapter and main with MyAdapter
-
 function updateValues(device, val, values) {
 	return A.seriesOf(values, (item) => {
 		let i = Object.assign({}, item);
 		const name = i.name;
 		delete i.name;
-		i.id = device.host.name + i.id;
-		if (val[name] !== undefined)
-			return A.makeState(i, val[name], true);
+		i.id = device.host.name + (i.id || i.id === '' ? i.id : '.' + name);
+		i.write = !!i.write;
+		let v = val[name];
+		if (i.type === 'json') {
+			i.type = 'string';
+			v = JSON.stringify(v);
+		}
+		if (v !== undefined)
+			return (typeof i.fun === 'function' ? i.fun(device, i, v) : A.makeState(i, v, true)).catch(A.pE);
 	}).catch(e => e);
 }
 
@@ -445,13 +480,39 @@ function main() {
 	if ((A.debug = A.C.ip.endsWith('!')))
 		A.C.ip = A.C.ip.slice(A.D(`Debug mode on!`, 0), -1);
 
-	let add = A.C.ip.split(',').map(x => x.split(':').map(s => s.trim()));
+	let add = A.C.new.split(',').map(x => x.split(':').map(s => s.trim()));
 
 	brlink = new Broadlink(add);
-//	brlink.on('15001', m => A.If('Got 15001 with m:%O ', m));
+	A.onStop = () => brlink.close(A.I('Close all connections...'));
+
+	//	brlink.on('15001', m => A.If('Got 15001 with m:%O ', m));
 
 
 	brlink.on("deviceReady", function (device) {
+
+		function setp(dn) {
+			return [{
+				id: dn + '.startHour',
+				name: 'startHour',
+				write: true,
+				type: typeof 1,
+				role: "value",
+			}, {
+				id: dn + '.startMinute',
+				name: 'startMinute',
+				write: true,
+				type: typeof 1,
+				role: "value",
+			}, {
+				id: dn + '.temp',
+				name: 'temp',
+				write: true,
+				type: typeof 1.0,
+				role: "value.temperature",
+			}];
+		}
+
+
 		const typ = device.type.slice(0, 2);
 		device.typ = typ;
 		device.removeAllListeners('error');
@@ -561,62 +622,192 @@ function main() {
 								type: typeof true,
 							}, false, true) : null);
 						break;
-					case 'A1':
+					case 'T1':
+						device.setTime();
 						device.update = (val) => {
 							//							A.If('Should update %s with %O', device.host.name, val);
 							return Promise.resolve()
 								.then(() => updateValues(device, val, [{
 									id: '',
-									name: 'temperature',
+									name: 'roomTemp',
 									type: typeof 1.1,
 									role: "value.temperature",
-									write: false,
 									unit: "°C",
 									native: {
 										host: device.host
 									}
 								}, {
-									id: humName,
-									name: 'humidity',
+									name: 'thermostatTemp',
+									write: true,
 									type: typeof 1.1,
-									role: "value.humidity",
-									write: false,
-									min: 0,
-									max: 100,
-									unit: "%"
+									role: "value.temperature",
+									unit: "°C"
 								}, {
-									id: lightName,
-									name: 'light',
+									name: 'roomTempAdj',
+									write: true,
+									type: typeof 1.1,
+									role: "value.temperature",
+									unit: "°C"
+								}, {
+									name: 'externalTemp',
+									type: typeof 1.1,
+									role: "value.temperature",
+									unit: "°C"
+								}, {
+									name: 'roomTemp',
+									type: typeof 1.1,
+									role: "value.temperature",
+									unit: "°C"
+								}, {
+									name: 'remoteLock',
+									type: typeof true,
+									write: true,
+									role: "switch",
+								}, {
+									name: 'power',
+									type: typeof true,
+									write: true,
+									role: "switch",
+								}, {
+									name: 'active',
+									type: typeof true,
+									write: true,
+									role: "switch",
+								}, {
+									name: 'time',
+									type: typeof '',
+									write: true,
+									role: "button",
+								}, {
+									name: 'autoMode',
 									type: typeof 0,
 									role: "value",
 									min: 0,
-									max: 3,
-									states: "0:finster;1:dunkel;2:normal;3:hell"
+									max: 1,
+									states: "0:manual;1:auto",
+									write: true,
 								}, {
-									id: airQualityName,
-									name: 'air_quality',
+									name: 'loopMode',
 									type: typeof 0,
+									write: true,
+									role: "value",
+									min: 1,
+									max: 3,
+									states: "1:weekend starts Saturday;2:weekend starts Sunday;3:All days are weekdays",
+								}, {
+									name: 'sensor',
+									type: typeof 0,
+									write: true,
 									role: "value",
 									min: 0,
-									max: 3,
-									states: "0:sehr gut;1:gut;2:normal;3:schlecht"
+									max: 2,
+									states: "0:internal;1:external;2:internalControl-externalLimit"
 								}, {
-									id: noiseName,
-									name: 'noise',
-									type: typeof 0,
-									role: "value",
-									min: 0,
-									max: 3,
-									states: "0:ruhig;1:normal;2:laut;3:sehr laut"
+									name: 'weekday',
+									fun: (device, i, v) => {
+										let d = 0;
+										return A.seriesOf(v, (x) => {
+											let dn = '.weekday.s' + ++d;
+											return updateValues(device, x, setp(dn));
+										}, 0);
+									}
+								}, {
+									name: 'weekend',
+									fun: (device, i, v) => {
+										let d = 0;
+										return A.seriesOf(v, (x) => {
+											let dn = '.weekend.s' + ++d;
+											return updateValues(device, x, setp(dn));
+										}, 0);
+									}
+								}, {
+									name: 'osv',
+									type: typeof 0.1,
+									write: true,
+									role: "value.temperature",
+									unit: "°C",
+									min: 5,
+									max: 99
+								}, {
+									name: 'dif',
+									type: typeof 0.1,
+									write: true,
+									role: "value.temperature",
+									unit: "°C",
+									min: 1,
+									max: 9
+								}, {
+									name: 'svh',
+									type: typeof 0.1,
+									write: true,
+									role: "value.temperature",
+									unit: "°C",
+									min: 5,
+									max: 99
+								}, {
+									name: 'svl',
+									type: typeof 0.1,
+									write: true,
+									role: "value.temperature",
+									unit: "°C",
+									min: 5,
+									max: 99
 								}]))
 								.catch(e => A.Wf('Update device %s Error: %O', device.host.name, e));
 						};
 						break;
-					case 'T1':
-						device.update = (val) => A.Df('Update T1 %s with %O',device.name, val);
+					case 'A1':
+						device.update = (val) =>
+							Promise.resolve()
+							.then(() => updateValues(device, val, [{
+								id: '',
+								name: 'temperature',
+								type: typeof 1.1,
+								role: "value.temperature",
+								write: false,
+								unit: "°C",
+								native: {
+									host: device.host
+								}
+							}, {
+								id: humName,
+								name: 'humidity',
+								type: typeof 1.1,
+								role: "value.humidity",
+								write: false,
+								min: 0,
+								max: 100,
+								unit: "%"
+							}, {
+								id: lightName,
+								name: 'light',
+								type: typeof 0,
+								role: "value",
+								min: 0,
+								max: 3,
+								states: "0:finster;1:dunkel;2:normal;3:hell"
+							}, {
+								id: airQualityName,
+								name: 'air_quality',
+								type: typeof 0,
+								role: "value",
+								min: 0,
+								max: 3,
+								states: "0:sehr gut;1:gut;2:normal;3:schlecht"
+							}, {
+								id: noiseName,
+								name: 'noise',
+								type: typeof 0,
+								role: "value",
+								min: 0,
+								max: 3,
+								states: "0:ruhig;1:normal;2:laut;3:sehr laut"
+							}]))
+							.catch(e => A.Wf('Update device %s Error: %O', device.host.name, e));
+
 						break;
 					default:
-						A.D(`Unknown ${device.typ} with ${A.O(device)}`);
+						A.Wf('Unknown %s with %O', device.host.name, device.host);
 				}
 				return A.makeState({
 					id: device.name + reachName,

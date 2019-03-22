@@ -1,4 +1,4 @@
-!#/usr/bin/python2
+#!#/usr/bin/python2
 
 from datetime import datetime
 try:
@@ -12,7 +12,7 @@ import socket
 import sys
 import threading
 import codecs
-
+import binascii
 
 def gendevice(devtype, host, mac):
   devices = {
@@ -210,7 +210,7 @@ class device:
     response = self.send_packet(0x65, payload)
 
     payload = self.decrypt(response[0x38:])
-
+#    print binascii.hexlify(payload)
     if not payload:
      return False
 
@@ -277,7 +277,7 @@ class device:
       checksum = checksum & 0xffff
     packet[0x20] = checksum & 0xff
     packet[0x21] = checksum >> 8
-
+    print 'send Packet',binascii.hexlify(packet[0x26:])
     starttime = time.time()
     with self.lock:
       while True:
@@ -582,18 +582,20 @@ class hysen(device):
   # New behaviour: raises a ValueError if the device response indicates an error or CRC check fails
   # The function prepends length (2 bytes) and appends CRC
   def send_request(self,input_payload):
-    
+    print binascii.hexlify(input_payload)
     from PyCRC.CRC16 import CRC16
     crc = CRC16(modbus_flag=True).calculate(bytes(input_payload))
 
     # first byte is length, +2 for CRC16
     request_payload = bytearray([len(input_payload) + 2,0x00])
     request_payload.extend(input_payload)
+    print 'request payload',binascii.hexlify(request_payload)
     
     # append CRC
     request_payload.append(crc & 0xFF)
     request_payload.append((crc >> 8) & 0xFF)
 
+    print 'request payload',binascii.hexlify(request_payload)
     # send to device
     response = self.send_packet(0x6a, request_payload)
 
@@ -603,6 +605,8 @@ class hysen(device):
       raise ValueError('broadlink_response_error',err)
     
     response_payload = bytearray(self.decrypt(bytes(response[0x38:])))
+
+    print 'response payload',binascii.hexlify(response_payload),":",len(response_payload), binascii.hexlify(self.key), binascii.hexlify(self.iv)
 
     # experimental check on CRC in response (first 2 bytes are len, and trailing bytes are crc)
     response_payload_len = response_payload[0]
@@ -628,6 +632,7 @@ class hysen(device):
   # Get full status (including timer schedule)
   def get_full_status(self):
     payload = self.send_request(bytearray([0x01,0x03,0x00,0x00,0x00,0x16]))    
+    print 'get full status payload', binascii.hexlify(payload)
     data = {}
     data['remote_lock'] =  payload[3] & 1
     data['power'] =  payload[4] & 1
@@ -884,7 +889,15 @@ def setup(ssid, password, security_mode):
   sock.sendto(payload, ('255.255.255.255', 80))
 
 # test 
-hys = None
-devices = discover(timeout=5)
- 
-  
+strHost="192.168.0.187"
+strMac="34:ea:34:9b:92:46"
+strType = '0x4ead'
+macbytes = bytearray.fromhex(strMac.replace(':',''))
+device = hysen((strHost,80),macbytes,strType)
+print device.auth()
+data = device.get_full_status()
+print data
+data = device.get_temp()
+print data
+data = device.get_external_temp()
+print data

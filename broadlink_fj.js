@@ -14,55 +14,6 @@ const EventEmitter = require('events'),
     crypto = require('crypto'),
     A = require('@frankjoke/myadapter').MyAdapter;
 
-/*
-	const crctab16 = new Uint16Array([
-		0X0000, 0X1189, 0X2312, 0X329B, 0X4624, 0X57AD, 0X6536, 0X74BF,
-		0X8C48, 0X9DC1, 0XAF5A, 0XBED3, 0XCA6C, 0XDBE5, 0XE97E, 0XF8F7,
-		0X1081, 0X0108, 0X3393, 0X221A, 0X56A5, 0X472C, 0X75B7, 0X643E,
-		0X9CC9, 0X8D40, 0XBFDB, 0XAE52, 0XDAED, 0XCB64, 0XF9FF, 0XE876,
-		0X2102, 0X308B, 0X0210, 0X1399, 0X6726, 0X76AF, 0X4434, 0X55BD,
-		0XAD4A, 0XBCC3, 0X8E58, 0X9FD1, 0XEB6E, 0XFAE7, 0XC87C, 0XD9F5,
-		0X3183, 0X200A, 0X1291, 0X0318, 0X77A7, 0X662E, 0X54B5, 0X453C,
-		0XBDCB, 0XAC42, 0X9ED9, 0X8F50, 0XFBEF, 0XEA66, 0XD8FD, 0XC974,
-		0X4204, 0X538D, 0X6116, 0X709F, 0X0420, 0X15A9, 0X2732, 0X36BB,
-		0XCE4C, 0XDFC5, 0XED5E, 0XFCD7, 0X8868, 0X99E1, 0XAB7A, 0XBAF3,
-		0X5285, 0X430C, 0X7197, 0X601E, 0X14A1, 0X0528, 0X37B3, 0X263A,
-		0XDECD, 0XCF44, 0XFDDF, 0XEC56, 0X98E9, 0X8960, 0XBBFB, 0XAA72,
-		0X6306, 0X728F, 0X4014, 0X519D, 0X2522, 0X34AB, 0X0630, 0X17B9,
-		0XEF4E, 0XFEC7, 0XCC5C, 0XDDD5, 0XA96A, 0XB8E3, 0X8A78, 0X9BF1,
-		0X7387, 0X620E, 0X5095, 0X411C, 0X35A3, 0X242A, 0X16B1, 0X0738,
-		0XFFCF, 0XEE46, 0XDCDD, 0XCD54, 0XB9EB, 0XA862, 0X9AF9, 0X8B70,
-		0X8408, 0X9581, 0XA71A, 0XB693, 0XC22C, 0XD3A5, 0XE13E, 0XF0B7,
-		0X0840, 0X19C9, 0X2B52, 0X3ADB, 0X4E64, 0X5FED, 0X6D76, 0X7CFF,
-		0X9489, 0X8500, 0XB79B, 0XA612, 0XD2AD, 0XC324, 0XF1BF, 0XE036,
-		0X18C1, 0X0948, 0X3BD3, 0X2A5A, 0X5EE5, 0X4F6C, 0X7DF7, 0X6C7E,
-		0XA50A, 0XB483, 0X8618, 0X9791, 0XE32E, 0XF2A7, 0XC03C, 0XD1B5,
-		0X2942, 0X38CB, 0X0A50, 0X1BD9, 0X6F66, 0X7EEF, 0X4C74, 0X5DFD,
-		0XB58B, 0XA402, 0X9699, 0X8710, 0XF3AF, 0XE226, 0XD0BD, 0XC134,
-		0X39C3, 0X284A, 0X1AD1, 0X0B58, 0X7FE7, 0X6E6E, 0X5CF5, 0X4D7C,
-		0XC60C, 0XD785, 0XE51E, 0XF497, 0X8028, 0X91A1, 0XA33A, 0XB2B3,
-		0X4A44, 0X5BCD, 0X6956, 0X78DF, 0X0C60, 0X1DE9, 0X2F72, 0X3EFB,
-		0XD68D, 0XC704, 0XF59F, 0XE416, 0X90A9, 0X8120, 0XB3BB, 0XA232,
-		0X5AC5, 0X4B4C, 0X79D7, 0X685E, 0X1CE1, 0X0D68, 0X3FF3, 0X2E7A,
-		0XE70E, 0XF687, 0XC41C, 0XD595, 0XA12A, 0XB0A3, 0X8238, 0X93B1,
-		0X6B46, 0X7ACF, 0X4854, 0X59DD, 0X2D62, 0X3CEB, 0X0E70, 0X1FF9,
-		0XF78F, 0XE606, 0XD49D, 0XC514, 0XB1AB, 0XA022, 0X92B9, 0X8330,
-		0X7BC7, 0X6A4E, 0X58D5, 0X495C, 0X3DE3, 0X2C6A, 0X1EF1, 0X0F78,
-	]);
-
-	// calculate the 16-bit CRC of data with predetermined length.
-	function crc16(data) {
-		var res = 0x0ffff;
-
-		for (let b of data) {
-			res = ((res >> 8) & 0x0ff) ^ crctab16[(res ^ b) & 0xff];
-		}
-
-		return (~res) & 0x0ffff;
-	}
-
-*/
-
 class Device extends EventEmitter {
     constructor(host, mac, devtype, bl) {
         super();
@@ -72,6 +23,7 @@ class Device extends EventEmitter {
         this.bl = bl;
         this.host = host;
         this.type = "Unknown";
+        this.typ = "UK";
         delete this.host.family;
         delete this.host.size;
         host.mac = mac;
@@ -206,6 +158,7 @@ class Device extends EventEmitter {
                     A.If('message command=7 received, err=%s: %O', Broadlink.toHex(err), obj);
                     return;
                 }
+                //                A.If('received message from %s:%O',self.name,obj);
                 if (err === 0)
                     return resume(obj);
                 obj.err = err;
@@ -254,6 +207,7 @@ class Device extends EventEmitter {
             const command = what.command;
             const payload = what.payload;
             if (command === 0xe9) {
+                //                A.If('auth payload: %O', payload);
                 self.key = Buffer.alloc(0x10, 0);
                 payload.copy(self.key, 0, 0x04, 0x14);
 
@@ -272,6 +226,8 @@ class Device extends EventEmitter {
     }
 
     sendPacket(command, payload, timeout) {
+
+
         this.timeout = timeout || 700;
         if (this.timeout < 0) {
             this.timeout = -this.timeout;
@@ -291,16 +247,22 @@ class Device extends EventEmitter {
         packet[0x26] = command;
         packet[0x28] = this.count & 0xff;
         packet[0x29] = this.count >> 8;
-        packet[0x2a] = this.host.mac[0];
-        packet[0x2b] = this.host.mac[1];
-        packet[0x2c] = this.host.mac[2];
-        packet[0x2d] = this.host.mac[3];
-        packet[0x2e] = this.host.mac[4];
-        packet[0x2f] = this.host.mac[5];
+        packet[0x2a] = this.host.maco[0];
+        packet[0x2b] = this.host.maco[1];
+        packet[0x2c] = this.host.maco[2];
+        packet[0x2d] = this.host.maco[3];
+        packet[0x2e] = this.host.maco[4];
+        packet[0x2f] = this.host.maco[5];
         packet[0x30] = this.id[0];
         packet[0x31] = this.id[1];
         packet[0x32] = this.id[2];
         packet[0x33] = this.id[3];
+
+        if (payload && payload.length > 0) {
+            let npl = Buffer.alloc(parseInt((payload.length + 16) / 16) * 16, 0);
+            payload.copy(npl, 0, 0);
+            payload = npl;
+        }
 
         var checksum = 0xbeaf,
             i;
@@ -325,7 +287,9 @@ class Device extends EventEmitter {
         }
         packet[0x20] = checksum & 0xff;
         packet[0x21] = checksum >> 8;
-
+        let pb = new Buffer.alloc(packet.length - 0x26);
+        packet.copy(pb, 0, 0x26);
+        //        A.If('sendPacket from id %s mac %s command %s, payload: %s, packet: %s, key:%s, iv:%s', this.id.toString('hex'), this.host.maco.toString('hex'), command.toString(16), payload.toString('hex'), pb.toString('hex'), this.key.toString('hex'), this.iv.toString('hex'));
         if (timeout < 0)
             return this._send(packet);
         return A.retry(3, this._send.bind(this), packet);
@@ -766,66 +730,216 @@ class T1 extends Device {
         super(host, mac, devtype, bl);
         this.type = "T1";
     }
-    /*    // --- start of other test
-            sendT1packet(data) {
-                //        if (!data)
-                //            data = Buffer.alloc(4, 0);
-                //        else 
-                if (Array.isArray(data))
-                    data = Buffer.from(data);
-                const payload = Buffer.alloc(data.length + 2, 0);
-                data.copy(payload, 0, 0);
-                let cc = crc16(data);
-                payload[data.length] = cc & 0xff;
-                payload[data.length + 1] = (cc >> 8) & 0xff;
-                A.I(`Send to T1 ${A.O(payload)}`);
-                return this.sendPacket(0x6a, payload).then(res => {
-                    if (res && res.payload && !res.err) {
-                        let pl = res.payload;
-                        let size = pl[0];
-                        A.I(`Got payload with size ${size}: ${pl}`);
-                        return pl;
-                    }
-                    return A.reject(res);
-                });
-            }
-    */ // --- end of other test
-    sendT1packet(command, data) {
-        if (!data)
-            data = Buffer.alloc(4, 0);
-        else if (Array.isArray(data))
-            data = Buffer.from(data);
-        const payload = Buffer.alloc(8, 0);
-        payload[0] = command;
-        payload[1] = payload[2] = 1;
-        data.copy(payload, 3, 0);
-        let cc = 0;
-        for (let i = 0; i < 7; i++)
-            cc += payload[i];
+    // --- start of other test
+    sendT1packet(cmd, data) {
 
-        cc = (cc & 0xff) ^ 0xa5;
-        payload[7] = cc;
-        A.I(`sent payload to T1:` + A.F(payload));
-        return this.checkOff(this.sendPacket, 0x6a, payload).then(res => {
+        function crc16(buffer) {
+            var crc = 0xFFFF;
+            var odd;
+
+            for (var i = 0; i < buffer.length; i++) {
+                crc = crc ^ buffer[i];
+
+                for (var j = 0; j < 8; j++) {
+                    odd = crc & 0x0001;
+                    crc = crc >> 1;
+                    if (odd) {
+                        crc = crc ^ 0xA001;
+                    }
+                }
+            }
+            return crc;
+        }
+
+        //        if (!data)
+        //            data = Buffer.alloc(4, 0);
+        //        else 
+        if (Array.isArray(data))
+            data = Buffer.from(data);
+        //        A.If('sendT1packet: from id:%O key:%O = %O', this.id,this.key, data);
+        const payload = Buffer.alloc(data.length + 4, 0);
+        data.copy(payload, 2, 0);
+        payload[0] = data.length + 2;
+
+        let cc = crc16(data);
+        payload[data.length + 2] = cc & 0xff;
+        payload[data.length + 3] = (cc >> 8) & 0xff;
+        //        A.If('sendT1packet: %O', payload);
+        return this.sendPacket(cmd, payload).then(res => {
+            //            A.If('sendT1packet got back from cmd %O',res);
             if (res && res.payload && !res.err) {
-                let pl = res.payload;
-                let size = pl[0];
-                A.I(`Got payload with size ${size}: ${pl}`);
-                return pl;
+                //                let pl = res.payload;
+                //                let size = pl[0];
+                //                A.If('Got payload with size %n: %O', size, pl);
+                return res.payload;
             }
             return A.reject(res);
-        });
+        }, e => A.Wf('sendT1Packed error %O', e));
+    }
+
+    setTime(date) {
+        if (!date)
+            date = new Date();
+        let dow = date.getDay();
+        dow = dow ? dow : 7;
+        return this.checkOff(this.sendT1packet, 0x6a, [0x01, 0x10, 0x00, 0x08, 0x00, 0x02, 0x04, date.getHours(), date.getMinutes(), date.getSeconds(), dow]);
+    }
+    setMode(auto, loop, sensor) {
+        auto = auto !== undefined ? auto : this._val.autoMode;
+        loop = loop !== undefined ? loop : this._val.loopMode;
+        sensor = sensor !== undefined ? sensor : this._val.sensor;
+        let mode = loop * 16 + auto;
+        sensor = sensor ? sensor : 0;
+        A.Df('setMode for %s = auto:%d loop:%d mode:%O, sensor:%O', this.name, auto, loop, mode, sensor);
+        return this.checkOff(this.sendT1packet, 0x6a, [0x01, 0x06, 0x00, 0x02, mode, sensor]);
+    }
+
+    /*   def set_temp(self, temp):
+    self.send_request(bytearray([0x01,0x06,0x00,0x01,0x00,int(temp * 2)]) )
+    */
+    setTemp(temp) {
+        A.Df('setTemp for %s = temp:%d', this.name, temp);
+        return this.checkOff(this.sendT1packet, 0x6a, [0x01, 0x06, 0x00, 0x01, 0x00, parseInt(temp * 2.0)]);
+    }
+
+    /*
+      def set_power(self, power=1, remote_lock=0):
+        self.send_request(bytearray([0x01,0x06,0x00,0x00,remote_lock,power]) )
+    */
+    setPower(power, remote) {
+        power = power !== undefined ? power : this._val.power;
+        remote = remote !== undefined ? remote : this._val.remoteLock;
+        remote = remote ? 1 : 0;
+        power = power ? 1 : 0;
+        A.Df('setPower for %s = power:%d remote:%d', this.name, power, remote);
+        return this.checkOff(this.sendT1packet, 0x6a, [0x01, 0x06, 0x00, 0x00, remote, power]);
+    }
+    /*
+    # Advanced settings
+    # Sensor mode (SEN) sensor = 0 for internal sensor, 1 for external sensor, 2 for internal control temperature, external limit temperature. Factory default: 0.
+    # Set temperature range for external sensor (OSV) osv = 5..99. Factory default: 42C
+    # Deadzone for floor temprature (dIF) dif = 1..9. Factory default: 2C
+    # Upper temperature limit for internal sensor (SVH) svh = 5..99. Factory default: 35C
+    # Lower temperature limit for internal sensor (SVL) svl = 5..99. Factory default: 5C
+    # Actual temperature calibration (AdJ) adj = -0.5. Prescision 0.1C
+    # Anti-freezing function (FrE) fre = 0 for anti-freezing function shut down, 1 for anti-freezing function open. Factory default: 0
+    # Power on memory (POn) poweron = 0 for power on memory off, 1 for power on memory on. Factory default: 0
+    def set_advanced(self, loop_mode, sensor, osv, dif, svh, svl, adj, fre, poweron):
+      input_payload = bytearray([0x01,0x10,0x00,0x02,0x00,0x05,0x0a, loop_mode, sensor, osv, dif, svh, svl, (int(adj*2)>>8 & 0xff), (int(adj*2) & 0xff), fre, poweron])
+      self.send_request(input_payload)
+    */
+    setAdvanced(item, val) {
+        let v = this._val;
+        if (item && v && v[item] !== undefined)
+            this._val[item] = val;
+        A.Df('setAdvanced for %s = power:%d remote:%d', this.name, item, val);
+        return this.checkOff(this.sendT1packet, 0x6a, [0x01, 0x10, 0x00, 0x02, 0x00, 0x05, 0x0a, v.loopMode, v.sensor, v.osv, v.dif, v.svh, v.svl, (parseInt(v.roomTempAdj * 2) >> 8 & 0xff), (parseInt(v.roomTempAdj * 2) & 0xff), v.fre, v.poweron]);
+    }
+
+    /*
+  # Set timer schedule
+  # Format is the same as you get from get_full_status.
+  # weekday is a list (ordered) of 6 dicts like:
+  # {'start_hour':17, 'start_minute':30, 'temp': 22 }
+  # Each one specifies the thermostat temp that will become effective at start_hour:start_minute
+  # weekend is similar but only has 2 (e.g. switch on in morning and off in afternoon)
+  def set_schedule(self,weekday,weekend):
+    # Begin with some magic values ...
+    input_payload = bytearray([0x01,0x10,0x00,0x0a,0x00,0x0c,0x18])
+
+    # Now simply append times/temps
+    # weekday times
+    for i in range(0, 6):
+      input_payload.append( weekday[i]['start_hour'] )
+      input_payload.append( weekday[i]['start_minute'] )
+
+    # weekend times
+    for i in range(0, 2):
+      input_payload.append( weekend[i]['start_hour'] )
+      input_payload.append( weekend[i]['start_minute'] )
+
+    # weekday temperatures
+    for i in range(0, 6):
+      input_payload.append( int(weekday[i]['temp'] * 2) )
+
+    # weekend temperatures
+    for i in range(0, 2):
+      input_payload.append( int(weekend[i]['temp'] * 2) )
+
+    self.send_request(input_payload)
+
+    */
+    setSchedule(id, val) {
+        A.Df('Should set schedule item %s for %s to %O', id, val);
+        let v = this._val;
+        let a = [0x01, 0x10, 0x00, 0x0a, 0x00, 0x0c, 0x18];
+        let i;
+        for (i = 0; i < 6; i++) {
+            a.push(v.weekday[i].startHour);
+            a.push(v.weekday[i].startMinute);
+        }
+        for (i = 0; i < 2; i++) {
+            a.push(v.weekend[i].startHour);
+            a.push(v.weekend[i].startMinute);
+        }
+        for (i = 0; i < 6; i++) {
+            a.push(parseInt(v.weekday[i].temp*2));
+        }
+        for (i = 0; i < 2; i++) {
+            a.push(parseInt(v.weekend[i].temp*2));
+        }
+        return this.checkOff(this.sendT1packet, 0x6a, a);
     }
 
     getAll() {
         const ret = this._val;
         ret.here = false;
+
+        function getSched(x, start, end) {
+            let r = [];
+            let i = start;
+            while (i < end) {
+                r.push({
+                    startHour: Number(x[2 * i + 23]),
+                    startMinute: Number(x[2 * i + 24]),
+                    temp: Number(x[i + 39]) / 2.0
+                });
+                ++i;
+            }
+            return r;
+        }
         //        return this.sendT1packet(0xA0).then(x => {
-        const buf = Buffer.alloc(4, 0);
-        buf[0] = buf[1] = buf[2] = 1;
-        return this.checkOff(this.sendT1packet, 0xA0, buf).then(x => {
-            ret.payload = x;
+        return this.checkOff(this.sendT1packet, 0x6a, [0x01, 0x03, 0x00, 0x00, 0x00, 0x16]).then(x => {
+            //            A.If('full status payload: %O',x);
+            x.copy(x, 0, 2);
             ret.here = true;
+            //            ret.payload = x;
+            ret.remoteLock = Boolean(x[3] & 1);
+            ret.power = Boolean(x[4] & 1);
+            ret.active = Boolean(x[4] & 16);
+            ret.tempManual = Boolean(x[4] & 64);
+            ret.roomTemp = Number(x[5]) / 2.0;
+            ret.thermostatTemp = Number(x[6]) / 2.0;
+            ret.autoMode = Number(x[7] & 15);
+            ret.loopMode = Number((x[7] >> 4) & 15);
+            ret.sensor = Number(x[8]);
+            ret.osv = Number(x[9]);
+            ret.dif = Number(x[10]);
+            ret.svh = Number(x[11]);
+            ret.svl = Number(x[12]);
+            ret.roomTempAdj = (Number(x[13]) * 256 + Number(x[14])) / 2.0;
+            if (ret.roomTempAdj > 32767)
+                ret.roomTempAdj = 32767 - ret.roomTempAdj;
+            ret.fre = Number(x[15]);
+            ret.poweron = Number(x[16]);
+            ret.unknown = Number(x[17]);
+            ret.externalTemp = Number(x[18]) / 2.0;
+            ret.time = Number(x[19]) + ':' + Number(x[20]) + ':' + Number(x[21]) + ' @' + Number(x[22]);
+            ret.poweron = Number(x[16]);
+            ret.unknown = Number(x[17]);
+            ret.weekday = getSched(x, 0, 6);
+            ret.weekend = getSched(x, 6, 8);
+            return ret;
         });
     }
 }
@@ -868,13 +982,11 @@ class Broadlink extends EventEmitter {
             SP3P: {
                 class: SP3P,
                 name: 'sp3p',
-                isPlus: true,
                 0x947A: 'SP3SPower',
             },
             T1: {
                 class: T1,
                 name: 't1',
-                isPlus: true,
                 0x4ead: 'T1 Floureon',
             },
             RM: {
@@ -892,7 +1004,6 @@ class Broadlink extends EventEmitter {
             RMP: {
                 class: RMP,
                 name: 'rmp',
-                isPlus: true,
                 0x272a: 'RM2 Pro Plus',
                 0x2787: 'RM2 Pro Plus2',
                 0x278b: 'RM2 Pro Plus BL',
@@ -943,12 +1054,16 @@ class Broadlink extends EventEmitter {
         }
         this._addresses.push('255.255.255.255');
         this._addresses.push('224.0.0.251');
-
+        if (!add)
+            return;
         for (let k of add) {
-            if (Array.isArray(k) && k.length === 2 && this._devlist[k[0]])
-                this._devlist[k[0]][Number(k[1])] = k[0].toLowerCase();
+            if (Array.isArray(k) && k.length === 2) {
+                let cl = k[1].toUpperCase();
+                let dt = Number(k[0]);
+                if (this._devlist[cl])
+                    this._devlist[cl][dt] = cl.toLowerCase();
+            }
         }
-
     }
 
     static toHex(n, len) {
@@ -1022,18 +1137,20 @@ class Broadlink extends EventEmitter {
         //        A.Df('got device type %s @host:%O', devtype.toString(16), host);
         host.devtype = devtype;
         host.type = 'unknown';
-        host.name = 'unknown_' + host.mac;
+        host.name = 'unknown_' + devtype.toString(16) + '_' + host.mac;
         let dev = null;
         for (let cl of A.ownKeys(this._devlist)) {
             const typ = this._devlist[cl];
             if (typ[devtype] || (typ.range && devtype >= typ.range.min && devtype <= typ.range.max)) {
                 dev = new typ.class(host, mac, devtype, this);
-                //                dev[typ.name](typ.isPlus);
                 host.type = typ.name;
                 host.devname = typ.range ? typ.range.name : typ[devtype];
                 return dev;
             }
         }
+        host.type = 'unknown';
+        host.devname = 'UKN';
+        //        A.If('Unknown...%O, %s, %s',host, mac, devtype);
         return new Device(host, mac, devtype, this);
     }
 
@@ -1064,6 +1181,7 @@ class Broadlink extends EventEmitter {
             msg.copy(mac, 0, 0x2a, 0x30);
         }
 
+        host.maco = mac;
         mac = Array.prototype.map.call(new Uint8Array(mac), x => x.toString(16)).reverse();
         mac = mac.map(x => x.length < 2 ? '0' + x : x).join(':');
 
@@ -1072,6 +1190,7 @@ class Broadlink extends EventEmitter {
         //        A.Df('parsePublic found %O with %O',host,msg);
         //            console.log(mac);
         if ((!self._devices[mac] || self._devices[mac].dummy) && host.devtype) {
+            //            A.If('new device found: host=%O',host);
             var dev = self.genDevice(host.devtype, host, mac);
             self._devices[mac] = dev;
             dev.once("deviceReady", function () {
@@ -1166,6 +1285,8 @@ class Broadlink extends EventEmitter {
                             addr = addr.concat(what.map(x => x.address));
                         else if (what && what.address)
                             addr.push(what.address);
+                        else if (typeof what === 'string')
+                            addr.push(what);
                         if (!addr.length)
                             addr = addr.concat(this._addresses);
                         A.Df('discover from %O', addr);

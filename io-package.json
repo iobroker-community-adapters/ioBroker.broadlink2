@@ -91,7 +91,8 @@
                 "off": "+"
             }
         ],
-        "poll": "30"
+        "poll": "30",
+        "new": ""
     },
     "objects": [],
     "config": {

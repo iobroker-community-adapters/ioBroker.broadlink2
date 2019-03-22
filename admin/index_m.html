@@ -274,10 +274,12 @@
 					if (buttons[i]) {
 						for (var b = 0; b < buttons[i].length; b++) {
 							if ((!v && buttons[i][b] === 'up') || v === values.length - 1 && buttons[i][b] === 'down') {
-								text += `<a data-command="${buttons[i][b]}" class="btn-floating waves-effect waves-light red lighten-2 values-buttons right" disabled><i class="material-icons">add</i></a>`
+								text +=
+									`<a data-command="${buttons[i][b]}" class="btn-floating waves-effect waves-light red lighten-2 values-buttons right" disabled><i class="material-icons">add</i></a>`
 								continue;
 							}
-							text += `<a data-index="${v}" data-command="${buttons[i][b]}" class="btn-floating waves-effect waves-light red lighten-2 values-buttons right "><i class="material-icons">add</i></a>`
+							text +=
+								`<a data-index="${v}" data-command="${buttons[i][b]}" class="btn-floating waves-effect waves-light red lighten-2 values-buttons right "><i class="material-icons">add</i></a>`
 						}
 					}
 					text += '</td>';
@@ -383,7 +385,14 @@
 			<label class="translate">Poll switches every x seconds (0 = no polling)</labbel>
 				<input class="value" id="poll" />
 		</div>
-		<div class "divider"></div>
+	</div>
+	<div class="row" style="height: 8%">
+		<div class="col s18">
+			<label class="translate">new</label>
+			<input class="value" id="new" />
+		</div>
+	</div>
+	<div class="row" style="height: 8%">
 		<div class="col s6">
 			<span class="translate">SceneDescription</span>
 		</div>
