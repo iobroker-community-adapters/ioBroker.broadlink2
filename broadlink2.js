@@ -10,7 +10,6 @@ const
 	A = require('@frankjoke/myadapter').MyAdapter,
 	//	utils = require('./lib/utils'),
 	//	adapter = utils.Adapter('broadlink2'),
-	dns = require('dns'),
 	assert = require('assert');
 
 const scanList = {},
@@ -158,7 +157,7 @@ A.stateChange = function (id, state) {
 		for (let e of ['.startHour', '.startMinute', '.temp'])
 			if (id.endsWith(e)) {
 				let i = id.split('.');
-				device._val[i[1]][parseInt(i[2].slice(1))-1][i[3]] = state.val;
+				device._val[i[1]][parseInt(i[2].slice(1)) - 1][i[3]] = state.val;
 				return device.setSchedule(id, state.val);
 			}
 		return A.reject(A.Wf("checkT1 don't know how to set %s of %s to %O", id, device.name, state.val));
@@ -212,7 +211,7 @@ A.stateChange = function (id, state) {
 						Promise.reject(A.W(`cannot get code to send for: ${id}=${id0} ${A.O(state)}`)));
 			case 'T1':
 				// eslint-disable-next-line no-fallthrough
-				return checkT1(device, state, id).then(() => device.getAll()).then(x => (x && x.here && device.update) ? device.update(x) : null).catch(A.pE);
+				return checkT1(device, state, id).then(() => device.getAll()).then(x => (A.Ir(x,'getall returned %O after %s',x,id) && x.here && device.update) ? device.update(x) : null).catch(A.pE);
 			default:
 				return Promise.reject(A.W(`stateChange error invalid id type: ${id}=${id0} ${A.O(state)}`));
 		}
@@ -516,307 +515,305 @@ function main() {
 		const typ = device.type.slice(0, 2);
 		device.typ = typ;
 		device.removeAllListeners('error');
-		device.on('error', A.D);
-		A.c2p(dns.reverse)(device.host.address)
-			.then(x => A.T(x, []) ? x[0].toString().trim() : x.toString().trim(), () => device.host.mac)
-			.then(x => {
-				if (x.toLowerCase().endsWith(A.C.ip))
-					x = x.slice(0, -A.C.ip.length);
-				x = device.name = typ + ':' + x.split('.').join('-');
-				if (scanList[x] && !scanList[x].dummy)
-					return A.W(`Device found already: ${x} with ${A.O(device.host)}`);
-				device.host.name = x;
-				A.If('Device %s dedected: address=%s, mac=%s, typ=%s, id=%s devtype=%s', x, device.host.address, device.host.mac, device.host.type, device.host.devhex, device.host.devname);
-				scanList[x] = device;
-				switch (device.typ) {
-					case 'SP':
-						device.oval = undefined;
-						device.update = (val) => {
-							//							A.If('Should update %s with %O', device.host.name, val);
-							return Promise.resolve().then(() => {
-									if (val.state !== undefined && device.oval !== val.state) {
-										if (device.oval !== undefined)
-											A.I(`Switch ${device.name} changed to ${val.state} most probably manually!`);
-										device.oval = val.state;
-										return A.makeState({
-											id: device.host.name,
-											write: true,
-											role: 'switch',
-											type: typeof true,
-											native: {
-												host: device.host
-											}
-										}, val.state, true);
-									}
-									return Promise.resolve();
-								})
-								.then(() => updateValues(device, val, [{
-									name: 'energy',
-									id: '.CurrentPower',
-									role: "level",
-									write: false,
-									unit: "W",
-									type: typeof 1.1
-								}, {
-									name: 'nightlight',
-									id: '.NightLight',
-									role: "switch",
+		device.on('error', A.W);
+		//		A.If('what is name of %O', device);
+		let x = device.name = device.host.name;
+		if (scanList[x] && !scanList[x].dummy)
+			return A.W(`Device found already: ${x} with ${A.O(device.host)}`);
+		device.host.name = x;
+		A.If('Device %s dedected: address=%s, mac=%s, typ=%s, id=%s devtype=%s', x, device.host.address, device.host.mac, device.host.type, device.host.devhex, device.host.devname);
+		scanList[x] = device;
+		switch (device.typ) {
+			case 'SP':
+				device.oval = undefined;
+				device.update = (val) => {
+					//							A.If('Should update %s with %O', device.host.name, val);
+					return Promise.resolve().then(() => {
+							if (val.state !== undefined && device.oval !== val.state) {
+								if (device.oval !== undefined)
+									A.I(`Switch ${device.name} changed to ${val.state} most probably manually!`);
+								device.oval = val.state;
+								return A.makeState({
+									id: device.host.name,
 									write: true,
-									type: typeof true
-								}]))
-								.catch(e => A.Wf('Update device %s Error: %O', device.host.name, e));
-						};
-						break;
-					case 'S1':
-						device.update = (val) => {
-							return A.seriesOf(A.ownKeysSorted(val), (i) => i.length > 10 ? A.makeState({
-									id: device.host.name + '.' + i,
-									write: false,
-									role: 'value',
-									type: typeof 1,
+									role: 'switch',
+									type: typeof true,
 									native: {
 										host: device.host
 									}
-								}, val.state, true) : A.resolve(), 1)
-								.catch(e => A.Wf('Update device %s Error: %O', device.host.name, e));
-						};
-						break;
-					case 'RM':
-						device.ltemp = undefined;
-						device.update = (val) => {
-							//							A.If('Should update %s with %O', device.host.name, val);
-							return Promise.resolve()
-								.then(() => updateValues(device, val, [{
-									id: tempName,
-									role: "temperature",
-									write: false,
-									unit: "°C",
-									type: typeof 1.1
-								}]));
-						};
-						A.makeState({
-								id: x,
-								role: "value",
-								write: true,
-								type: typeof true,
-								native: {
-									host: device.host
-								}
-							}, false, true)
-							.then(() => A.makeState({
-								id: x + learnName + learnIr,
-								write: true,
-								role: 'button',
-								type: typeof true,
-							}, false, true))
-							.then(() => A.makeState({
-								id: x + sendName,
-								role: "text",
-								write: true,
-								type: typeof ''
-							}, ' ', true))
-							.then(() => device.type === 'RMP' ? A.makeState({
-								id: x + learnName + learnRf,
-								write: true,
-								role: 'button',
-								type: typeof true,
-							}, false, true) : null);
-						break;
-					case 'T1':
-						device.setTime();
-						device.update = (val) => {
-							//							A.If('Should update %s with %O', device.host.name, val);
-							return Promise.resolve()
-								.then(() => updateValues(device, val, [{
-									id: '',
-									name: 'roomTemp',
-									type: typeof 1.1,
-									role: "value.temperature",
-									unit: "°C",
-									native: {
-										host: device.host
-									}
-								}, {
-									name: 'thermostatTemp',
-									write: true,
-									type: typeof 1.1,
-									role: "value.temperature",
-									unit: "°C"
-								}, {
-									name: 'roomTempAdj',
-									write: true,
-									type: typeof 1.1,
-									role: "value.temperature",
-									unit: "°C"
-								}, {
-									name: 'externalTemp',
-									type: typeof 1.1,
-									role: "value.temperature",
-									unit: "°C"
-								}, {
-									name: 'roomTemp',
-									type: typeof 1.1,
-									role: "value.temperature",
-									unit: "°C"
-								}, {
-									name: 'remoteLock',
-									type: typeof true,
-									write: true,
-									role: "switch",
-								}, {
-									name: 'power',
-									type: typeof true,
-									write: true,
-									role: "switch",
-								}, {
-									name: 'active',
-									type: typeof true,
-									write: true,
-									role: "switch",
-								}, {
-									name: 'time',
-									type: typeof '',
-									write: true,
-									role: "button",
-								}, {
-									name: 'autoMode',
-									type: typeof 0,
-									role: "value",
-									min: 0,
-									max: 1,
-									states: "0:manual;1:auto",
-									write: true,
-								}, {
-									name: 'loopMode',
-									type: typeof 0,
-									write: true,
-									role: "value",
-									min: 1,
-									max: 3,
-									states: "1:weekend starts Saturday;2:weekend starts Sunday;3:All days are weekdays",
-								}, {
-									name: 'sensor',
-									type: typeof 0,
-									write: true,
-									role: "value",
-									min: 0,
-									max: 2,
-									states: "0:internal;1:external;2:internalControl-externalLimit"
-								}, {
-									name: 'weekday',
-									fun: (device, i, v) => {
-										let d = 0;
-										return A.seriesOf(v, (x) => {
-											let dn = '.weekday.s' + ++d;
-											return updateValues(device, x, setp(dn));
-										}, 0);
-									}
-								}, {
-									name: 'weekend',
-									fun: (device, i, v) => {
-										let d = 0;
-										return A.seriesOf(v, (x) => {
-											let dn = '.weekend.s' + ++d;
-											return updateValues(device, x, setp(dn));
-										}, 0);
-									}
-								}, {
-									name: 'osv',
-									type: typeof 0.1,
-									write: true,
-									role: "value.temperature",
-									unit: "°C",
-									min: 5,
-									max: 99
-								}, {
-									name: 'dif',
-									type: typeof 0.1,
-									write: true,
-									role: "value.temperature",
-									unit: "°C",
-									min: 1,
-									max: 9
-								}, {
-									name: 'svh',
-									type: typeof 0.1,
-									write: true,
-									role: "value.temperature",
-									unit: "°C",
-									min: 5,
-									max: 99
-								}, {
-									name: 'svl',
-									type: typeof 0.1,
-									write: true,
-									role: "value.temperature",
-									unit: "°C",
-									min: 5,
-									max: 99
-								}]))
-								.catch(e => A.Wf('Update device %s Error: %O', device.host.name, e));
-						};
-						break;
-					case 'A1':
-						device.update = (val) =>
-							Promise.resolve()
-							.then(() => updateValues(device, val, [{
-								id: '',
-								name: 'temperature',
-								type: typeof 1.1,
-								role: "value.temperature",
-								write: false,
-								unit: "°C",
-								native: {
-									host: device.host
-								}
-							}, {
-								id: humName,
-								name: 'humidity',
-								type: typeof 1.1,
-								role: "value.humidity",
-								write: false,
-								min: 0,
-								max: 100,
-								unit: "%"
-							}, {
-								id: lightName,
-								name: 'light',
-								type: typeof 0,
-								role: "value",
-								min: 0,
-								max: 3,
-								states: "0:finster;1:dunkel;2:normal;3:hell"
-							}, {
-								id: airQualityName,
-								name: 'air_quality',
-								type: typeof 0,
-								role: "value",
-								min: 0,
-								max: 3,
-								states: "0:sehr gut;1:gut;2:normal;3:schlecht"
-							}, {
-								id: noiseName,
-								name: 'noise',
-								type: typeof 0,
-								role: "value",
-								min: 0,
-								max: 3,
-								states: "0:ruhig;1:normal;2:laut;3:sehr laut"
-							}]))
-							.catch(e => A.Wf('Update device %s Error: %O', device.host.name, e));
+								}, val.state, true);
+							}
+							return Promise.resolve();
+						})
+						.then(() => updateValues(device, val, [{
+							name: 'energy',
+							id: '.CurrentPower',
+							role: "level",
+							write: false,
+							unit: "W",
+							type: typeof 1.1
+						}, {
+							name: 'nightlight',
+							id: '.NightLight',
+							role: "switch",
+							write: true,
+							type: typeof true
+						}, {
+							name: 'state',
+							role: "switch",
+							type: typeof true
+						}]))
+						.catch(e => A.Wf('Update device %s Error: %O', device.host.name, e));
+				};
+				break;
+			case 'S1':
+				device.update = (val) => {
+					return A.seriesOf(A.ownKeysSorted(val), (i) => i.length > 10 ? A.makeState({
+							id: device.host.name + '.' + i,
+							write: false,
+							role: 'value',
+							type: typeof 1,
+							native: {
+								host: device.host
+							}
+						}, val.state, true) : A.resolve(), 1)
+						.catch(e => A.Wf('Update device %s Error: %O', device.host.name, e));
+				};
+				break;
+			case 'RM':
+				device.ltemp = undefined;
+				device.update = (val) => {
+					//							A.If('Should update %s with %O', device.host.name, val);
+					return Promise.resolve()
+						.then(() => updateValues(device, val, [{
+							id: tempName,
+							role: "temperature",
+							write: false,
+							unit: "°C",
+							type: typeof 1.1
+						}]));
+				};
+				A.makeState({
+						id: x,
+						role: "value",
+						write: true,
+						type: typeof true,
+						native: {
+							host: device.host
+						}
+					}, false, true)
+					.then(() => A.makeState({
+						id: x + learnName + learnIr,
+						write: true,
+						role: 'button',
+						type: typeof true,
+					}, false, true))
+					.then(() => A.makeState({
+						id: x + sendName,
+						role: "text",
+						write: true,
+						type: typeof ''
+					}, ' ', true))
+					.then(() => device.type === 'RMP' ? A.makeState({
+						id: x + learnName + learnRf,
+						write: true,
+						role: 'button',
+						type: typeof true,
+					}, false, true) : null);
+				break;
+			case 'T1':
+				device.setTime();
+				device.update = (val) => {
+					//							A.If('Should update %s with %O', device.host.name, val);
+					return Promise.resolve()
+						.then(() => updateValues(device, val, [{
+							id: '',
+							name: 'roomTemp',
+							type: typeof 1.1,
+							role: "value.temperature",
+							unit: "°C",
+							native: {
+								host: device.host
+							}
+						}, {
+							name: 'thermostatTemp',
+							write: true,
+							type: typeof 1.1,
+							role: "value.temperature",
+							unit: "°C"
+						}, {
+							name: 'roomTempAdj',
+							write: true,
+							type: typeof 1.1,
+							role: "value.temperature",
+							unit: "°C"
+						}, {
+							name: 'externalTemp',
+							type: typeof 1.1,
+							role: "value.temperature",
+							unit: "°C"
+						}, {
+							name: 'roomTemp',
+							type: typeof 1.1,
+							role: "value.temperature",
+							unit: "°C"
+						}, {
+							name: 'remoteLock',
+							type: typeof true,
+							write: true,
+							role: "switch",
+						}, {
+							name: 'power',
+							type: typeof true,
+							write: true,
+							role: "switch",
+						}, {
+							name: 'active',
+							type: typeof true,
+							write: true,
+							role: "switch",
+						}, {
+							name: 'time',
+							type: typeof '',
+							write: true,
+							role: "button",
+						}, {
+							name: 'autoMode',
+							type: typeof 0,
+							role: "value",
+							min: 0,
+							max: 1,
+							states: "0:manual;1:auto",
+							write: true,
+						}, {
+							name: 'loopMode',
+							type: typeof 0,
+							write: true,
+							role: "value",
+							min: 1,
+							max: 3,
+							states: "1:weekend starts Saturday;2:weekend starts Sunday;3:All days are weekdays",
+						}, {
+							name: 'sensor',
+							type: typeof 0,
+							write: true,
+							role: "value",
+							min: 0,
+							max: 2,
+							states: "0:internal;1:external;2:internalControl-externalLimit"
+						}, {
+							name: 'weekday',
+							fun: (device, i, v) => {
+								let d = 0;
+								return A.seriesOf(v, (x) => {
+									let dn = '.weekday.s' + ++d;
+									return updateValues(device, x, setp(dn));
+								}, 0);
+							}
+						}, {
+							name: 'weekend',
+							fun: (device, i, v) => {
+								let d = 0;
+								return A.seriesOf(v, (x) => {
+									let dn = '.weekend.s' + ++d;
+									return updateValues(device, x, setp(dn));
+								}, 0);
+							}
+						}, {
+							name: 'osv',
+							type: typeof 0.1,
+							write: true,
+							role: "value.temperature",
+							unit: "°C",
+							min: 5,
+							max: 99
+						}, {
+							name: 'dif',
+							type: typeof 0.1,
+							write: true,
+							role: "value.temperature",
+							unit: "°C",
+							min: 1,
+							max: 9
+						}, {
+							name: 'svh',
+							type: typeof 0.1,
+							write: true,
+							role: "value.temperature",
+							unit: "°C",
+							min: 5,
+							max: 99
+						}, {
+							name: 'svl',
+							type: typeof 0.1,
+							write: true,
+							role: "value.temperature",
+							unit: "°C",
+							min: 5,
+							max: 99
+						}]))
+						.catch(e => A.Wf('Update device %s Error: %O', device.host.name, e));
+				};
+				break;
+			case 'A1':
+				device.update = (val) =>
+					Promise.resolve()
+					.then(() => updateValues(device, val, [{
+						id: '',
+						name: 'temperature',
+						type: typeof 1.1,
+						role: "value.temperature",
+						write: false,
+						unit: "°C",
+						native: {
+							host: device.host
+						}
+					}, {
+						id: humName,
+						name: 'humidity',
+						type: typeof 1.1,
+						role: "value.humidity",
+						write: false,
+						min: 0,
+						max: 100,
+						unit: "%"
+					}, {
+						id: lightName,
+						name: 'light',
+						type: typeof 0,
+						role: "value",
+						min: 0,
+						max: 3,
+						states: "0:finster;1:dunkel;2:normal;3:hell"
+					}, {
+						id: airQualityName,
+						name: 'air_quality',
+						type: typeof 0,
+						role: "value",
+						min: 0,
+						max: 3,
+						states: "0:sehr gut;1:gut;2:normal;3:schlecht"
+					}, {
+						id: noiseName,
+						name: 'noise',
+						type: typeof 0,
+						role: "value",
+						min: 0,
+						max: 3,
+						states: "0:ruhig;1:normal;2:laut;3:sehr laut"
+					}]))
+					.catch(e => A.Wf('Update device %s Error: %O', device.host.name, e));
 
-						break;
-					default:
-						A.Wf('Unknown %s with %O', device.host.name, device.host);
-				}
-				return A.makeState({
-					id: device.name + reachName,
-					write: false,
-					role: 'indicator.unreach',
-					type: typeof true,
-				}, device.unreach = false, true);
-			}).catch(e => A.W(`Error in device dedect: "${e}"`));
-		return false;
+				break;
+			default:
+				A.Wf('Unknown %s with %O', device.host.name, device.host);
+		}
+		return A.makeState({
+			id: device.name + reachName,
+			write: false,
+			role: 'indicator.unreach',
+			type: typeof true,
+		}, device.unreach = false, true);
 	});
 
 	A.D('Config IP-Address end to remove: ' + A.C.ip);
@@ -848,9 +845,14 @@ function main() {
 					host: dev.native.host,
 					dummy: true
 				};
-				A.W(`device ${id} not found, please rescan later again or delete it! It was: ${A.obToArray(device.host)}`);
-				scanList[id] = device;
-				notFound.push(id);
+				if (brlink.getDev(dev.native.host.mac)) {
+					device = brlink.getDev(dev.native.host.mac);
+					A.Wf('seems that device %s got renamed to %s! You may delete old device and change your scripts!',id,device.name);
+				} else {
+					A.W(`device ${id} not found, please rescan later again or delete it! It was: ${A.obToArray(device.host)}`);
+					scanList[id] = device;
+					notFound.push(id);
+				}
 			}
 			return Promise.resolve(true);
 		}, 1))

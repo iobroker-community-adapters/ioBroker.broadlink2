@@ -29,7 +29,7 @@ class Device extends EventEmitter {
         host.mac = mac;
         this.devtype = devtype;
         this.host.devhex = Broadlink.toHex(devtype, 4);
-        this.host.name = this.constructor.name + '_' + this.host.devhex + '_' + mac;
+        this.host.name = this.host.devhex + '_' + mac;
 
         this.count = Math.random() & 0xffff;
         this.key = new Buffer([0x09, 0x76, 0x28, 0x34, 0x3f, 0xe9, 0x9e, 0x23, 0x76, 0x5c, 0x15, 0x13, 0xac, 0xcf, 0x8b, 0x02]);
@@ -412,8 +412,9 @@ class SP2 extends Device {
                 //                ret.nightlight = !!(payload[0x4] & 2);
                 return A.resolve(ret);
             } else return A.reject(ret);
+        // eslint-disable-next-line no-unused-vars
         }, e => {
-            A.D(`getVal on '${this.host.name}' had error ${A.O(e)} and returned ${A.O(ret)}`);
+//            A.D(`getVal on '${this.host.name}' had error ${A.O(e)} and returned ${A.O(ret)}`);
             return ret;
         }); //.catch(e => A.I(`getVal on '${this.constructor.name}' had error ${A.O(e)} and returned ${A.O(self._val)}`, e));
     }
@@ -883,10 +884,10 @@ class T1 extends Device {
             a.push(v.weekend[i].startMinute);
         }
         for (i = 0; i < 6; i++) {
-            a.push(parseInt(v.weekday[i].temp*2));
+            a.push(parseInt(v.weekday[i].temp * 2));
         }
         for (i = 0; i < 2; i++) {
-            a.push(parseInt(v.weekend[i].temp*2));
+            a.push(parseInt(v.weekend[i].temp * 2));
         }
         return this.checkOff(this.sendT1packet, 0x6a, a);
     }
@@ -952,7 +953,6 @@ class Broadlink extends EventEmitter {
         this._cs = null;
         this._ls = null;
         this._addresses = [];
-        this._devnames = {};
         this._devlist = {
             SP1: {
                 0x0000: 'SP1',
@@ -1194,12 +1194,13 @@ class Broadlink extends EventEmitter {
             var dev = self.genDevice(host.devtype, host, mac);
             self._devices[mac] = dev;
             dev.once("deviceReady", function () {
-                return A.c2p(dns.reverse)(dev.host.address)
+                return A.c2p(dns.reverse)(dev.host.address).catch(() => dev.host.name)
+//                    .then(x => A.Ir(x, 'got back %O from %O', x, dev.host))
                     .then(x => Array.isArray(x) ? x[0].toString().trim().split('.')[0] : x.toString().trim(), () => dev.host.name)
                     .then(x => {
                         dev.host.name = dev.host.type.slice(0, 2).toUpperCase() + ':' + x;
                         dev.name = dev.host.name;
-                        self._devnames[dev.name] = dev;
+                        self._devices[dev.name] = dev;
                     }).then(() => self.emit("deviceReady", dev));
             });
             A.retry(3, dev.auth.bind(dev)).catch(A.nop);
@@ -1207,12 +1208,8 @@ class Broadlink extends EventEmitter {
         return host;
     }
 
-    get devNames() {
-        return this._devnames;
-    }
-
-    getByName(name) {
-        return this._devnames && this._devnames[name.trim()];
+    getDev(name) {
+        return this._devices && this._devices[name.trim()];
     }
 
     discover(what, ms) {
