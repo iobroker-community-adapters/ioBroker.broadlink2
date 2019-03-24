@@ -80,7 +80,7 @@ A.objChange = function (obj, val) { //	This is needed for name changes
 function sendCode(device, value) {
 	let buffer = new Buffer(value.replace(reCODE, ''), 'hex'); //var buffer = new Buffer(value.substr(5), 'hex'); // substr(5) removes CODE_ from string
 
-	return device.setVal(buffer).then(x => device.name + ' sent ' + value + ', ' + x);
+	return device.sendVal(buffer).then(x => device.name + ' sent ' + value + ', ' + x);
 	//	return Promise.resolve(A.D('sendData to ' + device.name + ', Code: ' + value));
 }
 

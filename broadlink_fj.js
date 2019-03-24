@@ -661,7 +661,7 @@ class RM extends Device {
         })));
     }
 
-    setVal(data) {
+    sendVal(data) {
         var self = this;
         var packet = new Buffer([0x02, 0x00, 0x00, 0x00]);
         packet = Buffer.concat([packet, data]);
