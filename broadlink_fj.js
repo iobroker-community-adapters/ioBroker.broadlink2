@@ -611,6 +611,7 @@ class S1 extends Device {
 class RM extends Device {
     constructor(host, mac, devtype, bl) {
         super(host, mac, devtype, bl);
+        this.sendwait = new A.Sequence();
         this.type = "RM";
     }
     getVal() {
@@ -661,9 +662,10 @@ class RM extends Device {
     }
 
     setVal(data) {
+        var self = this;
         var packet = new Buffer([0x02, 0x00, 0x00, 0x00]);
         packet = Buffer.concat([packet, data]);
-        return this.checkOff(this.sendPacket, 0x6a, packet,5000); //.then(x => A.I(`setVal/sendData for ${this.host.name} returned ${A.O(x)}`, x));
+        return this.sendwait.addp(() => this.checkOff(self.sendPacket, 0x6a, packet,5000)); //.then(x => A.I(`setVal/sendData for ${this.host.name} returned ${A.O(x)}`, x));
     }
 
     enterLearning() {

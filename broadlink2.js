@@ -86,7 +86,7 @@ function sendCode(device, value) {
 
 // eslint-disable-next-line complexity
 A.stateChange = function (id, state) {
-	//	A.I(A.F(id,' =S> ',state));
+	A.Df('Change %s to %O',id,state);
 
 	let thisDevice;
 
