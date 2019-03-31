@@ -4,6 +4,8 @@ tasks
 node_modules
 .idea
 .git
+doc/
+lib/otherProjectSources/
 /node_modules
 test
 .travis.yml

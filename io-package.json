@@ -5,8 +5,8 @@
         "title": "Broadlink2 (RM++, SP++, A1) Adapter for multiple W-Lan devices",
         "news": {
             "1.9.9": {
-                "en": "Beta testing for V 2.0!",
-                "de": "Beta-Test für 2.0"
+                "en": "Beta testing for V 2.0! New rename funktion in config!",
+                "de": "Beta-Test für 2.0! Neue Rename-Funktion in der Konfig!"
             },
             "1.9.1": {
                 "en": "Added RM Mini new support with",
@@ -68,7 +68,7 @@
 
     },
     "native": {
-        "ip": ".fritz.box",
+        "rename": "SP:0x7547_34:ea:34:bd:67:a1=HeaterPlug",
         "scenes": [
             {
                 "name": "Fernsehen",
@@ -92,7 +92,7 @@
             }
         ],
         "poll": "30",
-        "new": ""
+        "new": "!"
     },
     "objects": [],
     "config": {

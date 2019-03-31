@@ -13,9 +13,9 @@ systemDictionary= {
         "en": "Refresh after x seconds",
         "de": "Abfrage der Schalter alle x Sekunden"
     },
-    "Remove IP suffix": {
-        "en": "Unterdrücke IP suffix (sollte mit . wie '.fritz.box' beginnen)",
-        "de": "Unterdrücke IP suffix (sollte mit . wie '.fritz.box' beginnen)"
+    "Rename Device": {
+        "en": "rename devices: 'SP:0x7547_34:ea:34:bd:67:a1=HeaterPlug, ...'",
+        "de": "Geräte umbenennen: 'SP:0x7547_34:ea:34:bd:67:a1=SteckdoseHeizung, ...'"
     },
     "On save adapter restarts with new config immediately": {
         "en": "Adapter will be restarted when you save data.",
@@ -54,7 +54,7 @@ systemDictionary= {
         en: "Scene, this are commands separated with ','"
     },
     "new": {
-        de: "Neues Gerätetype(n) definieren: devicetype:class, ... (class = A1,MP1,RM,RMP,S1C,SP1,SP2,SP3P,T1)",
-        en: "Define new devices : devicetype:class, ... (class one of= A1,MP1,RM,RMP,S1C,SP1,SP2,SP3P,T1)"
+        de: "Neues Gerätetype(n) definieren: devicetype=class, ... (class = A1,MP1,RM,RMP,S1C,SP1,SP2,SP3P,T1)",
+        en: "Define new devices : devicetype=class, ... (class one of= A1,MP1,RM,RMP,S1C,SP1,SP2,SP3P,T1)"
     }
 };

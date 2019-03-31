@@ -376,23 +376,23 @@
 			<h4 class="translate">Broadlink2 adapter settings</h4>
 		</div>
 	</div>
-	<div class="row" style="height: 8%">
+	<div class="row" style="height: 7%">
 		<div class="col s6">
-			<label class="translate">Remove IP suffix</label>
-			<input class="value" id="ip" />
+			<label class="translate" for="poll">Poll switches every x seconds (0 = no polling)</labbel>
+				<input class="value" type="number" id="poll"  min="10" max="3600" data-crypt="0" size="10" class="value number" />
 		</div>
 		<div class="col s6">
-			<label class="translate">Poll switches every x seconds (0 = no polling)</labbel>
-				<input class="value" id="poll" />
+			<label class="translate" for="new">new</label>
+			<input class="value" id="new" type="text" data-crypt="0" size="600"/>
 		</div>
 	</div>
-	<div class="row" style="height: 8%">
-		<div class="col s18">
-			<label class="translate">new</label>
-			<input class="value" id="new" />
+	<div class="row" style="height: 7%">
+		<div class="col s12">
+			<label class="translate" for="rename">Rename Device</label>
+			<input class="value" id="rename" type="text" data-crypt="0" size="120" />
 		</div>
 	</div>
-	<div class="row" style="height: 8%">
+	<div class="row" style="height: 5%">
 		<div class="col s6">
 			<span class="translate">SceneDescription</span>
 		</div>
@@ -400,7 +400,7 @@
 			<span class="translate">On save adapter restarts with new config immediately</span>
 		</div>
 	</div>
-	<div id="scenes" class="row" style="width: 100%; height: 42%">
+	<div id="scenes" class="row" style="width: 100%; height: 25%">
 		<a title="Add Scene" class="btn-floating waves-effect waves-light teal table-button-add left">
 			<i class="material-icons">add</i>
 		</a>&nbsp;
@@ -417,7 +417,7 @@
 			</table>
 		</div>
 	</div>
-	<div id="switches" class="row" style="width: 100%; height: 42%">
+	<div id="switches" class="row" style="width: 100%; height: 25%">
 		<a title="Add Switch" class="btn-floating waves-effect waves-light teal table-button-add left">
 			<i class="material-icons">add</i>
 		</a>&nbsp;

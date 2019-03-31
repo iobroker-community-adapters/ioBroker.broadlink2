@@ -1174,7 +1174,7 @@ class Broadlink extends EventEmitter {
         //                    self._cs.setMulticastInterface(this.lastaddr);
         delete host.family;
         delete host.size;
-        host.command = Number(msg[0x26]) + Number(msg[0x27]) * 256;
+//        host.command = Number(msg[0x26]) + Number(msg[0x27]) * 256;
         if (msg.length >= 0x40) {
             //            mac = msg[0x3a:0x40];
             msg.copy(mac, 0, 0x3a, 0x40);
