@@ -780,6 +780,8 @@ function main() {
 	let add = A.C.new.split(',').map(x => x.split('=').map(s => s.trim()));
 	if (add.length === 1 && add[0].length === 1)
 		add = [];
+	if (!A.C.rename)
+		A.C.rename = '';
 	rename = A.C.rename.split(',').map(x => x.split('=').map(s => s.trim()));
 	if (rename.length === 1 && rename[0].length === 1)
 		rename = [];
@@ -902,9 +904,9 @@ function main() {
 		.then(() => didFind = Object.keys(scanList))
 		.then(() => A.seriesOf(A.obToArray(A.objects).filter(x => x._id.startsWith(A.ain) && x.native && x.native.host), dev => {
 			let id = dev.native.host.name; // dev._id.slice(A.ain.length);
-			if (id && !findName(id) && !scanList[id] && dev._id === A.ain + dev.common.name && dev.common.name.indexOf('.')<0) {
+			if (id && !findName(id) && !scanList[id] && dev._id === A.ain + dev.common.name && dev.common.name.indexOf('.') < 0) {
 				//			!id.endsWith(learnName + learnRf) && !id.endsWith(learnName + learnIr)) {
-//				A.If('found %s', id);
+				//				A.If('found %s', id);
 				let device = {
 					name: id,
 					fun: Promise.reject,
