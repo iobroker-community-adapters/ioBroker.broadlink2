@@ -27,7 +27,7 @@
     "node": ">=6.0.0"
   },
   "dependencies": {
-    "@frankjoke/myadapter": "^1.1.0"
+    "@frankjoke/myadapter": "^1.1.1"
   },
   "devDependencies": {
     "axios": "^0.18.0",

@@ -408,7 +408,8 @@ function sendState(state, val) {
 				ack: false
 			});
 		})
-		.then(() => A.makeState(state.id, val, true));
+		.then(() => A.makeState(state.id, val, true))
+		.catch(A.pE);
 }
 
 function updateValues(device, val, values) {
@@ -763,13 +764,13 @@ function createStatesDevice(device) {
 		}).catch(A.pE);
 }
 
-function renId(id, oldid, newid) {
-	if (id.startsWith(A.ain + oldid + '.'))
-		return A.ain + newid + '.' + id.slice((A.ain + oldid + '.').length);
-	return id;
-}
-
 function main() {
+
+	function renId(id, oldid, newid) {
+		if (id.startsWith(A.ain + oldid + '.'))
+			return A.ain + newid + '.' + id.slice((A.ain + oldid + '.').length);
+		return id;
+	}
 
 	let didFind = [],
 		notFound = [];
@@ -803,7 +804,8 @@ function main() {
 		//	A.getObject(device.host.name).then(res => A.If('got object %s: %O', device.host.name, res)).catch(A.pE);
 		if (scanList[x] && !scanList[x].dummy)
 			return A.Wf(`Device found already: %s with %O`, x, device.host);
-		A.If('Device %s dedected: address=%s, mac=%s, typ=%s, id=%s devtype=%s', x, device.host.address, device.host.mac, device.host.type, device.host.devhex, device.host.devname);
+		A.If('Device %s dedected: address=%s, mac=%s, typ=%s, id=%s devtype=%s%s', x, device.host.address, device.host.mac, device.host.type, device.host.devhex, device.host.devname,
+			device.host.name === device.name ? '' : ', originalName=' + device.host.name);
 		scanList[x] = device;
 	});
 
