@@ -92,12 +92,12 @@ class Device extends EventEmitter {
     getAll() {
         if (A.T(this._val) === 'object')
             this._val.here = false;
-        return this.checkOff(this.getVal).then(v => {
-            return A.T(v) === 'object' ? v : {
-                val: v,
-                here: true
-            };
-        });
+        return this.checkOff(this.getVal).then(v => A.T(v) === 'object' ? v : {
+            val: v,
+            here: true
+        }, () => ({
+            here: false
+        }));
     }
 
     getVal() {
@@ -412,9 +412,9 @@ class SP2 extends Device {
                 //                ret.nightlight = !!(payload[0x4] & 2);
                 return A.resolve(ret);
             } else return A.reject(ret);
-        // eslint-disable-next-line no-unused-vars
+            // eslint-disable-next-line no-unused-vars
         }, e => {
-//            A.D(`getVal on '${this.host.name}' had error ${A.O(e)} and returned ${A.O(ret)}`);
+            //            A.D(`getVal on '${this.host.name}' had error ${A.O(e)} and returned ${A.O(ret)}`);
             return ret;
         }); //.catch(e => A.I(`getVal on '${this.constructor.name}' had error ${A.O(e)} and returned ${A.O(self._val)}`, e));
     }
@@ -665,7 +665,7 @@ class RM extends Device {
         var self = this;
         var packet = new Buffer([0x02, 0x00, 0x00, 0x00]);
         packet = Buffer.concat([packet, data]);
-        return this.sendwait.addp(() => this.checkOff(self.sendPacket, 0x6a, packet,5000)); //.then(x => A.I(`setVal/sendData for ${this.host.name} returned ${A.O(x)}`, x));
+        return this.sendwait.addp(() => this.checkOff(self.sendPacket, 0x6a, packet, 5000)); //.then(x => A.I(`setVal/sendData for ${this.host.name} returned ${A.O(x)}`, x));
     }
 
     enterLearning() {
@@ -1174,7 +1174,7 @@ class Broadlink extends EventEmitter {
         //                    self._cs.setMulticastInterface(this.lastaddr);
         delete host.family;
         delete host.size;
-//        host.command = Number(msg[0x26]) + Number(msg[0x27]) * 256;
+        //        host.command = Number(msg[0x26]) + Number(msg[0x27]) * 256;
         if (msg.length >= 0x40) {
             //            mac = msg[0x3a:0x40];
             msg.copy(mac, 0, 0x3a, 0x40);
@@ -1197,7 +1197,7 @@ class Broadlink extends EventEmitter {
             self._devices[mac] = dev;
             dev.once("deviceReady", function () {
                 return A.c2p(dns.reverse)(dev.host.address).catch(() => dev.host.name)
-//                    .then(x => A.Ir(x, 'got back %O from %O', x, dev.host))
+                    //                    .then(x => A.Ir(x, 'got back %O from %O', x, dev.host))
                     .then(x => Array.isArray(x) ? x[0].toString().trim().split('.')[0] : x.toString().trim(), () => dev.host.name)
                     .then(x => {
                         dev.host.name = dev.host.type.slice(0, 2).toUpperCase() + ':' + x;

@@ -538,14 +538,14 @@ function createStatesDevice(device) {
 					device.ltemp = undefined;
 					device.update = (val) => {
 						//							A.If('Should update %s with %O', device.host.name, val);
-						return Promise.resolve()
-							.then(() => updateValues(device, val, [{
-								id: tempName,
-								role: "temperature",
-								write: false,
-								unit: "°C",
-								type: typeof 1.1
-							}]));
+						return Promise.resolve( updateValues(device, val, [{
+							id: tempName,
+							role: "temperature",
+							name: 'temperature',
+							write: false,
+							unit: "°C",
+							type: typeof 1.1
+						}]));
 					};
 					A.makeState({
 							id: x,
