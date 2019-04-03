@@ -7,8 +7,6 @@
 
 [English manual - Englische Anleitung](README.md)
 
-* sorry bin erst beim übersetzen, noch nicht ganz fertig!
-
 ## Adapter für verschiedene Broadlink WLan-Geräte (RM++,SP++,A1, Floureon, S1C)
 
 Dieser ioBroker adapter für die meisten Broadlink kompatiblen Geräte wie RM++, SP1, SP2, SP3, Honeywell SP2, SPMini, SPMini2, SPMiniPlus A1AIR und einige OEM Versionen. Die neueste Version kennt auch S1C Sicherheitstechnik und Floureon/Beok313 Thermostate.

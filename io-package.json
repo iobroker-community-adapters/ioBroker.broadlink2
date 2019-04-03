@@ -1,12 +1,12 @@
 {
     "common": {
         "name": "broadlink2",
-        "version": "1.9.9",
-        "title": "Broadlink2 (RM++, SP++, A1) Adapter for multiple W-Lan devices",
+        "version": "2.0.0",
+        "title": "Broadlink2 (RM++, SP++, A1) for multiple Broadlink-protocol W-Lan devices",
         "news": {
-            "1.9.9": {
-                "en": "Beta testing for V 2.0! New rename funktion in config!",
-                "de": "Beta-Test für 2.0! Neue Rename-Funktion in der Konfig!"
+            "2.0.0": {
+                "en": "Complete rewrite of adaper with multiple options, please read readme.md!",
+                "de": "Komplett neu geschriebenen Adapter mit neuen Funktionen und Konfiguration, bitte README lesen!"
             },
             "1.9.1": {
                 "en": "Added RM Mini new support with",
@@ -52,14 +52,11 @@
             "IR/RF",
             "Remote",
             "Switch",
-            "Floureon",
-            "Beok313",
             "A1",
             "RM2",
             "RM3",
             "SP1",
-            "SP2",
-            "S1C"
+            "SP2"
         ],
         "readme": "https://github.com/frankjoke/ioBroker.broadlink2/blob/master/README.md",
         "loglevel": "info",
@@ -71,7 +68,7 @@
 
     },
     "native": {
-        "rename": "SP:0x7547_34:ea:34:bd:67:a1=HeaterPlug",
+        "ip": ".fritz.box",
         "scenes": [
             {
                 "name": "Fernsehen",
@@ -94,8 +91,7 @@
                 "off": "+"
             }
         ],
-        "poll": "30",
-        "new": "!"
+        "poll": "30"
     },
     "objects": [],
     "config": {
