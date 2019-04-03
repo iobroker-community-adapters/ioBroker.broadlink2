@@ -1,4 +1,4 @@
-# ![Logo](./admin/broadlink.png) Steuert BroadLink IR/RF-Remotes und Schaltsteckdosen
+# ![Logo](./admin/broadlink2.png) Controls BroadLink compatible devices
 
 [![NPM version](http://img.shields.io/npm/v/iobroker.broadlink2.svg)](https://www.npmjs.com/package/iobroker.broadlink2)
 [![installed](http://iobroker.live/badges/broadlink2-installed.svg)](http://iobroker.live/badges/broadlink2-installed.svg)
