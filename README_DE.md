@@ -38,9 +38,7 @@ Please delete devices from admin.objects in case you remove them permanentely or
 
 ### Note
 
-SP1 devices cannot be polled.
-
-* This adapter is based on original Broadlink adapter v0.1.1 found here: <https://github.com/hieblmedia/ioBroker.broadlink>
+SP1-Geräte können nicht abgefragt werden!
 
 ## Configuration
 
@@ -88,36 +86,35 @@ Der Adapter versteht jetzt auch 'sendTo' Kommandos.
 
 ## Floureon or Beok313 Thermostats
 
-* Most data can be set, the time can be set by writing anything to `_setTime` in which case the time of the device will be set to ioBroker system time. This will be done automatically also on adpter start.
+* Sie meisten States können beschrieben werden. Die Uhrzeit kann mit einem Schreiben auf `_setTime` auf die ioBroker Systemzeit gesetzt werden. Das passiert auch automatisch bei Adapter-Start.
 
 ## Config additional dnew devices
 
-* You may add new devices which use same protocol by adding them with the device-ID (in hex or decimal) and the device class (löisted there (class = A1,MP1,RM,RMP,S1C,SP1,SP2,SP3P,T1). So you can add a new remote which the adapter finds only as unknown device with hex ID of 0x1234 to the RM list by 0x01234=RMP. 
+* Falls sie ein neues Gerät einbinden welches der Adapter noch nicht kennt wobei sie aber wissen dass es mit einem der Gerätetypen kompatible ist können sie es in der Konfig eintragen. Sie brauchen dazu den device-id (in hex oder dezimal) und die Klasse des Geätes (wie  = A1,MP1,RM,RMP,S1C,SP1,SP2,SP3P,T1). Mit dem  device ID von 0x1234 kann ein RM Plus mit `0x01234=RMP` hinzugefügt werden. 
 
 ## Rename devices
 
-* Devices receive normally their network host name, or a combination of the device type, ID and mac address as their name with the first 2 letters of the type with ':' in front. You can rename such a device with `T1:BroadLink-OEM-T1-fa-83-7c=Beok313` in which case the original name will not be used but the new name used will be `Beok313`.
+* Die Geräte werden normalerweise nach ihrem Host-Namen benannt (den sie selbst bei der Anmeldung angeben), falls das nicht der Fall ist wird eine Kombination aus Geräte-Type, ID und Mac Addresse Verwendet. Es werden die ersten 2 Buchstaben der Type mit ':' vorangestellt. Sie können das auf andere Namen umbenennen wenn sie z.B. `T1:BroadLink-OEM-T1-fa-83-7c=Beok313` ins Umbenenne-Feld der Konfiguration schreiben, der Name 'T1:BroadLink-OEM-T1-fa-83-7c' würde dann nicht verwendet und durch  `Beok313` ersetzt werden.
 
-## Debug mode
+## Debug Modus
 
-* If you add an `!` at the end of the list of added new devices (even if it is empty) you can set the adapter to debug mode where it will log a lot of additional information even iof it is not set to 'info' mode in Admin.
-
+* Wenn sie ans Ende der hinzuzufüghenden Geräte ein `!` schreiben (auch bei leerer Liste) dann wird der Adapter Debug-Meldungen loggen auch wenn er im Admin auf 'info' gesetzt ist.
 
 ## Known-Issues
 
-* If you learn the same signal multiple times the code can be different everytime. This can not be changed.
-* Sometimes it does not find devices if they do not respond to the search. Do a rescan or restart adapter to restart a new instance.
+* Die Codes bei mehrmaligen Lernen von den selben Tasten können unterschiedlich sein!
+* Manchmal können Geräte nicht gefunden werden da sie die Wlan-Verbindung verlogen wurde. Sie werden vom Adapter selbständig wieder gesucht aber können während der Abwesenheit nicht bediehnt werden.
 
 ## Important/Wichtig
 
-* Requires node >=V6
+* Der Adapter braucht Nodejs Version >=V6
 
 ## Changelog
 
 ### 2.0.0
 
 * Can handle Floureon/Beko thermostats (now with MQTT)
-* Can handle SC1 security devices
+* Can handle S1C security devices
 * Names device after their name or with their mac to reduce possibility of renaming
 * Can rename devices
 * Can add device Id's/Types for new devices

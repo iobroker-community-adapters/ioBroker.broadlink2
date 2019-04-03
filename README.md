@@ -29,8 +29,6 @@ Please delete old devices from admin.objects in case you remove them permanentel
 
 SP1 devices cannot be polled.
 
-* This adapter is based on original Broadlink adapter v0.1.1 found here: <https://github.com/hieblmedia/ioBroker.broadlink>
-
 ## Configuration
 
 * Enter prefix of network address in configuration which should be removed when generating device names
@@ -41,7 +39,8 @@ SP1 devices cannot be polled.
 * In Objects of ioBroker you can find "broadlink2.[devicename].Learn or LearnRF for '+' type of devices".
 * For RM(x)+ (Plus) devices you get also a special RS-sweep-lear button which can learn more devices than on normal 433MHz.
 * Set this object to true. (you can click on the button in object view)
-* Now press some button on your remote control within 30 seconds.
+* Now press some button on your remote control within 30 seconds. in normal mode press them shortly with some time in between until learned.
+* in RF-sweep learn you need to press the button first for ~10 seconds, then release it and then press it aggain for short time.
 * An new Object should now appear within the Object "broadlink.[n].[devicename].LearnedState" with the name ">>> Rename learned @ YYYYMMDDTHHmmSS"
 * You can click on the button in object view to send the code.
 * To rename the item click on the name (starting with `_Rename_learned_`) and change the name. It should not include `,`, `.` or `;` as well as some other characters, they will be replaced by '_';
@@ -63,13 +62,13 @@ Just create an object (state, type button) with value where you prepend "CODE_" 
 
 ## Use send messages to adapter
 
-Der Adapter versteht jetzt auch 'sendTo' Kommandos.
+The adapter understands also 'sendTo' commands.
 
-* `debug`: `sendTo('broadlink2.0','debug','on')` (es geht auch 0,1,on,off,ein,aus,true,false) würde debug ein- oder ausschalten.
-* `get`:  `sendTo('broadlink2.0','get', 'RM2:RMPROPLUS.Temperature'` kann der state von Werten abgefragt werden, man bekommt z.B. `{ val: 29.9, ack: true, ts: 1505839335870, q: 0, from: 'system.adapter.broadlink2.0', lc: 1505839335870 }` zurück
-* `switch`: schaltet Steckdose ein/aus je nach Text: `sendTo('broadlink2.0','switch','SP:your device id=on')`
+* `debug`: `sendTo('broadlink2.0','debug','on')` (also 0,1,on,off,ein,aus,true,false) would switch debug mode on.
+* `get`:  `sendTo('broadlink2.0','get', 'RM2:RMPROPLUS.Temperature'` could request data from device like  `{ val: 29.9, ack: true, ts: 1505839335870, q: 0, from: 'system.adapter.broadlink2.0', lc: 1505839335870 }` zurück
+* `switch`: can switch a plug on or off: `sendTo('broadlink2.0','switch','SP:your device id=on')`
 * `switch_on`/`switch_off`:  sendTo('broadlink2.0','switch_on','SP:your device id')`
-* `send`: `sendTo('broadlink2.0','send','RM:yourdev.Learn')` würde lernen starten und `sendTo('broadlink2.0','send','RM:yourdev.L.yourid')` würde den code (oder eine Scene) senden.
+* `send`: `sendTo('broadlink2.0','send','RM:yourdev._Learn')` would start learn and `sendTo('broadlink2.0','send','RM:yourdev.L.yourid')` would send the code.
 * `send_scene`: `sendTo('broadlink2.0','send_scene','scene xxx ')` würde den als message angegebenen Text als Szene ausführen
 * `send_code`: `sendTo('broadlink2.0','send_code','RM:your remote.CODE_xxxxx')` würde den CODE_xxxx vom R:your name senden.
 
@@ -102,7 +101,7 @@ Der Adapter versteht jetzt auch 'sendTo' Kommandos.
 
 ### 2.0.0
 * Can handle Floureon/Beko thermostats (now with MQTT)
-* Can handle SC1 security devices
+* Can handle S1C security devices
 * Names device after their name or with their mac to reduce possibility of renaming
 * Can rename devices
 * Can add device Id's/Types for new devices
