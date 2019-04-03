@@ -52,11 +52,14 @@
             "IR/RF",
             "Remote",
             "Switch",
+            "Floureon",
+            "Beok313",
             "A1",
             "RM2",
             "RM3",
             "SP1",
-            "SP2"
+            "SP2",
+            "S1C"
         ],
         "readme": "https://github.com/frankjoke/ioBroker.broadlink2/blob/master/README.md",
         "loglevel": "info",

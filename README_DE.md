@@ -7,7 +7,18 @@
 
 [German manual - Deutsche Anleitung](README_DE.md)
 
-## Adapter for different Broadlink compatible WLan-devices (RM++,SP++,A1, Floureon, S1C)
+* sorry bin erst beim übersetzen, noch nicht ganz fertig!
+
+## Adapter für verschiedene Broadlink WLan-Geräte (RM++,SP++,A1, Floureon, S1C)
+
+Dieser ioBroker adapter für die meisten Broadlink kompatiblen Geräte wie RM++, SP1, SP2, SP3, Honeywell SP2, SPMini, SPMini2, SPMiniPlus A1AIR und einige OEM Versionen. Die neueste Version kennt auch S1C Sicherheitstechnik und Floureon/Beok313 Thermostate.
+Natürlich werden Fernsteuerungen wie RM2, RM Mini, RM Pro Phicomm, RM2 Home Plus, RM2 Home Plus GDT, RM2 Pro Plus, RM2 Pro Plus2 und RM2 Pro Plus BL unterstützt. Die Fernsteuerungen können Befehle lernen welche dann mit ioBroker gesendet werden können.
+
+Neue angelerne Befehle können umbenannt werden, Dabei wird auch der Befehls-ID umbenannt.
+
+Man kann auch eigene Einträge erzeugen indem man sie entweder 'CODE_'+code nennt oder unter AdminObjekte mittels dem Bleistift im 'nativ'-Bereich einen Eintrag `code` mit dem code (ohne _CODE voran) generierst, Allerdings müssen all diese im `.L.` Verzeichnis sein.
+
+Man kann Szenen bilden weche dann Mehrere Befehle hintereinander auszuführen. 
 
 This is an ioBroker adapter for multiple  Broadlink switch like RM2, RM3, RM Plus, SP1, SP2, SP3, Honeywell SP2, SPMini, SPMini2, SPMiniPlus and some OEM products from them.
 ALso remote controllers are supported like RM2, RM Mini, RM Pro Phicomm, RM2 Home Plus, RM2 Home Plus GDT, RM2 Pro Plus, RM2 Pro Plus2 and RM2 Pro Plus BL. Multiple controllers will generate their own entries and need to be trained separately.
@@ -21,9 +32,9 @@ The adapter has fixed states to send codes from RM-devices or to learn them It c
 
 If devices which are configured on a certain IP are not found again they will be flagged 'notReachable'! If they are connected again they will be useable normally.
 
-If a device is not answering for 5 minutes in a row it's set to unreachable. ***notReachable*** devices will give a log warning message every x scans. After some scans the adapter will try to find them again on the same mac address before.
+If a device is not answering 2 times in a row it's set to unreachable. ***notReachable*** devices will give a log warning message every 50 scans. After 10 scans the adapter will try to find them again on the same IP like before. If you changed IP please do a rescan.
 
-Please delete old devices from admin.objects in case you remove them permanentely or renamed them in your router!
+Please delete devices from admin.objects in case you remove them permanentely or renamed them in your router!
 
 ### Note
 
@@ -44,22 +55,24 @@ SP1 devices cannot be polled.
 * Now press some button on your remote control within 30 seconds.
 * An new Object should now appear within the Object "broadlink.[n].[devicename].LearnedState" with the name ">>> Rename learned @ YYYYMMDDTHHmmSS"
 * You can click on the button in object view to send the code.
-* To rename the item click on the name (starting with `_Rename_learned_`) and change the name. It should not include `,`, `.` or `;` as well as some other characters, they will be replaced by '_';
+* To rename the item click on the name (starting with `>>>`) and change the name. It should not include `,`, `.` or `;`
 
 It is also possible to use the codes from [RM-Bridge](http://rm-bridge.fun2code.de/).
 Just create an object (state, type button) with value where you prepend "CODE_" or with native entry `code` without any 'CODE_'.
 
 ## Use scenes
 
-* Scenes can contain ID's or names as well as numbers separated by `,`. Normally the ID's will be executed/sent with 100ms time difference but if you need a longer pause between then you can write in a number which reflects the milli seconds to wait. For example `SP:dose=1, 1000, RM:your.L.StereoEin, 1000, RM:your.L.TVEin` would switch on an wireless plug named 'SP:dose', then wait one second (actually 1.1 seconds), Switch on the stero and after another second the tv. You can also switch devices of other adapters, like `hm-rpc.0.MEQ1435726.1.STATE=true` would switch this Homematic device on! Boolsche states can be switched with '=1/=on/=true/=ein', if you leave it without `=` than it will use true. To switch off a device you end it with '=0/=false/=aus/=off' which is necessary to be switched off!
+* Szenen bestehen aus ID's oder Zahlen mit `,` aneinandergereiht. Normal werden sie einfach im Abstand von 100ms hintereinander ausgelöst. Wird eine Zahl gefunden wird dort so viele ms gewartet bis zum nächsten Auslösen. Also `,SP:dose1, RM:your.L.StereoEin, 1000, RM:your.L.TVEin` würde die Steckdose einschalten, dann den Fernseher  1100ms nachher die Stereoanlage. Man kann auch Werte bei anderen (auch fremde) States durch Angabe des kompletten id's schalten: `hm-rpc.0.MEQ1435726.1.STATE` würde diesen einschalten! Übrigens, Bei boolschen Stateskann kann beim Einschalten das '=1/=on/=true/=ein' weggelassen werden da true der default-Wert ist. Beim Ausschalten wäre ein '=0/=false/=aus/=off' undbedingt notwendig!
 
 ## Use states
 
-* You may create also states for your devices which combines an On and Off commands to a single state which can be switched like any other device..
-* You need to list the commands for switching a state on and off in the separate columns, these can be multiple ones so state knows when your device is switched on/off by any of them
-* If you set the state the to on or off onlöy the first on/off command will be sent
-* If only on commands are present the switch will send the respective command on a numeric value-1, with means it will send the first command if it receives an `0`, the second if it receives a `1`. In this way you can simulate multiple states within one state.
-* If you use only '+' as off command then you need to provide 10 on commands separated by ',' which reflect the numbers `0-9` on the remote control. You can send the sstate then a number, like `123`  (max is 9999) and it would send `1`, `2` and `3` with 1/3rd of a second delay between them! In this way you sen set for example the channel on TV to '33' by just write 'TVchannel=33' if the state name is TVchannel.
+* Sie können states anlegen welche mittels gelernten Signale ein- oder ausgeschaltet werden.
+* Damit geben sie den State-Namen an und die Signale (listem mit ',' getrennt) die das Gerät einschalten und auch solche die es ausschalten.
+* Bei boolschen States wird nur der erste Wert gesendet aber beim Senden von allen Werten wird der State gesetzt. Das ist von Vorteil wenn mehrere Tasten ein Gerät einschalten (oder Ausschalten)
+* Es kännen zum Ausschalten auch keine Signale gelistet werden dann werden die zum Einschalten verwendeten Werte in einer Liste
+* wird als Aus-Signal nur '+' angegeben werden die Werte im Ein-Bereich (hoffentlich 10 Signale) als Zehnertastatur verwendet die Wete bis zu 9999 senden kann. Wenn dann der State mit Wert 123 beschrieben wird wird dann '1' , '2' und dann '3' mit jeweils nach 1/3 Sekunde Verzögerung gesendet!
+
+Die Liste muss mit dem 0-Befehl beginnen und mit dem 9-Befehl enden!
 
 ## Use send messages to adapter
 
@@ -89,6 +102,7 @@ Der Adapter versteht jetzt auch 'sendTo' Kommandos.
 
 * If you add an `!` at the end of the list of added new devices (even if it is empty) you can set the adapter to debug mode where it will log a lot of additional information even iof it is not set to 'info' mode in Admin.
 
+
 ## Known-Issues
 
 * If you learn the same signal multiple times the code can be different everytime. This can not be changed.
@@ -101,6 +115,7 @@ Der Adapter versteht jetzt auch 'sendTo' Kommandos.
 ## Changelog
 
 ### 2.0.0
+
 * Can handle Floureon/Beko thermostats (now with MQTT)
 * Can handle SC1 security devices
 * Names device after their name or with their mac to reduce possibility of renaming
@@ -111,24 +126,17 @@ Der Adapter versteht jetzt auch 'sendTo' Kommandos.
 
 
 ### 1.9.1
-
 * added anothe RM Mini code
 
 ### 1.8.1
-
 * Changed util.js and tests and added new devices
 
-### 1.7.0
-
-* Changed and corrected states which are created by A1-devices
-
 ### Todo for later revisions
-
-* config of devices and codes in separate config tool
+* config of devices and codes
 
 ## Installation
 
-with ioBroker admin, npm install iobroker.broadlink2 or from <https://github.com/frankjoke/ioBroker.broadlink2>
+Mit ioBroker admin, npm install iobroker.broadlink2 oder von <https://github.com/frankjoke/ioBroker.broadlink2>
 
 ## License
 
