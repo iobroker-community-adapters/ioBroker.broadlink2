@@ -5,7 +5,7 @@
 [![Downloads](https://img.shields.io/npm/dm/iobroker.broadlink2.svg)](https://www.npmjs.com/package/iobroker.broadlink2)
 [![Travis-CI](http://img.shields.io/travis/frankjoke/ioBroker.broadlink2/V2Beta.svg)](https://travis-ci.org/frankjoke/ioBroker.broadlink2)
 
-[German manual - Deutsche Anleitung](README_DE.md)
+[English manual - Englische Anleitung](README.md)
 
 * sorry bin erst beim übersetzen, noch nicht ganz fertig!
 
