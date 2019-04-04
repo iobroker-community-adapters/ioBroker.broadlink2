@@ -1,5 +1,10 @@
-/* jshint -W097 */// jshint strict:false
-/*jslint node: true */
+/* eslint-disable strict */
+/* eslint-disable brace-style */
+/* eslint-disable no-unused-expressions */
+/* eslint-disable no-sync */
+/* eslint-disable no-undef */
+/* eslint-disable complexity */
+/* eslint-disable no-console */
 // check if tmp directory exists
 var fs            = require('fs');
 var path          = require('path');
@@ -311,6 +316,7 @@ function installJsController(cb) {
         } else {
             // check if port 9000 is free, else admin adapter will be added to running instance
             var client = new require('net').Socket();
+            client.on('error', () => {});
             client.connect(9000, '127.0.0.1', function() {
                 console.error('Cannot initiate fisrt run of test, because one instance of application is running on this PC. Stop it and repeat.');
                 process.exit(0);

@@ -1,7 +1,7 @@
 {
   "name": "iobroker.broadlink2",
-  "version": "1.9.1",
-  "description": "ioBroker interface for Broadlink devices ",
+  "version": "2.0.0",
+  "description": "ioBroker Broadlink2 Adapter",
   "author": "Frank Joke <frankjoke@hotmail.com>",
   "contributors": [
     "Reinhard Hiebl <reinhard@hieblmedia.com>"
@@ -24,13 +24,16 @@
     "url": "git+https://github.com/frankjoke/ioBroker.broadlink2.git"
   },
   "engines": {
-    "node": ">=4.3.0"
+    "node": ">=6.0.0"
   },
-  "dependencies": {},
+  "dependencies": {
+    "@frankjoke/myadapter": "^1.1.1"
+  },
   "devDependencies": {
-    "gulp": "^3.9.1",
-    "mocha": "^4.1.0",
-    "chai": "^4.1.2"
+    "axios": "^0.18.0",
+    "chai": "^4.1.2",
+    "gulp": "^4.0.0",
+    "mocha": "^4.1.0"
   },
   "main": "broadlink2.js",
   "scripts": {

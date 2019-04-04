@@ -1,9 +1,13 @@
 {
     "common": {
         "name": "broadlink2",
-        "version": "1.9.1",
+        "version": "2.0.0",
         "title": "Broadlink2 (RM++, SP++, A1) for multiple Broadlink-protocol W-Lan devices",
         "news": {
+            "2.0.0": {
+                "en": "Complete rewrite of adaper with multiple options, please read readme.md!",
+                "de": "Komplett neu geschriebenen Adapter mit neuen Funktionen und Konfiguration, bitte README lesen!"
+            },
             "1.9.1": {
                 "en": "Added RM Mini new support with",
                 "de": "Broadlink RM Mini unterstützung"
@@ -41,7 +45,7 @@
         "enabled": true,
         "messagebox": true,
         "subscribe": "messagebox",
-        "extIcon": "https://raw.githubusercontent.com/frankjoke/ioBroker.broadlink2/master/admin/broadlink.png",
+        "extIcon": "https://raw.githubusercontent.com/frankjoke/ioBroker.broadlink2/master/admin/broadlink2.png",
         "keywords": [
             "Broadlink",
             "W-Lan",
@@ -59,7 +63,9 @@
         "type": "iot-systems",
         "authors": [
             "Frank Joke <frankjoke@hotmail.com>"
-        ]
+        ],
+        "compact": true
+
     },
     "native": {
         "ip": ".fritz.box",

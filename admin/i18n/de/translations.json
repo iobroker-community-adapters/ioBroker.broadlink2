@@ -1,0 +1,15 @@
+{
+    "Broadlink2 adapter settings": "Broadlink2 Adapter Einstellungen",
+    "On save adapter restarts with new config immediately": "Beim Speichern von Einstellungen wird der Adapter sofort neu gestartet.",
+    "Poll switches every x seconds (0 = no polling)": "Abfrage der Schalter alle x Sekunden",
+    "Remove IP suffix": "Unterdrücke IP suffix (sollte mit . wie '.fritz.box' beginnen)",
+    "Scene setup": "Szenen-Definition:",
+    "SceneDescription": "Szenen können aus gelernten States, Szenen, Sender.CODE_xxx oder einer Verzögerung in Millisekunden bestehen.",
+    "Settings": "Einstellungen",
+    "Switch setup": "States die mit gelernten Daten oder Sequenzen Ein/Aus geschaltet werden. Kann eine Liste mit ',' getrennt sein wo das 1. signal gesendet wird aber alle schalten",
+    "off": "Aus-Signale",
+    "on": "Ein-Signale",
+    "scene": "Szene, Kommandos mit ',' getrennt",
+    "scname": "Name der Szene",
+    "stname": "Name des States"
+}

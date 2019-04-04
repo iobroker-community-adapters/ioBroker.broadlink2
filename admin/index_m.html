@@ -51,54 +51,6 @@
 
 <script type="text/javascript">
 	var scenes = [];
-	systemDictionary = {
-		"Broadlink2 adapter settings": {
-			"de": "Broadlink2 Adapter Einstellungen"
-		},
-		"Settings": {
-			"de": "Einstellungen"
-		},
-		"Poll switches every x seconds (0 = no polling)": {
-			"de": "Abfrage der Schalter alle x Sekunden"
-		},
-		"Remove IP suffix": {
-			"de": "Unterdrücke IP suffix (sollte mit . wie '.fritz.box' beginnen)"
-		},
-		"On save adapter restarts with new config immediately": {
-			"de": "Beim Speichern von Einstellungen wird der Adapter sofort neu gestartet."
-		},
-		"SceneDescription": {
-			de: "Szenen können aus gelernten States, Szenen, Sender.CODE_xxx oder einer Verzögerung in Millisekunden bestehen.",
-			en: "Scene can consist of learned states, scenes or Sender.CODE_xxx or a time delay in ms!"
-		},
-		"Scene setup": {
-			"de": "Szenen-Definition:"
-		},
-		"scname": {
-			de: "Name der Szene",
-			en: "Scene Name"
-		},
-		"stname": {
-			de: "Name des States",
-			en: "State Name"
-		},
-		"on": {
-			de: "Ein-Signale",
-			en: "On-signals"
-		},
-		"off": {
-			de: "Aus-Signale",
-			en: "Off-signals"
-		},
-		"Switch setup": {
-			de: "States die mit gelernten Daten oder Sequenzen Ein/Aus geschaltet werden. Kann eine Liste mit ',' getrennt sein wo das 1. signal gesendet wird aber alle schalten",
-			en: "States which will be switched on/off with learned states or sequences. THey can be lists where the first will be sent but the others will switch as well!"
-		},
-		"scene": {
-			de: "Szene, Kommandos mit ',' getrennt",
-			en: "Scene, this are commands separated with ','"
-		},
-	};
 
 	// the function loadSettings has to exist ...
 	function load(settings, onChange) {
@@ -322,10 +274,12 @@
 					if (buttons[i]) {
 						for (var b = 0; b < buttons[i].length; b++) {
 							if ((!v && buttons[i][b] === 'up') || v === values.length - 1 && buttons[i][b] === 'down') {
-								text += `<a data-command="${buttons[i][b]}" class="btn-floating waves-effect waves-light red lighten-2 values-buttons right" disabled><i class="material-icons">add</i></a>`
+								text +=
+									`<a data-command="${buttons[i][b]}" class="btn-floating waves-effect waves-light red lighten-2 values-buttons right" disabled><i class="material-icons">add</i></a>`
 								continue;
 							}
-							text += `<a data-index="${v}" data-command="${buttons[i][b]}" class="btn-floating waves-effect waves-light red lighten-2 values-buttons right "><i class="material-icons">add</i></a>`
+							text +=
+								`<a data-index="${v}" data-command="${buttons[i][b]}" class="btn-floating waves-effect waves-light red lighten-2 values-buttons right "><i class="material-icons">add</i></a>`
 						}
 					}
 					text += '</td>';
@@ -416,22 +370,29 @@
 <div class="m adapter-container">
 	<div class="row" style="height: 7%">
 		<div class="col s1">
-			<img src="broadlink.png" />
+			<img src="broadlink2.png" />
 		</div>
 		<div class="col s9">
 			<h4 class="translate">Broadlink2 adapter settings</h4>
 		</div>
 	</div>
-	<div class="row" style="height: 8%">
+	<div class="row" style="height: 7%">
 		<div class="col s6">
-			<label class="translate">Remove IP suffix</label>
-			<input class="value" id="ip" />
+			<label class="translate" for="poll">Poll switches every x seconds (0 = no polling)</labbel>
+				<input class="value" type="number" id="poll"  min="10" max="3600" data-crypt="0" size="10" class="value number" />
 		</div>
 		<div class="col s6">
-			<label class="translate">Poll switches every x seconds (0 = no polling)</labbel>
-				<input class="value" id="poll" />
+			<label class="translate" for="new">new</label>
+			<input class="value" id="new" type="text" data-crypt="0" size="600"/>
 		</div>
-		<div class "divider"></div>
+	</div>
+	<div class="row" style="height: 7%">
+		<div class="col s12">
+			<label class="translate" for="rename">Rename Device</label>
+			<input class="value" id="rename" type="text" data-crypt="0" size="120" />
+		</div>
+	</div>
+	<div class="row" style="height: 5%">
 		<div class="col s6">
 			<span class="translate">SceneDescription</span>
 		</div>
@@ -439,7 +400,7 @@
 			<span class="translate">On save adapter restarts with new config immediately</span>
 		</div>
 	</div>
-	<div id="scenes" class="row" style="width: 100%; height: 42%">
+	<div id="scenes" class="row" style="width: 100%; height: 25%">
 		<a title="Add Scene" class="btn-floating waves-effect waves-light teal table-button-add left">
 			<i class="material-icons">add</i>
 		</a>&nbsp;
@@ -456,7 +417,7 @@
 			</table>
 		</div>
 	</div>
-	<div id="switches" class="row" style="width: 100%; height: 42%">
+	<div id="switches" class="row" style="width: 100%; height: 25%">
 		<a title="Add Switch" class="btn-floating waves-effect waves-light teal table-button-add left">
 			<i class="material-icons">add</i>
 		</a>&nbsp;

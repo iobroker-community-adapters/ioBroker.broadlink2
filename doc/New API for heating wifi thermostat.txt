@@ -1,0 +1,343 @@
+As a developer, you need to know the ID number of thermostat firstly. 
+
+For example, the ID number is 4664.
+1. As the ID is encrypted, you need to calculate the effect ID_Effect. 
+ID_Effect=(ID+1)*65535+65535=12 39 ED C6 (4 bytes).
+2. When you know the number of ID_Effect, you need to communicate with the server of domain name bestbeca.cn.
+The engineer should use the server of domain name to analyse the real ip address. The port is 25565.
+The developer need to send 12 39 ED C6 for the registration then use the tcp protocol for communication . 
+3. After that,  all the parameters of thermostat will be controlled according to the 8 byte datas in the following protocol detail .
+4. When thermostat sends collected temperature data to upper computer,  the value of collected temperature should be multiplied by 2 and sent completely by the format of HEX because the accuracy is 0.5.
+For example:  When the collected temperature is 25.5,  the value sent by thermostat to the upper computer will be 33H (the demical is 51 ); 
+Similarly, When upper computer sends set temperature data to thermostat,  the value of set temperature should be multiplied by 2 and sent completely by the format of HEX because the accuracy is 0.5.
+For example:  When the set temperature is 25.5,  the value sent by upper computer to the thermostat should be 33H (the demical is 51).
+E.G.: Read Temper= 25.5C
+The send(or receive) value is 25.5*2=51
+The data in HEX =33H
+
+Communication Protocol And DataFormat Describe
+
+Declare:  Following " 0X " Mean's HEX Values
+
+;;=======================================================================================================================
+
+      1Data Package protocol as below:
+
+      		COMMAND + ID0 + ID1 + Data0 + Data1 + Data2 + Data3 + CheckSum
+
+         8 Bytes in total
+
+;;=======================================================================================================================
+
+      2: CheckSum definition:     
+
+	  (size: 8 Bits)
+          CheckSum = (COMMAND + ID0 + ID1 + Data0 + Data1 + Data2 + Data3) & 0xFF ^ 0xA5
+
+;;========================================================================================================================
+
+      3: COMMAND definition
+            
+            ReadPC read data from thermostat
+            WritePC transmit data to thermostat 
+
+            COMMAND is command opcodesize: 8 Bit commands as below
+                  command
+                PC ------->thermostat
+                  [0XA0] --> PC read all data from thermostat
+                  [0XA1] --> PC transmit all data to thermostat 
+		  [0XA2] --> Turn-on/off power
+		  [0XA3] --> no use
+		  [0XA4] --> no use
+		  [0XA5] --> no use
+		  [0XA6] --> Temperature setting 
+		  [0XA7] --> Temperature calibration
+	          [0XA8] --> Time setting
+                  [0XA9] --> Auto/Hand setting
+                 
+                          command
+                  Thermostat--------->PC
+		  [0X50] -->thermostat returns all data to PC
+		 
+
+;;===============================================================================
+
+      4: ID0 , ID1 definition       
+Note:
+ 	  ID0,ID1  must be 01 01,it is fixed,can not be other data 
+    
+
+;;===============================================================================
+	  
+      5: Data Package definition  
+	     
+             Data0 ~ Data3 is command operand size is 32 Bit (4 Bytes) 
+	     ;;------------------------------
+	
+             COMMAND1: 0XA0      
+	     Data Package0XA0 + ID0 + ID1 + Data0 + Data1 + Data2 + Data3 + CheckSum
+	               Data0		00
+	               Data1		00
+	               Data2		00
+	               Data3		00
+	     ;;------------------------------
+    
+	     Response: 0x50  data returns
+
+	  ;;------------------------------    
+	  
+	  COMMAND2: 0XA1      
+	  Data package0XA1 + ID0 + ID1 + Data0 + Data1 + Data2 + Data3 + CheckSum
+
+	               Data0      =>no use
+                                 
+                                 Bit2       must be 0
+                            	 Bit3       Manual and weekly programmable
+                                          0 -> Weekly programmable
+                                          1 -> Manual       
+                            
+                            	 Bit4       turn-on/off
+                                          0 -> turn-off
+                                          1 -> turn-on
+                            
+                            	 Bit6-Bit5 no use
+
+                                 Bit7      no use
+            
+            	   Data1       =>  temperature calibration, -9-9 degree C(0XF7-0X09)
+            
+            	   Data2       =>  temperature setting, from 10 to 30 degree C (0X0A-0X1E)
+            
+            	   Data3       =>  ambient temperature
+	   ;;------------------------------ 
+
+	   response:  0x50 returns   OK
+	   ;;------------------------------      	
+
+	   COMMAND3: 0XA2
+           Data package0XA2 + ID0 + ID1 + Data0 + Data1 + Data2 + Data3 + CheckSum
+		 
+		             Data0      =>  Bit1-Bit3	Invalid
+				            Bit4         turn-on/off
+                                              0 -> turn-off
+				              1 -> turn-on
+                                Bit5-Bit7       Invalid
+            
+            	   Data1       =>  Invalid
+
+            	   Data2       =>  Invalid
+
+            	   Data3       =>  Invalid
+	   ;;------------------------------ 
+
+	   response:  0x50  returns   OK
+
+	   ;;------------------------------
+
+	   COMMAND4: 0XA3      
+           Data package0XA3 + ID0 + ID1 + Data0 + Data1 + Data2 + Data3 + CheckSum
+		 
+		             Data0      =>  no use  
+                             Bit2-Bit7   Invalid
+            
+                 Data1       =>  Invalid
+            
+                 Data2       =>  Invalid
+            
+                 Data3       =>  Invalid
+	   ;;------------------------------ 
+
+	   response: 0x50 returns   OK
+
+	   ;;------------------------------
+
+	   COMMAND5: 0XA4      
+           Data package0XA4 + ID0 + ID1 + Data0 + Data1 + Data2 + Data3 + CheckSum
+		 
+		   Data0      =>  Bit0-Bit4        Invalid
+			Bit6-Bit 5      no use
+            
+            	   Data1       =>  Invalid
+
+            	   Data2       =>  Invalid
+
+            	   Data3       =>  Invalid
+	   ;;------------------------------ 
+
+	   response: 0x50 returns    OK
+
+	   ;;------------------------------
+
+
+	   COMMAND7: 0XA6      
+           Data package0XA6 + ID0 + ID1 + Data0 + Data1 + Data2 + Data3 + CheckSum
+		 
+		             Data0       =>  Invalid
+            
+            	   Data1       =>  Invalid
+            
+            	   Data2       =>  temperature setting
+            
+            	   Data3       =>  Invalid 
+	   ;;------------------------------ 
+
+	   response: 0x50 returns  OK
+
+	   ;;------------------------------
+
+	   COMMAND8: 0XA7      
+           Data package0XA7 + ID0 + ID1 + Data0 + Data1 + Data2 + Data3 + CheckSum
+		 
+		             Data0       =>  Invalid
+            
+            	   Data1       =>  temperature calibrationfrom-9 to 9 degree=> 0xF7...9)
+            
+            	   Data2       =>  Invalid
+            
+            	   Data3       =>  Invalid
+	   ;;------------------------------ 
+
+	  response: 0x50  returns OK
+	   ;;------------------------------
+
+	   COMMAND9: 0XA8      
+                    Data package0XA8 + ID0 + ID1 + Data0 + Data1 + Data2 + Data3 + CheckSum
+		 
+		             Data0       =>  second(BCD code)
+            
+            	   Data1       =>  minute(BCD code)
+            
+            	   Data2       =>  hour(BCD code)
+            
+            	   Data3       =>  week(BCD code)
+	  ;;------------------------------ 
+
+	  response: 0x50  returns OK
+    ;;------------------------------   
+      
+	  COMMAND10: 0XA9
+	   ;;------------------------------ 
+	  Data package0XA4 + ID0 + ID1 + Data0 + Data1 + Data2 + Data3 + CheckSum
+		 
+		             Data0      =>   Bit0-Bit2       Invalid
+		                             Bit3            Manual and weekly programmable
+                                                0 -> Weekly programmable
+                                                1 -> Manual 
+				                         Bit4-Bit 7      Invalid
+                 Data1       =>  Invalid
+
+                 Data2       =>  Invalid
+
+                 Data3       =>  Invalid
+      response: 0x50  returns OK
+          
+;;===============================================================================
+;;===============================================================================
+ response: 0x50  OK
+ Data package0x50 + ID0 + ID1 + Data0 + Data1 + Data2 + Data3 + CheckSum   	
+                  
+                  Data0      =>  Bit1-Bit0 no use
+                                 
+                                   Bit2       0
+                            	   Bit3       Manual and weekly programmable
+                                            0 -> Weekly programmable
+                                            1 -> Manual       
+                            
+                            	   Bit4       turn-on/off
+                                            0 -> turn-off
+                                            1 -> turn-on
+                            
+                            	   Bit6-Bit5 no use
+
+                 
+                            	   Bit7      no use
+            
+            	    Data1       =>  temperature calibration, -9-9 degree C(0XF7-0X09)
+            
+            	    Data2       =>  temperature setting, from 10 to 30 degree C (0X0A-0X1E)
+            
+            	    Data3       =>  ambient temperature
+                  
+;;===============================================================================
+;;===============================================================================
+      
+      6: Example of 2 commands
+
+          PC is master  thermosat is slave
+      ----------------------------------------------------------
+      
+      ----------------------------------------------------------
+      master read data from thermostat
+            COMMAND     ==  0XA0       PC read data from thermostat
+            ID0,ID1     =>  IP
+            Data0       =>  0xxx
+            Data1       =>  0xxx
+            Data2       =>  0xxx
+            Data3       =>  0xxx
+            CheckSum
+            
+     slave respond 
+			COMMAND     ==  0X50       thermostat responds data to PC
+            
+            ID0,ID1     =>  01 01
+            
+            Data0       =>  Bit1-Bit0 no use
+                            Bit2       0     
+                            Bit3       standby
+                            
+                            Bit4       turn-on/off
+                                  0 -> turn-off
+                                  1 -> turn-on 
+                            
+                            Bit6-Bit5  no use
+
+                            Bit7       valve 
+                                  0->turn-off 
+                                  1->turn-on
+                            
+                            Bit7       standby 
+            
+            Data1       =>  temperature calibration
+            
+            Data2       =>  temperature setting from 10 to 30 degree
+            
+            Data3       =>  ambient temperature
+            
+            CheckSum
+            
+      ----------------------------------------------------------
+      
+      ----------------------------------------------------------
+      PC transmit all data to thermostat
+            COMMAND     ==  0XA1       PC transmit all data to thermostat
+            
+            ID0,ID1     =>  01 01
+           
+            Data0       =>  Bit1-Bit0 no use
+                            Bit2       0  
+                            Bit3       standby 
+                            
+                            Bit4       turn-on/off
+                                  0 -> turn-off
+                                  1 -> turn-on 
+                            
+                            Bit6-Bit5    no use
+
+                            Bit7      valve
+                                  0->turn-off
+                                  1->turn-on
+                            
+
+            
+            Data1       =>  temperature calibration
+            
+            Data2       =>  temperature setting from 10 to 30 degree
+            
+            Data3       =>  standby
+            
+            CheckSum
+            
+      slave response
+			COMMAND     ==  0X50       PC transmit all data to thermostat   OK
+            
+            ----------------------------------------------------------

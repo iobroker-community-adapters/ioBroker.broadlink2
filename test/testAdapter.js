@@ -1,5 +1,10 @@
-/* jshint -W097 */// jshint strict:false
-/*jslint node: true */
+/* eslint-disable strict */
+/* eslint-disable brace-style */
+/* eslint-disable no-unused-expressions */
+/* eslint-disable no-sync */
+/* eslint-disable no-undef */
+/* eslint-disable complexity */
+/* eslint-disable no-console */
 var expect = require('chai').expect;
 var setup  = require(__dirname + '/lib/setup');
 
