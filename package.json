@@ -27,7 +27,7 @@
     "node": ">=6.0.0"
   },
   "dependencies": {
-    "@frankjoke/myadapter": "^1.1.1"
+    "@frankjoke/myadapter": "https://github.com/frankjoke/myAdapter/tarball/master"
   },
   "devDependencies": {
     "axios": "^0.18.0",
