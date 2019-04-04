@@ -3,7 +3,7 @@
 [![NPM version](http://img.shields.io/npm/v/iobroker.broadlink2.svg)](https://www.npmjs.com/package/iobroker.broadlink2)
 [![installed](http://iobroker.live/badges/broadlink2-installed.svg)](http://iobroker.live/badges/broadlink2-installed.svg)
 [![Downloads](https://img.shields.io/npm/dm/iobroker.broadlink2.svg)](https://www.npmjs.com/package/iobroker.broadlink2)
-[![Travis-CI](http://img.shields.io/travis/frankjoke/ioBroker.broadlink2/V2Beta.svg)](https://travis-ci.org/frankjoke/ioBroker.broadlink2)
+[![Travis-CI](http://img.shields.io/travis/frankjoke/ioBroker.broadlink2/master.svg)](https://travis-ci.org/frankjoke/ioBroker.broadlink2)
 
 [English manual - Englische Anleitung](README.md)
 
