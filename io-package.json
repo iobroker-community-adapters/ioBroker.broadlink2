@@ -41,7 +41,7 @@
         "platform": "Javascript/Node.js",
         "materialize": true,
         "mode": "daemon",
-        "icon": "broadlink.png",
+        "icon": "broadlink2.png",
         "enabled": true,
         "messagebox": true,
         "subscribe": "messagebox",
