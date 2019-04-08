@@ -1,6 +1,6 @@
 {
   "name": "iobroker.broadlink2",
-  "version": "2.0.0",
+  "version": "2.0.1",
   "description": "ioBroker Broadlink2 Adapter",
   "author": "Frank Joke <frankjoke@hotmail.com>",
   "contributors": [
@@ -27,7 +27,7 @@
     "node": ">=6.0.0"
   },
   "dependencies": {
-    "@frankjoke/myadapter": "^1.1.3"
+    "@frankjoke/myadapter": "^1.1.6"
   },
   "devDependencies": {
     "axios": "^0.18.0",

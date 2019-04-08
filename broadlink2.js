@@ -37,7 +37,7 @@ let brlink, adapterObjects = [],
 	states = {};
 
 // eslint-disable-next-line no-unused-vars
-const AA = A.init(module, 'broadlink2', main); // associate adapter and main with MyAdapter
+A.init(module, 'broadlink2', main); // associate adapter and main with MyAdapter
 
 
 //A.I('Adapter starting...');
@@ -51,7 +51,7 @@ A.objChange = function (obj, val) { //	This is needed for name changes
 				A.Df('get object %O gets changed to  %O', oobj, obj);
 				const nst = oobj.common,
 					ncn = nst.name,
-					nid = ncn.replace(AA.FORBIDDEN_CHARS, '_'),
+					nid = ncn.replace(A.adapter.FORBIDDEN_CHARS, '_'),
 					dev = obj.split('.'),
 					fnn = dev.slice(2, -1).concat(nid).join('.');
 				if (nid === dev[4] || nid.startsWith(defaultName)) // no need to rename!
@@ -791,7 +791,7 @@ function main() {
 	rename = A.C.rename.split(',').map(x => x.split('=').map(s => s.trim()));
 	if (rename.length === 1 && rename[0].length === 1)
 		rename = [];
-	rename = rename.map(x => [x[0], x[1].replace(AA.FORBIDDEN_CHARS, '_')]);
+	rename = rename.map(x => [x[0], x[1].replace(A.adapter.FORBIDDEN_CHARS, '_')]);
 
 	A.If('Devices to add: %s', add, add.map(x => x.join('=')).join(','));
 	A.If('Devices to rename: %s', rename.map(x => x.join('=')).join(','));
