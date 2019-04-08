@@ -3,6 +3,7 @@
         "name": "broadlink2",
         "version": "2.0.1",
         "title": "Broadlink2 (RM++, SP++, A1) for multiple Broadlink-protocol W-Lan devices",
+        "titleLang": "Broadlink2 (RM++, SP++, A1, T1, S1C, Beok313, Floureon) for multiple Broadlink-protocol W-Lan devices",
         "news": {
             "2.0.1": {
                 "en": "Complete rewrite of adaper with multiple options, please read readme.md!",
