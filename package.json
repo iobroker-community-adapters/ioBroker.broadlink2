@@ -27,12 +27,12 @@
     "node": ">=6.0.0"
   },
   "dependencies": {
-    "@frankjoke/myadapter": "^1.1.6"
+    "@frankjoke/myadapter": "^1.2.5"
   },
   "devDependencies": {
-    "axios": "^0.18.0",
-    "chai": "^4.1.2",
-    "gulp": "^4.0.0",
+    "axios": "^0.19.2",
+    "chai": "^4.2.0",
+    "gulp": "^4.0.2",
     "mocha": "^4.1.0"
   },
   "main": "broadlink2.js",
