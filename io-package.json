@@ -1,10 +1,14 @@
 {
     "common": {
         "name": "broadlink2",
-        "version": "2.0.1",
+        "version": "2.0.3",
         "title": "Broadlink2 (RM++, SP++, A1) for multiple Broadlink-protocol W-Lan devices",
         "titleLang": "Broadlink2 (RM++, SP++, A1, T1, S1C, Beok313, Floureon) for multiple Broadlink-protocol W-Lan devices",
         "news": {
+            "2.0.3": {
+                "en": "Changed myAdapter to support js-controller v2.x & v3.x!",
+                "de": "myAdapter geändert um js-controller v2.x & v3.x zu unterstützen."
+            },
             "2.0.1": {
                 "en": "Complete rewrite of adaper with multiple options, please read readme.md!",
                 "de": "Komplett neu geschriebenen Adapter mit neuen Funktionen und Konfiguration, bitte README lesen!"
