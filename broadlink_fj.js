@@ -242,8 +242,8 @@ class Device extends EventEmitter {
         packet[0x05] = 0xa5;
         packet[0x06] = 0xaa;
         packet[0x07] = 0x55;
-        packet[0x24] = 0x2a;
-        packet[0x25] = 0x27;
+        packet[0x24] = this.devtype & 0xff;
+        packet[0x25] = this.devtype >> 8;
         packet[0x26] = command;
         packet[0x28] = this.count & 0xff;
         packet[0x29] = this.count >> 8;
@@ -613,6 +613,9 @@ class RM extends Device {
         super(host, mac, devtype, bl);
         this.sendwait = new A.Sequence();
         this.type = "RM";
+        this._request_header = Buffer.from([]);
+        this._code_sending_header = Buffer.from([]);
+
     }
     getVal() {
         //"""Returns the power state of the smart plug."""
@@ -620,29 +623,27 @@ class RM extends Device {
         const ret = this._val;
         if (A.T(ret) === 'object')
             ret.here = false;
-        var packet = Buffer.alloc(16, 0);
+        var packet = Buffer.concat([this._request_header, Buffer.from([0x01])]);
         //        A.I(`getVal on '${this.constructor.name}' called! on ${A.O(this.host)}`);
-        packet[0] = 1;
         return this.checkOff(this.sendPacket, 0x6a, packet).then(res => {
             //            A.I(`getVal on '${this.constructor.name}' returned ${A.O(res)}`);
             if (res && res.payload && !res.err) {
+                var offset = this._request_header.length + 4;
                 let payload = res.payload;
                 ret.here = true;
-                ret.temperature = (payload[0x4] * 10 + payload[0x5]) / 10.0;
+                ret.temperature = (payload[offset] * 10 + payload[offset+1]) / 10.0;
                 return A.resolve(ret);
             } else return A.reject(ret);
         }); //.catch(e => A.I(`getVal on '${this.constructor.name}' had error ${A.O(e)} and returned ${A.O(ret)}`, e));
     }
 
     checkData() {
-        var packet = Buffer.alloc(16, 0);
-        packet[0] = 4;
+        var packet = Buffer.concat([this._request_header, Buffer.from([0x04])]);
         //        A.I(`send checkData on '${this.constructor.name}'`);
         return this.checkOff(this.sendPacket, 0x6a, packet, -1000).then(res => {
             //             A.I(`checkData on '${this.constructor.name}' returned ${A.O(res)}`);
             if (res && res.payload && !res.err) {
-                let data = Buffer.alloc(res.payload.length - 4, 0);
-                res.payload.copy(data, 0, 4);
+                let data = res.payload.slice(this._request_header.length + 4) 
                 return A.resolve(data);
             }
             return A.reject(res);
@@ -663,15 +664,23 @@ class RM extends Device {
 
     sendVal(data) {
         var self = this;
-        var packet = new Buffer([0x02, 0x00, 0x00, 0x00]);
-        packet = Buffer.concat([packet, data]);
+        var packet = Buffer.concat([this._code_sending_header, Buffer.from([0x02, 0x00, 0x00, 0x00]), data]);
         return this.sendwait.addp(() => this.checkOff(self.sendPacket, 0x6a, packet, 5000)); //.then(x => A.I(`setVal/sendData for ${this.host.name} returned ${A.O(x)}`, x));
     }
 
     enterLearning() {
-        var packet = Buffer.alloc(16, 0);
-        packet[0] = 3;
+        var packet = Buffer.concat([this._request_header, Buffer.from([0x03])]);
         return this.checkOff(this.sendPacket, 0x6a, packet); //.then(x => A.I(`enterLearning for ${this.host.name} returned ${A.O(x)}`, x));
+    }
+
+}
+
+class RM4 extends RM {
+    constructor(host, mac, devtype, bl) {
+        super(host, mac, devtype, bl);
+        this.type = "RM4";
+        this._request_header = Buffer.from([0x04, 0x00]);
+        this._code_sending_header = Buffer.from([0xd0, 0x00]);
     }
 
 }
@@ -1002,6 +1011,17 @@ class Broadlink extends EventEmitter {
                 0x278f: 'RM Mini Shate',
                 0x2797: 'RM Pro (OEM)',
                 0x27C2: 'RM Mini 3'
+            },
+            RM4: {
+                class: RM4,
+                name: 'rm4',
+                0x51da: 'RM4 Mini',
+                0x5f36: 'RM Mini 3',
+                0x6026: 'RM4 Pro',
+                0x610e: 'RM4 Mini',
+                0x610f: 'RM4c',
+                0x62bc: 'RM4 Mini',
+                0x62be: 'RM4c'
             },
             RMP: {
                 class: RMP,
