@@ -1,10 +1,5 @@
-/* eslint-disable strict */
-/* eslint-disable brace-style */
-/* eslint-disable no-unused-expressions */
-/* eslint-disable no-sync */
-/* eslint-disable no-undef */
-/* eslint-disable complexity */
-/* eslint-disable no-console */
+/* jshint -W097 */// jshint strict:false
+/*jslint node: true */
 // check if tmp directory exists
 var fs            = require('fs');
 var path          = require('path');
@@ -169,7 +164,7 @@ function checkIsControllerInstalled(cb, counter) {
     try {
         var f = fs.readFileSync(dataDir + 'objects.json');
         var objects = JSON.parse(f.toString());
-        if (objects['system.adapter.admin.0']) {
+        if (objects['system.certificates']) {
             console.log('checkIsControllerInstalled: installed!');
             setTimeout(function () {
                 if (cb) cb();
