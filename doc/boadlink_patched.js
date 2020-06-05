@@ -1,4 +1,3 @@
-/* eslint-disable no-await-in-loop */
 "use strict";
 /**
  * UDP Connector for Broadlink devices
@@ -56,10 +55,6 @@ class Device extends EventEmitter {
 
     }
 
-    toString() {
-        return `${this.type}:${this.name}, ${this.host.mac}, ${this.host.address}`;
-    }
-
     close() {
         if (this.tout) {
             //            clearTimeout(self.tout);
@@ -85,66 +80,40 @@ class Device extends EventEmitter {
         return this._val;
     }
 
-    async checkOff(fun, ...args) {
+    checkOff(fun, arg1, arg2, arg3) {
         if (this.dummy)
-            return {
+            return Promise.reject({
                 here: false,
                 err: 'closed'
-            };
-        if (!fun || typeof fun != "function")
-            return {
-                err: "no function"
-            };
-        try {
-            const res = await fun.bind(this)(...args);
-            if (res)
-                return res;
-        } catch (e) {
-            try {
-                await A.wait(10);
-                return fun.bind(this)(...args);
-            } catch (er) {
-                A.D(`Error '${er}' when reading device ${this}`)
-                return {
-                    err: er,
-                };
-            }
-        }
-        return Promise.resolve(fun ? fun.bind(this)(...args) : undefined);
+            });
+        return Promise.resolve(fun ? fun.bind(this)(arg1, arg2, arg3) : undefined);
     }
 
-    async getAll() {
+    getAll() {
         if (A.T(this._val) === 'object')
             this._val.here = false;
-        let v = await this.checkOff(this.getVal);
-        if (v === null || v === undefined)
-            v = {
-                here: false
-            };
-        else if (A.T(v) !== 'object') v = {
+        return this.checkOff(this.getVal).then(v => A.T(v) === 'object' ? v : {
             val: v,
             here: true
-        };
-        return v;
+        }, () => ({
+            here: false
+        }));
     }
 
-    async getVal() {
-        await A.wait(0);
-        return this._val;
+    getVal() {
+        return A.resolve(this._val);
     }
 
-    async setVal(obj) {
-        await A.wait(0);
-        return this._val = obj;
+    setVal(obj) {
+        return A.resolve(this._val = obj);
     }
 
-    async _send(packet) {
-        const timeout = this.timeout || 2000;
+    _send(packet) {
+        const timeout = this.timeout || 1000;
         const self = this;
-        if (!this.cs || this.tout) throw new Error('socket not created/bound or closed or waiting!');
+        if (!this.cs || this.tout) return Promise.reject('socket not created/bound or closed or waiting!');
         this.cs.removeAllListeners('message');
-        await this.s.catch(e => A.Dr(e, 'Something went wrong in previous send: %O', e));
-        return new Promise((res, rej) => {
+        return this.s.catch(e => A.Dr(e, 'Something went wrong in previous send: %O', e)).then(() => new Promise((res, rej) => {
 
             function reject(what) {
                 if (self.tout) {
@@ -202,10 +171,11 @@ class Device extends EventEmitter {
                 name: self.host.name
             }), timeout);
             self.cs.send(packet, 0, packet.length, self.host.port, self.host.address, err => err ? reject(err) : null);
-        });
+        }));
+
     }
 
-    async auth() {
+    auth() {
         const self = this;
         let payload = Buffer.alloc(0x50, 0);
         payload[0x04] = 0x31;
@@ -233,29 +203,29 @@ class Device extends EventEmitter {
         payload[0x35] = ' '.charCodeAt(0);
         payload[0x36] = '1'.charCodeAt(0);
 
-        const what = await this.sendPacket(0x65, payload);
-        const command = what.command;
-        payload = what.payload;
-        if (command === 0xe9) {
-            //                A.If('auth payload: %O', payload);
-            self.key = Buffer.alloc(0x10, 0);
-            payload.copy(self.key, 0, 0x04, 0x14);
+        return this.sendPacket(0x65, payload).then(what => {
+            const command = what.command;
+            const payload = what.payload;
+            if (command === 0xe9) {
+                //                A.If('auth payload: %O', payload);
+                self.key = Buffer.alloc(0x10, 0);
+                payload.copy(self.key, 0, 0x04, 0x14);
 
-            self.id = Buffer.alloc(0x04, 0);
-            payload.copy(self.id, 0, 0x00, 0x04);
-            //                            A.I(`I emit deviceReady for ${A.O(self.host)}`);
-            A.N(self.emit.bind(self), "deviceReady", self);
-            //                self.emit("deviceReady", self);
-        } else {
-            if (!what.err)
-                what.err = 0xe9;
-            return A.reject(what);
-        }
-        return A.resolve(self);
-        // .catch(e => A.Df('catch auth error %s! on %s with mac %s', e, self.host.name, self.host.address));
+                self.id = Buffer.alloc(0x04, 0);
+                payload.copy(self.id, 0, 0x00, 0x04);
+                //                            A.I(`I emit deviceReady for ${A.O(self.host)}`);
+                A.N(self.emit.bind(self), "deviceReady", self);
+                //                self.emit("deviceReady", self);
+            } else {
+                if (!what.err)
+                    what.err = 0xe9;
+                return A.reject(what);
+            }
+            return A.resolve(self);
+        }); // .catch(e => A.Df('catch auth error %s! on %s with mac %s', e, self.host.name, self.host.address));
     }
 
-    async sendPacket(command, payload, timeout) {
+    sendPacket(command, payload, timeout) {
 
 
         this.timeout = timeout || 700;
@@ -322,19 +292,7 @@ class Device extends EventEmitter {
         //        A.If('sendPacket from id %s mac %s command %s, payload: %s, packet: %s, key:%s, iv:%s', this.id.toString('hex'), this.host.maco.toString('hex'), command.toString(16), payload.toString('hex'), pb.toString('hex'), this.key.toString('hex'), this.iv.toString('hex'));
         if (timeout < 0)
             return this._send(packet);
-        let err = null;
-        for (let n = 0; n < 3; n++) {
-            // eslint-disable-next-line no-await-in-loop
-            // eslint-disable-next-line no-loop-func
-            const res = await this._send(packet).catch((e) => {
-                err = "SendPacketErr "+A.O(e);
-                return null;
-            });
-            if (res) return res;
-            await A.wait(10);
-        }
-        throw new Error("sendPacket error: could not send after 3 trials!: "+err);
-        // return A.retry(3, this._send.bind(this), packet);
+        return A.retry(3, this._send.bind(this), packet);
     }
 
 }
@@ -345,7 +303,7 @@ class MP1 extends Device {
         super(host, mac, devtype, bl);
         this.type = "MP";
     }
-    async getVal() {
+    getVal() {
         //"""Returns the power state of the smart plug."""
         const ret = this._val;
         if (A.T(ret) === 'object')
@@ -360,21 +318,26 @@ class MP1 extends Device {
         packet[0x06] = 0xae;
         packet[0x07] = 0xc0;
         packet[0x08] = 0x01;
-        const res = await this.checkOff(this.sendPacket, 0x6a, packet);
-        //            A.I(`getVal on '${this.constructor.name}' returned ${A.O(res)}`);
-        if (res && res.payload && !res.err) {
-            let state = res.payload[0x0e];
-            ret.here = true;
-            ret.sw1 = Boolean(state & 1);
-            ret.sw2 = Boolean(state & 2);
-            ret.sw3 = Boolean(state & 4);
-            ret.sw4 = Boolean(state & 8);
-            //                ret.nightlight = !!(payload[0x4] & 2);
-        }
-        return ret;
+        return this.checkOff(this.sendPacket, 0x6a, packet).then(res => {
+            //            A.I(`getVal on '${this.constructor.name}' returned ${A.O(res)}`);
+            if (res && res.payload && !res.err) {
+                let state = res.payload[0x0e];
+                ret.here = true;
+                ret.sw1 = Boolean(state & 1);
+                ret.sw2 = Boolean(state & 2);
+                ret.sw3 = Boolean(state & 4);
+                ret.sw4 = Boolean(state & 8);
+                //                ret.nightlight = !!(payload[0x4] & 2);
+                return ret;
+            } else return A.reject(ret);
+            // eslint-disable-next-line no-unused-vars
+        }, e => {
+            //            A.I(`getVal on '${this.host.name}' had error ${A.O(e)} and returned ${A.O(ret)}`);
+            return ret;
+        }); //.catch(e => A.I(`getVal on '${this.constructor.name}' had error ${A.O(e)} and returned ${A.O(self._val)}`, e));
     }
 
-    async setVal(state, sw) {
+    setVal(state, sw) {
         //"""Sets the power state of the smart plug."""
         const vret = this._val;
         let st = state;
@@ -402,9 +365,7 @@ class MP1 extends Device {
         packet[0x0a] = 0x03;
         packet[0x0d] = sid_mask;
         packet[0x0e] = st ? sid_mask : 0;
-        const ret = await this.checkOff(this.sendPacket, 0x6a, packet);
-        if (!ret || ret.err || !ret.payload) return vret;
-        return (vret['sw' + sw] = st);
+        return this.checkOff(this.sendPacket, 0x6a, packet).then(ret => ret.err || !!ret.payload ? A.resolve(vret['sw' + sw] = st) : A.reject(vret));
     }
 }
 
@@ -414,7 +375,7 @@ class SP1 extends Device {
         this.type = "SP1";
         this._val = undefined;
     }
-    async setVal(state) {
+    setVal(state) {
         let st = state;
         if (typeof state === 'number' || typeof state === 'boolean')
             state = {
@@ -424,10 +385,7 @@ class SP1 extends Device {
             st = !!state.state;
         var packet = Buffer.alloc(4, 4);
         packet[0] = st ? 1 : 0;
-        const ret = await this.checkOff(this.sendPacket, 0x66, packet);
-        // console.log("setVal SP1", ret);
-        if (!ret || ret.err || !ret.payload) return this._val;
-        return (this._val = st);
+        return this.checkOff(this.sendPacket, 0x66, packet).then(ret => ret.err || !!ret.payload ? A.reject(this._val) : (this._val = st));
     }
 
 }
@@ -437,7 +395,7 @@ class SP2 extends Device {
         super(host, mac, devtype, bl);
         this.type = "SP2";
     }
-    async getVal() {
+    getVal() {
         //"""Returns the power state of the smart plug."""
         const ret = this._val;
         if (A.T(ret) === 'object')
@@ -445,19 +403,23 @@ class SP2 extends Device {
         var packet = Buffer.alloc(16, 0);
         //        A.I(`getVal on '${this.constructor.name}' called! on ${A.O(this.host)}`);
         packet[0] = 1;
-        const res = await this.checkOff(this.sendPacket, 0x6a, packet).catch(() => null);
-        //            A.I(`getVal on '${this.constructor.name}' returned ${A.O(res)}`);
-        if (res && res.payload && !res.err) {
-            let payload = res.payload;
-            ret.here = true;
-            ret.state = !!(payload[0x4] & 1);
-            //                ret.nightlight = !!(payload[0x4] & 2);
-        } else A.I("Error when reading device " + this);
-        return ret;
-        // eslint-disable-next-line no-unused-vars
+        return this.checkOff(this.sendPacket, 0x6a, packet).then(res => {
+            //            A.I(`getVal on '${this.constructor.name}' returned ${A.O(res)}`);
+            if (res && res.payload && !res.err) {
+                let payload = res.payload;
+                ret.here = true;
+                ret.state = !!(payload[0x4] & 1);
+                //                ret.nightlight = !!(payload[0x4] & 2);
+                return A.resolve(ret);
+            } else return A.reject(ret);
+            // eslint-disable-next-line no-unused-vars
+        }, e => {
+            //            A.D(`getVal on '${this.host.name}' had error ${A.O(e)} and returned ${A.O(ret)}`);
+            return ret;
+        }); //.catch(e => A.I(`getVal on '${this.constructor.name}' had error ${A.O(e)} and returned ${A.O(self._val)}`, e));
     }
 
-    async setVal(state) {
+    setVal(state) {
         //"""Sets the power state of the smart plug."""
         const self = this;
         let st = state;
@@ -474,10 +436,7 @@ class SP2 extends Device {
         packet[0] = 2;
         //        packet[4] = (st ? 1 : 0) + (nl ? 2 : 0);
         packet[4] = st ? 1 : 0;
-        const ret = await this.checkOff(this.sendPacket, 0x6a, packet);
-        // console.log("setVal SP2", ret);
-        if (!ret || ret.err || !ret.payload) return self._val;
-        return A.resolve(self._val.state = st);
+        return this.checkOff(this.sendPacket, 0x6a, packet).then(ret => ret.err || !!ret.payload ? A.resolve(self._val.state = st) : A.reject(self._val));
     }
 }
 
@@ -488,7 +447,7 @@ class SP3P extends Device {
         this._val = {};
     }
 
-    async setVal(state) {
+    setVal(state) {
         //"""Sets the power state of the smart plug."""
         const self = this;
         let st = state;
@@ -504,21 +463,11 @@ class SP3P extends Device {
         let packet = Buffer.alloc(16, 0);
         packet[0] = 2;
         packet[4] = (st ? 1 : 0) + (nl ? 2 : 0);
-        const x = await this.getAll().catch(() => null);
-        if (x) {
-            self._val.energy = x.energy;
-            self._val.nightlight = x.nightlight;
-            self._val.state = x.state;
-        }
-        const ret = await this.checkOff(this.sendPacket, 0x6a, packet);
-        // console.log("setVal SP3P", ret);
-        if (!ret || ret.err || !ret.payload) return self._val;
-        self._val.state = st;
-        self._val.here = true;
-        return self._val;
+        return this.getAll().then(x => (self._val.energy = x.energy, self._val.nightlight = x.nightlight, self._val.state = x.state), () => null)
+            .then(() => this.sendPacket(0x6a, packet).then(ret => ret.err || !!ret.payload ? A.resolve(self._val, self._val.state = st, self._val.here = true) : A.reject(self._val)));
     }
 
-    async getVal() {
+    getVal() {
         //"""Returns the power state of the smart plug."""
         const ret = this._val;
         if (A.T(ret) === 'object')
@@ -526,31 +475,39 @@ class SP3P extends Device {
         var packet = Buffer.alloc(16, 0);
         //        A.I(`getVal on '${this.constructor.name}' called! on ${A.O(this.host)}`);
         packet[0] = 1;
-        const res = await this.checkOff(this.sendPacket, 0x6a, packet);
-        //            A.I(`getVal on '${this.constructor.name}' returned ${A.O(res)}`);
-        if (res && res.payload && !res.err) {
-            let payload = res.payload;
-            ret.here = true;
-            ret.state = !!(payload[0x4] & 1);
-            ret.nightlight = !!(payload[0x4] & 2);
-        }
-        return ret;
-        // eslint-disable-next-line no-unused-vars
+        return this.checkOff(this.sendPacket, 0x6a, packet).then(res => {
+            //            A.I(`getVal on '${this.constructor.name}' returned ${A.O(res)}`);
+            if (res && res.payload && !res.err) {
+                let payload = res.payload;
+                ret.here = true;
+                ret.state = !!(payload[0x4] & 1);
+                ret.nightlight = !!(payload[0x4] & 2);
+                return ret;
+            } else return A.reject(ret);
+            // eslint-disable-next-line no-unused-vars
+        }, e => {
+            //            A.D(`getVal on '${this.host.name}' had error ${A.O(e)} and returned ${A.O(ret)}`);
+            return ret;
+        }); //.catch(e => A.I(`getVal on '${this.constructor.name}' had error ${A.O(e)} and returned ${A.O(self._val)}`, e));
     }
-    async getAll() {
+    getAll() {
         const self = this;
         const ret = this._val;
         //        A.I(`getAll on SP3P called! val = ${A.O(ret)}`);
-        const val = await this.getVal();
-        Object.assign(ret, val);
-        const energy = await self.getEnergy();
-        if (energy !== undefined && energy !== null)
-            ret.energy = energy;
-        self._val = ret;
-        return ret;
+        return this.getVal().then(val => self.getEnergy(Object.assign(ret, val)))
+            .then(energy => {
+                if (energy !== undefined)
+                    ret.energy = energy;
+                self._val = ret;
+                return ret;
+                // eslint-disable-next-line no-unused-vars
+            }, e => {
+                //                A.D(`getAll on '${this.host.name}' had error ${A.O(e)} and returned ${A.O(ret)}`);
+                return ret;
+            }); //.catch(e => A.I(`getAll on '${this.constructor.name}' had error ${A.O(e)} and returned ${A.O(self._val)}`,e));
     }
 
-    async getEnergy() {
+    getEnergy() {
         //"""Returns the power state of the smart plug."""
         //        A.I(`calling get_energy on ${A.O(this.host)}`);
         const packet = Buffer.alloc(16, 0);
@@ -560,11 +517,12 @@ class SP3P extends Device {
         packet[4] = 5;
         packet[5] = 1;
         packet[9] = 45;
-        const ret = await this.checkOff(this.sendPacket, 0x6a, packet);
-        //            A.I(`payload get energy: ${A.O(ret)}`);
-        if (ret && ret.payload && ret.payload[0] === 8)
-            return parseFloat(ret.payload[7].toString(16) + ret.payload[6].toString(16) + ret.payload[5].toString(16)) / 100.0;
-        return this._val && this._val.energy;
+        return this.checkOff(this.sendPacket, 0x6a, packet).then(ret => {
+            //            A.I(`payload get energy: ${A.O(ret)}`);
+            if (ret && ret.payload && ret.payload[0] === 8)
+                return A.resolve(parseFloat(ret.payload[7].toString(16) + ret.payload[6].toString(16) + ret.payload[5].toString(16)) / 100.0);
+            return A.reject();
+        }); // .catch(err => A.resolve(A.W(`got err in get energy: ${A.O(err)}`, undefined)));
     }
 }
 
@@ -574,25 +532,27 @@ class A1 extends Device {
         this.type = "A1";
         this._val = {};
     }
-    async getVal() {
+    getVal() {
         //        const self = this;
         const ret = this._val;
         ret.here = false;
         var packet = Buffer.alloc(16, 0);
         //        A.I(`getVal on '${this.constructor.name}' called! on ${A.O(this.host)}`);
         packet[0] = 1;
-        const res = await this.checkOff(this.sendPacket, 0x6a, packet);
-        //            A.I(`getVal on '${this.constructor.name}' returned ${A.O(res)}`);
-        if (res && res.payload && !res.err) {
-            let payload = res.payload;
-            ret.temperature = (payload[0x4] * 10 + payload[0x5]) / 10.0;
-            ret.humidity = (payload[0x6] * 10 + payload[0x7]) / 10.0;
-            ret.light = payload[0x8]; // "0:finster;1:dunkel;2:normal;3:hell"
-            ret.air_quality = payload[0x0a]; // "0:sehr gut;1:gut;2:normal;3:schlecht"
-            ret.noise = payload[0xc]; // "0:ruhig;1:normal;2:laut;3:sehr laut"
-            ret.here = true;
-        }
-        return ret;
+        return this.checkOff(this.sendPacket, 0x6a, packet).then(res => {
+            //            A.I(`getVal on '${this.constructor.name}' returned ${A.O(res)}`);
+            if (res && res.payload && !res.err) {
+                let payload = res.payload;
+                ret.temperature = (payload[0x4] * 10 + payload[0x5]) / 10.0;
+                ret.humidity = (payload[0x6] * 10 + payload[0x7]) / 10.0;
+                ret.light = payload[0x8]; // "0:finster;1:dunkel;2:normal;3:hell"
+                ret.air_quality = payload[0x0a]; // "0:sehr gut;1:gut;2:normal;3:schlecht"
+                ret.noise = payload[0xc]; // "0:ruhig;1:normal;2:laut;3:sehr laut"
+                ret.here = true;
+                return ret;
+            }
+            return A.reject(res);
+        });
     }
 }
 
@@ -608,7 +568,7 @@ class S1 extends Device {
         };
 
     }
-    async getVal() {
+    getVal() {
 
         function getSensor(pl, num) {
             const val = {};
@@ -632,17 +592,20 @@ class S1 extends Device {
         var packet = Buffer.alloc(16, 0);
         //        A.I(`getVal on '${this.constructor.name}' called! on ${A.O(this.host)}`);
         packet[0] = 6;
-        const res = await this.checkOff(this.sendPacket, 0x6a, packet);
-        //            A.I(`getVal on '${this.constructor.name}' returned ${A.O(res)}`);
-        if (res && res.payload && !res.err) {
-            //                A.If('S1 %s returned len &d %O', self.host.name, res.payload.length, res.payload);
-            let number = Number(res.payload[0x4]);
-            for (let i = 0; i < number; i++) {
-                //                    Object.assign(ret,getSensor(res.payload,i));
-                Object.assign(ret, getSensor(res.payload, i));
+        return this.checkOff(this.sendPacket, 0x6a, packet).then(res => {
+            //            A.I(`getVal on '${this.constructor.name}' returned ${A.O(res)}`);
+            if (res && res.payload && !res.err) {
+                //                A.If('S1 %s returned len &d %O', self.host.name, res.payload.length, res.payload);
+                let number = Number(res.payload[0x4]);
+                for (let i = 0; i < number; i++) {
+                    //                    Object.assign(ret,getSensor(res.payload,i));
+                    Object.assign(ret, getSensor(res.payload, i));
+                }
+                ret.here = true;
+                return ret;
             }
-        }
-        return ret;
+            return A.reject(res);
+        });
     }
 }
 class RM extends Device {
@@ -654,72 +617,70 @@ class RM extends Device {
         this._code_sending_header = Buffer.from([]);
 
     }
-    async _readSensor(type, offset, divider) {
+    getVal() {
+        //"""Returns the power state of the smart plug."""
+        //        const self = this;
         const ret = this._val;
         if (A.T(ret) === 'object')
             ret.here = false;
-        var packet = Buffer.concat([this._request_header, Buffer.from([type])]);
+        var packet = Buffer.concat([this._request_header, Buffer.from([0x01])]);
         //        A.I(`getVal on '${this.constructor.name}' called! on ${A.O(this.host)}`);
-        const res = await this.checkOff(this.sendPacket, 0x6a, packet);
-        //            A.I(`getVal on '${this.constructor.name}' returned ${A.O(res)}`);
-        if (res && res.payload && !res.err) {
-            var off = this._request_header.length + offset;
-            let payload = res.payload;
-            ret.here = true;
-            return payload[off] + payload[off + 1] / divider;
-        } else return undefined;
-
-    }
-    async getVal() {
-        const ret = this._val;
-        const res = await this._readSensor(0x01, 4, 10.0);
-        if (res !== undefined) ret.temperature = res;
-        return ret;
+        return this.checkOff(this.sendPacket, 0x6a, packet).then(res => {
+            //            A.I(`getVal on '${this.constructor.name}' returned ${A.O(res)}`);
+            if (res && res.payload && !res.err) {
+                var offset = this._request_header.length + 4;
+                let payload = res.payload;
+                ret.here = true;
+                ret.temperature = (payload[offset] * 10 + payload[offset+1]) / 10.0;
+                return A.resolve(ret);
+            } else return A.reject(ret);
+        }); //.catch(e => A.I(`getVal on '${this.constructor.name}' had error ${A.O(e)} and returned ${A.O(ret)}`, e));
     }
 
-    async checkData() {
+    checkData() {
         var packet = Buffer.concat([this._request_header, Buffer.from([0x04])]);
         //        A.I(`send checkData on '${this.constructor.name}'`);
-        const res = await this.checkOff(this.sendPacket, 0x6a, packet, -1000).catch(() => null);
-        //             A.I(`checkData on '${this.constructor.name}' returned ${A.O(res)}`);
-        if (res && res.payload && !res.err) {
-            let data = res.payload.slice(this._request_header.length + 4);
-            return data;
-        }
-        return null;
+        return this.checkOff(this.sendPacket, 0x6a, packet, -1000).then(res => {
+            //             A.I(`checkData on '${this.constructor.name}' returned ${A.O(res)}`);
+            if (res && res.payload && !res.err) {
+                let data = res.payload.slice(this._request_header.length + 4) 
+                return A.resolve(data);
+            }
+            return A.reject(res);
+        });
     }
 
-    async learn() {
+    learn() {
         const self = this;
         this.learning = true;
         A.If('Should learn on %s', this.host.name);
-        await self.checkData();
-        await self.enterLearning();
-        for (let i = 0; i < 30; i++) {
-            await A.wait(1000);
-            const r = await self.checkData();
-            if (r) {
-                self.learning = false;
-                const data = r.toString('hex');
-                // A.I("Received from device: " + data);
-                return {
-                    data
-                };
-            }
-        }
-        self.learning = false;
-        return {};
+        return self.checkData().catch(e => e).then(() => self.enterLearning().then(() => A.retry(15, () => A.wait(2000).then(() => self.checkData())).catch(() => null).then(l => {
+            self.learning = false;
+            return l ? {
+                data: l.toString('hex')
+            } : {};
+        })));
     }
 
     sendVal(data) {
         var self = this;
         var packet = Buffer.concat([this._code_sending_header, Buffer.from([0x02, 0x00, 0x00, 0x00]), data]);
-        return this.sendwait.addp(() => self.checkOff(self.sendPacket, 0x6a, packet, 5000)); //.then(x => A.I(`setVal/sendData for ${this.host.name} returned ${A.O(x)}`, x));
+        return this.sendwait.addp(() => this.checkOff(self.sendPacket, 0x6a, packet, 5000)); //.then(x => A.I(`setVal/sendData for ${this.host.name} returned ${A.O(x)}`, x));
     }
 
     enterLearning() {
         var packet = Buffer.concat([this._request_header, Buffer.from([0x03])]);
         return this.checkOff(this.sendPacket, 0x6a, packet); //.then(x => A.I(`enterLearning for ${this.host.name} returned ${A.O(x)}`, x));
+    }
+
+}
+
+class RM4 extends RM {
+    constructor(host, mac, devtype, bl) {
+        super(host, mac, devtype, bl);
+        this.type = "RM4";
+        this._request_header = Buffer.from([0x04, 0x00]);
+        this._code_sending_header = Buffer.from([0xd0, 0x00]);
     }
 
 }
@@ -730,7 +691,7 @@ class RMP extends RM {
         this.type = "RMP";
     }
 
-    async learn(rf) {
+    learn(rf) {
         const self = this;
         A.Df('Start learning with %s on %s', rf, self.host.name);
         this.learning = true;
@@ -742,15 +703,17 @@ class RMP extends RM {
             return self.checkOff(self.sendPacket, 0x6a, packet); //.then(x => A.I(`enterRFSweep for ${this.host.name} returned ${A.O(x)}`, x));
         }
 
-        async function checkRFData(check2) {
+        function checkRFData(check2) {
             var packet = Buffer.alloc(16, 0);
             packet[0] = check2 ? 0x1b : 0x1a;
-            const res = await self.checkOff(self.sendPacket, 0x6a, packet).catch(() => null);
-            if (res && res.payload && !res.err) {
-                if (res.payload[4] === 1)
-                    return true;
-            }
-            return false;
+            return self.checkOff(self.sendPacket, 0x6a, packet).then(res => {
+                //            A.I(`getVal on '${this.constructor.name}' returned ${A.O(res)}`);
+                if (res && res.payload && !res.err) {
+                    if (res.payload[4] === 1)
+                        return true;
+                }
+                return A.reject(res);
+            });
         }
 
         function cancelRFSweep() {
@@ -763,65 +726,15 @@ class RMP extends RM {
             return super.learn();
 
         A.If('Should learn RF-sweep on %s', this.host.name);
-        await self.checkData().catch(() => null);
-        await enterRFSweep();
-        for (let i = 0; i < 30; i++) {
-            await A.wait(1000);
-            const r = await self.checkData();
-            if (r) {
-                l.data = r.toString('hex');
+        return self.checkData().catch(e => e).then(() => enterRFSweep())
+            .then(() => A.retry(30, () => A.wait(1000).then(() => self.checkData().then(ld => ld ? l.data = ld.toString('hex') : ld))).catch(() => null).then(() => {
                 self.learning = false;
-                break;
-            }
-        }
-        await A.wait(100);
-        const f = await checkRFData();
-        if (f) l.rf = f;
-        cancelRFSweep();
-        if (l.rf) {
-            let d = await self.checkData();
-            if (d) {
-                d = d.toString('hex');
-                if (d && d != "000000000000000000000000")
-                    l.data = d;
-            }
-        }
-        // console.log(l);
-        return l;
+                return A.wait(100).then(() => checkRFData().then(x => l.rf = x, () => null).then(() => checkRFData(true)).then(x => l.rf2 = x, () => null).then(() => cancelRFSweep()).catch(() => null))
+                    .then(() => self.checkData().then(d => d ? l.data = d.toString('hex') : null, () => null))
+                    .then(() => l);
+            }));
     }
 
-}
-
-class RM4 extends RM {
-    constructor(host, mac, devtype, bl) {
-        super(host, mac, devtype, bl);
-        this.type = "RM4";
-        this._request_header = Buffer.from([0x04, 0x00]);
-        this._code_sending_header = Buffer.from([0xd0, 0x00]);
-    }
-}
-
-
-class RM4P extends RMP {
-    constructor(host, mac, devtype, bl) {
-        super(host, mac, devtype, bl);
-        this.type = "RM4";
-        this._request_header = Buffer.from([0x04, 0x00]);
-        this._code_sending_header = Buffer.from([0xd0, 0x00]);
-    }
-    async getHumidity() {
-        const ret = this._val;
-        const res = await this._readSensor(0x24, 6, 100.0);
-        if (res !== undefined) ret.humidity = res;
-        // delete ret.val;
-        return ret;
-    }
-    async getAll() {
-        const ret = await this.getVal();
-        const h = await this.getHumidity();
-        ret.humidity = h.humidity;
-        return ret;
-    }
 }
 
 class T1 extends Device {
@@ -990,7 +903,7 @@ class T1 extends Device {
         return this.checkOff(this.sendT1packet, 0x6a, a);
     }
 
-    async getAll() {
+    getAll() {
         const ret = this._val;
         ret.here = false;
 
@@ -1008,8 +921,7 @@ class T1 extends Device {
             return r;
         }
         //        return this.sendT1packet(0xA0).then(x => {
-        const x = await this.checkOff(this.sendT1packet, 0x6a, [0x01, 0x03, 0x00, 0x00, 0x00, 0x16]);
-        if (x) {
+        return this.checkOff(this.sendT1packet, 0x6a, [0x01, 0x03, 0x00, 0x00, 0x00, 0x16]).then(x => {
             //            A.If('full status payload: %O',x);
             x.copy(x, 0, 2);
             ret.here = true;
@@ -1039,8 +951,8 @@ class T1 extends Device {
             ret.unknown = Number(x[17]);
             ret.weekday = getSched(x, 0, 6);
             ret.weekend = getSched(x, 6, 8);
-        }
-        return ret;
+            return ret;
+        });
     }
 }
 
@@ -1100,6 +1012,17 @@ class Broadlink extends EventEmitter {
                 0x2797: 'RM Pro (OEM)',
                 0x27C2: 'RM Mini 3'
             },
+            RM4: {
+                class: RM4,
+                name: 'rm4',
+                0x51da: 'RM4 Mini',
+                0x5f36: 'RM Mini 3',
+                0x6026: 'RM4 Pro',
+                0x610e: 'RM4 Mini',
+                0x610f: 'RM4c',
+                0x62bc: 'RM4 Mini',
+                0x62be: 'RM4c'
+            },
             RMP: {
                 class: RMP,
                 name: 'rmp',
@@ -1108,21 +1031,6 @@ class Broadlink extends EventEmitter {
                 0x278b: 'RM2 Pro Plus BL',
                 0x279d: 'RM3 Pro Plus',
                 0x27a9: 'RM3 Pro Plus', // addition for new RM3 mini
-            },
-            RM4: {
-                class: RM4,
-                name: 'rm4',
-                0x51da: 'RM4 Mini',
-                0x5f36: 'RM Mini 3',
-                0x610e: 'RM4 Mini',
-                0x610f: 'RM4c',
-                0x62bc: 'RM4 Mini',
-                0x62be: 'RM4c'
-            },
-            RM4P: {
-                class: RM4P,
-                name: 'rm4p',
-                0x6026: 'RM4 Pro',
             },
             A1: {
                 class: A1,
@@ -1250,8 +1158,6 @@ class Broadlink extends EventEmitter {
     genDevice(devtype, host, mac) {
         //        A.Df('got device type %s @host:%O', devtype.toString(16), host);
         host.devtype = devtype;
-        // eslint-disable-next-line no-console
-        // console.log("Found", devtype, host, mac);
         host.type = 'unknown';
         host.name = 'unknown_' + devtype.toString(16) + '_' + host.mac;
         let dev = null;

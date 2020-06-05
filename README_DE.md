@@ -109,6 +109,10 @@ Der Adapter versteht jetzt auch 'sendTo' Kommandos.
 
 ## Changelog
 
+### 2.0.9
+
+* Beta für V2.1, RM4-Protokoll hinzugefügt und auch automatische Erkennung von Geräten mittels mac-Adresse hinzugefügt
+
 ### 2.0.1
 
 * Can handle Floureon/Beko thermostats (now with MQTT)

@@ -1,10 +1,14 @@
 {
     "common": {
         "name": "broadlink2",
-        "version": "2.0.3",
+        "version": "2.0.9",
         "title": "Broadlink2 (RM++, SP++, A1) for multiple Broadlink-protocol W-Lan devices",
         "titleLang": "Broadlink2 (RM++, SP++, A1, T1, S1C, Beok313, Floureon) for multiple Broadlink-protocol W-Lan devices",
         "news": {
+            "2.0.9": {
+                "en": "Beta for v2.1, added RM4 protocol and also check now device names according mac address",
+                "de": "Beta für V2.1, RM4-Protokoll hinzugefügt und auch automatische Erkennung von Geräten mittels mac-Adresse hinzugefügt"
+            },
             "2.0.3": {
                 "en": "Changed myAdapter to support js-controller v2.x & v3.x!",
                 "de": "myAdapter geändert um js-controller v2.x & v3.x zu unterstützen."
