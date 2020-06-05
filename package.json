@@ -28,7 +28,8 @@
     "npm": ">=6.4.0"
   },
   "dependencies": {
-    "@frankjoke/myadapter": "^1.2.8"
+    "@frankjoke/myadapter": "^1.2.8",
+    "@iobroker/adapter-core": "^2.4.0"
   },
   "devDependencies": {
     "axios": "^0.19.2",

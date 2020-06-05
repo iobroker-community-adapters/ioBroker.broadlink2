@@ -9,10 +9,9 @@
 "use strict";
 const
 	Broadlink = require('./broadlink_fj.js'),
-	A = require('@frankjoke/myadapter').MyAdapter,
+	A = require('@frankjoke/myadapter').MyAdapter;
 	//	utils = require('./lib/utils'),
 	//	adapter = utils.Adapter('broadlink2'),
-	assert = require('assert');
 
 const scanList = {},
 	tempName = '.Temperature',
