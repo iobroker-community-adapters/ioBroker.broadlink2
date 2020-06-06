@@ -65,13 +65,16 @@ def gendevice(devtype, host, mac, name=None, cloud=None):
         S1C: [0x2722],  # S1 (SmartOne Alarm Kit)
         dooya: [0x4E4D],  # Dooya DT360E (DOOYA_CURTAIN_V2)
         bg1: [0x51E3], # BG Electrical Smart Power Socket
-        lb1 : [0x60c8]   # RGB Smart Bulb
+        lb1: [0x60c7,
+                0x60c8]   # RGB Smart Bulb
     }
 
     # Look for the class associated to devtype in devices
+    print(host, mac, devtype, name, cloud)
     [device_class] = [dev for dev in devices if devtype in devices[dev]] or [None]
     if device_class is None:
         return device(host, mac, devtype, name=name, cloud=cloud)
+    print(device_class, host, mac, devtype, name, cloud)
     return device_class(host, mac, devtype, name=name, cloud=cloud)
 
 
@@ -1010,7 +1013,7 @@ class lb1(device):
                         'color jumping' : 6,
                         'multicolor jumping' : 7 }
 
-    def __init__(self, host, mac, devtype):
+    def __init__(self, host, mac, devtype, name):
         device.__init__(self, host, mac, devtype)
         self.type = "SmartBulb"
 

@@ -2,8 +2,8 @@
     "common": {
         "name": "broadlink2",
         "version": "2.0.9",
-        "title": "Broadlink2 (RM++, SP++, A1) for multiple Broadlink-protocol W-Lan devices",
-        "titleLang": "Broadlink2 (RM++, SP++, A1, T1, S1C, Beok313, Floureon) for multiple Broadlink-protocol W-Lan devices",
+        "title": "Broadlink2 (RM+, SP+, A1, T1, S1C, LB+, ..) W-Lan devices",
+        "titleLang": "Broadlink2 (RM++, SP++, A1, T1, S1C, Beok313, Floureon, LB+) W-Lan Broadlink-protocol devices",
         "news": {
             "2.0.9": {
                 "en": "Beta for v2.1, added RM4 protocol and also check now device names according mac address",

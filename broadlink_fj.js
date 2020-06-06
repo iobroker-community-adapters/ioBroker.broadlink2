@@ -104,13 +104,13 @@ class Device extends EventEmitter {
                 await A.wait(10);
                 return fun.bind(this)(...args);
             } catch (er) {
-                A.D(`Error '${er}' when reading device ${this}`)
+                A.D(`Error '${er}' when reading device ${this}`);
                 return {
                     err: er,
                 };
             }
         }
-        return Promise.resolve(fun ? fun.bind(this)(...args) : undefined);
+        // return Promise.resolve(fun ? fun.bind(this)(...args) : undefined);
     }
 
     async getAll() {
@@ -321,19 +321,23 @@ class Device extends EventEmitter {
         packet.copy(pb, 0, 0x26);
         //        A.If('sendPacket from id %s mac %s command %s, payload: %s, packet: %s, key:%s, iv:%s', this.id.toString('hex'), this.host.maco.toString('hex'), command.toString(16), payload.toString('hex'), pb.toString('hex'), this.key.toString('hex'), this.iv.toString('hex'));
         if (timeout < 0)
-            return this._send(packet);
+            return this._send(packet).catch((e) => {
+                err = "SendPacketSingleErr " + A.O(e);
+                return null;
+            });
         let err = null;
         for (let n = 0; n < 3; n++) {
             // eslint-disable-next-line no-await-in-loop
             // eslint-disable-next-line no-loop-func
             const res = await this._send(packet).catch((e) => {
-                err = "SendPacketErr "+A.O(e);
+                err = "SendPacketErr " + A.O(e);
                 return null;
             });
             if (res) return res;
             await A.wait(10);
         }
-        throw new Error("sendPacket error: could not send after 3 trials!: "+err);
+        A.W("sendPacket error: could not send after 3 trials!: " + err);
+        return null;
         // return A.retry(3, this._send.bind(this), packet);
     }
 
@@ -445,14 +449,14 @@ class SP2 extends Device {
         var packet = Buffer.alloc(16, 0);
         //        A.I(`getVal on '${this.constructor.name}' called! on ${A.O(this.host)}`);
         packet[0] = 1;
-        const res = await this.checkOff(this.sendPacket, 0x6a, packet).catch(() => null);
+        const res = await this.checkOff(this.sendPacket, 0x6a, packet);
         //            A.I(`getVal on '${this.constructor.name}' returned ${A.O(res)}`);
         if (res && res.payload && !res.err) {
             let payload = res.payload;
             ret.here = true;
             ret.state = !!(payload[0x4] & 1);
             //                ret.nightlight = !!(payload[0x4] & 2);
-        } else A.I("Error when reading device " + this);
+        }
         return ret;
         // eslint-disable-next-line no-unused-vars
     }
@@ -680,7 +684,7 @@ class RM extends Device {
     async checkData() {
         var packet = Buffer.concat([this._request_header, Buffer.from([0x04])]);
         //        A.I(`send checkData on '${this.constructor.name}'`);
-        const res = await this.checkOff(this.sendPacket, 0x6a, packet, -1000).catch(() => null);
+        const res = await this.checkOff(this.sendPacket, 0x6a, packet, -1000);
         //             A.I(`checkData on '${this.constructor.name}' returned ${A.O(res)}`);
         if (res && res.payload && !res.err) {
             let data = res.payload.slice(this._request_header.length + 4);
@@ -714,7 +718,7 @@ class RM extends Device {
     sendVal(data) {
         var self = this;
         var packet = Buffer.concat([this._code_sending_header, Buffer.from([0x02, 0x00, 0x00, 0x00]), data]);
-        return this.sendwait.addp(() => self.checkOff(self.sendPacket, 0x6a, packet, 5000)); //.then(x => A.I(`setVal/sendData for ${this.host.name} returned ${A.O(x)}`, x));
+        return this.sendwait.addp(() => self.checkOff(self.sendPacket, 0x6a, packet, 2000)); //.then(x => A.I(`setVal/sendData for ${this.host.name} returned ${A.O(x)}`, x));
     }
 
     enterLearning() {
@@ -745,7 +749,7 @@ class RMP extends RM {
         async function checkRFData(check2) {
             var packet = Buffer.alloc(16, 0);
             packet[0] = check2 ? 0x1b : 0x1a;
-            const res = await self.checkOff(self.sendPacket, 0x6a, packet).catch(() => null);
+            const res = await self.checkOff(self.sendPacket, 0x6a, packet);
             if (res && res.payload && !res.err) {
                 if (res.payload[4] === 1)
                     return true;
@@ -830,7 +834,7 @@ class T1 extends Device {
         this.type = "T1";
     }
     // --- start of other test
-    sendT1packet(cmd, data) {
+    async sendT1packet(cmd, data) {
 
         function crc16(buffer) {
             var crc = 0xFFFF;
@@ -864,16 +868,15 @@ class T1 extends Device {
         payload[data.length + 2] = cc & 0xff;
         payload[data.length + 3] = (cc >> 8) & 0xff;
         //        A.If('sendT1packet: %O', payload);
-        return this.sendPacket(cmd, payload).then(res => {
-            //            A.If('sendT1packet got back from cmd %O',res);
-            if (res && res.payload && !res.err) {
-                //                let pl = res.payload;
-                //                let size = pl[0];
-                //                A.If('Got payload with size %n: %O', size, pl);
-                return res.payload;
-            }
-            return A.reject(res);
-        }, e => A.Wf('sendT1Packed error %O', e));
+        const res = await this.sendPacket(cmd, payload);
+        //            A.If('sendT1packet got back from cmd %O',res);
+        if (res && res.payload && !res.err) {
+            //                let pl = res.payload;
+            //                let size = pl[0];
+            //                A.If('Got payload with size %n: %O', size, pl);
+            return res.payload;
+        }
+        return null;
     }
 
     setTime(date) {
@@ -1044,6 +1047,101 @@ class T1 extends Device {
     }
 }
 
+class LB1 extends Device {
+    constructor(host, mac, devtype, bl) {
+        super(host, mac, devtype, bl);
+        this.type = "LB1";
+        LB1.colorMode = {
+            'lovely color': 0,
+            'flashlight': 1,
+            'lightning': 2,
+            'color fading': 3,
+            'color breathing': 4,
+            'multicolor breathing': 5,
+            'color jumping': 6,
+            'multicolor jumping': 7
+        };
+        LB1.colorModeArr = Object.keys(LB1.colorMode);
+
+    }
+    async _sendCommand(command, type /* set = true, query = false */ ) {
+        const packet = Buffer.alloc(16 + Math.ceil(command.length / 16) * 16, 0);
+        packet[0x02] = 0xa5;
+        packet[0x03] = 0xa5;
+        packet[0x04] = 0x5a;
+        packet[0x05] = 0x5a;
+        packet[0x08] = type ? 0x02 : 0x01; // # 0x01 => query, # 0x02 => set
+        packet[0x09] = 0x0b;
+        packet[0x0a] = command.length;
+        for (const c in command) packet[0x0e + c] = command.charCodeAt(c);
+
+        let checksum = 0xbeaf;
+        for (let i = 0; i < packet.length; i++) {
+            checksum += packet[i];
+            checksum = checksum & 0xffff;
+        }
+
+        packet[0x00] = (0x0c + command.length) & 0xff;
+        packet[0x06] = checksum & 0xff; // # Checksum 1 position
+        packet[0x07] = checksum >> 8; // # Checksum 2 position
+
+        const res = await this.checkOff(this.sendPacket, 0x6a, packet);
+        return res;
+    }
+
+    retVal(res) {
+        let ret = this._val;
+        let payload = res.payload;
+        const len = payload[0xa] + payload[0xb] * 256;
+        if (len > 0) payload = payload.slice(0xe, len + 0xe);
+        else payload = "";
+        payload = payload.toString();
+        ret.here = true;
+        ret = Object.assign(ret, JSON.parse(payload));
+        ret.bulb_colormode = LB1.colorModeArr[ret.bulb_colormode];
+        ret.bulb_scenes = JSON.parse(ret.bulb_scenes);
+        console.log(ret);
+
+    }
+
+    async getVal() {
+        //"""Returns the power state of the smart plug."""
+        let ret = this._val;
+        if (A.T(ret) === 'object')
+            ret.here = false;
+        const res = await this._sendCommand("{}");
+        //            A.I(`getVal on '${this.constructor.name}' returned ${A.O(res)}`);
+        if (res && res.payload && !res.err) {
+            //                ret.nightlight = !!(payload[0x4] & 2);
+            this.retVal(res);
+        }
+        return ret;
+        // eslint-disable-next-line no-unused-vars
+    }
+
+    getAll() {
+        return this.getVal();
+    }
+    async setItem(item, value) {
+        let ret = this._val;
+        switch (item) {
+            case "pwr":
+                value = !value ? 0 : 1;
+        }
+        const cmd = JSON.stringify({
+            [item]: value
+        });
+        A.I(`About to send to LB1: ${cmd}`);
+        const res = await this._sendCommand(cmd, true);
+        if (res && !res.err && res.payload) {
+            this.retVal(res);
+            A.I(`SendCmdRes was ${A.O(res)}: ${""+res.payload}`);
+            return res;
+        }
+        A.W(`Error when sending to LB-Device! ${res}`);
+        return null;
+    }
+}
 
 class Broadlink extends EventEmitter {
     constructor(add) {
@@ -1122,6 +1220,7 @@ class Broadlink extends EventEmitter {
             RM4P: {
                 class: RM4P,
                 name: 'rm4p',
+                0x61a2: 'RM4 Pro',
                 0x6026: 'RM4 Pro',
             },
             A1: {
@@ -1133,6 +1232,12 @@ class Broadlink extends EventEmitter {
                 class: MP1,
                 name: 'mp1',
                 0x4EB5: 'MP1'
+            },
+            LB1: {
+                class: LB1,
+                name: 'lb1',
+                0x60C7: 'SmartBulb LB1',
+                0x60C8: 'SmartBulb LB1'
             },
             S1C: {
                 class: S1,
@@ -1283,7 +1388,7 @@ class Broadlink extends EventEmitter {
 
     parsePublic(msg, rinfo) {
         const self = this;
-        const host = Object.assign(rinfo);
+        const host = Object.assign({}, rinfo);
         let mac = Buffer.alloc(6, 0);
         //                    self._cs.setMulticastInterface(this.lastaddr);
         delete host.family;

@@ -10,8 +10,8 @@
 const
 	Broadlink = require('./broadlink_fj.js'),
 	A = require('@frankjoke/myadapter').MyAdapter;
-	//	utils = require('./lib/utils'),
-	//	adapter = utils.Adapter('broadlink2'),
+//	utils = require('./lib/utils'),
+//	adapter = utils.Adapter('broadlink2'),
 
 const scanList = {},
 	tempName = '.Temperature',
@@ -149,6 +149,12 @@ A.stateChange = async function (id, state) {
 		return A.reject(A.Wf("checkT1 don't know how to set %s of %s to %O", id, device.name, state.val));
 	}
 
+	function checkLB(device, state, id) {
+		const item = id.split('.').slice(-1)[0];
+		A.I(`would like to set ${device.name}.${item} to ${state.val}`);
+		return device.setItem(item, state.val);
+	}
+
 	//	A.D(`stateChange of "${id}": ${A.O(state)}`); 
 	if (!state.ack) {
 		if (id.startsWith(A.ain))
@@ -197,14 +203,20 @@ A.stateChange = async function (id, state) {
 					A.W(`cannot get code to send for: ${id}=${id0} ${A.O(state)}`);
 				}
 				break;
-				case 'T1':
-					await  checkT1(device, state, id);
-					temp = await device.getAll();
-					if (temp && temp.here && device.update)
-						await device.update(temp);
-				// eslint-disable-next-line no-fallthrough
-				default:
-					return A.W(`stateChange error invalid id type: ${id}=${id0} ${A.O(state)}`);
+			case 'T1':
+				await checkT1(device, state, id);
+				temp = await device.getAll();
+				if (temp && temp.here && device.update)
+					await device.update(temp);
+				break;
+			case 'LB':
+				await checkLB(device, state, id);
+				temp = await device.getAll();
+				if (temp && temp.here && device.update)
+					await device.update(temp);
+				break;
+			default:
+				return A.W(`stateChange error invalid id type: ${id}=${id0} ${A.O(state)}`);
 		}
 	}
 };
@@ -323,7 +335,7 @@ let firsttime = true;
 async function doPoll() {
 	let na = [];
 	discoverAll = discoverAll >= 9 ? 0 : ++discoverAll;
-	for(const item of Object.entries(scanList)) {
+	for (const item of Object.entries(scanList)) {
 		const [key, device] = item;
 		if (!device.getAll || device.dummy) {
 			if (!device.searchc) {
@@ -338,16 +350,16 @@ async function doPoll() {
 			continue;
 		}
 		let x = await device.getAll();
-			if (firsttime)
-				A.Dr(x, 'Device %s returned %O', device.name, x);
-			if (x && x.here && device.update) await device.update(x);
-			if (x && x.here) {
-				x.noUpdateFunction = 'do not know how to update';
-			} else if (!x)
-				x = {
-					here: false
-				};
-			//				A.Ir(x, 'Device %s will reject %O', device.name, x);
+		if (firsttime)
+			A.Dr(x, 'Device %s returned %O', device.name, x);
+		if (x && x.here && device.update) await device.update(x);
+		if (x && x.here && !device.update) {
+			x.noUpdateFunction = 'do not know how to update';
+		} else if (!x)
+			x = {
+				here: false
+			};
+		//				A.Ir(x, 'Device %s will reject %O', device.name, x);
 		if (!x.here) {
 			A.Df('device %s not reachable, waiting for it again %O', device.name);
 			if (device.lastResponse && device.lastResponse < Date.now() - 1000 * 60 * 5) {
@@ -356,7 +368,7 @@ async function doPoll() {
 				A.W(`Device ${device.name} not reachable, switched it off and will search for it every while.`);
 				await A.makeState(device.name + reachName, device.unreach = true, true);
 			}
-		}	
+		}
 	}
 	firsttime = false;
 	if (na.length) await brlink.discover(discoverAll ? na : undefined);
@@ -579,6 +591,49 @@ async function createStatesDevice(device) {
 						role: 'button',
 						type: typeof true,
 					}, false, true);
+			};
+			break;
+		case 'LB':
+			device.update = async (val) => {
+				await updateValues(device, val, [{
+					name: 'pwr',
+					type: typeof true,
+					write: true,
+					role: "switch",
+				}, {
+					name: 'brightness',
+					type: typeof 1,
+					role: "level",
+					write: true,
+					min: 0,
+					max: 100,
+					unit: "%"
+				}, {
+					name: 'bulb_colormode',
+					type: typeof 0,
+					write: true,
+					role: "level",
+					min: 0,
+					max: 7,
+					states: "0:lovely color;1:flashlight;2:lightning;3:color fading;4:color breathing;5:multicolor breathing;6:color jumping;7:multicolor jumping",
+				}, {
+					name: 'bulb_scenes',
+					type: "array",
+					write: true,
+					role: "level",
+				}, {
+					name: 'bulb_scene',
+					type: typeof "",
+					write: true,
+					role: "level",
+				}, {
+					name: 'bulb_sceneidx',
+					type: typeof 1,
+					role: "level",
+					write: true,
+					min: 0,
+					max: 255,
+				}]);
 			};
 			break;
 		case 'T1':
@@ -818,7 +873,7 @@ async function main() {
 		device.on('error', A.W);
 		//		A.If('what is name of %O', device);
 		let x = macObjects[device.host.mac] && macObjects[device.host.mac].name;
-		if (x && x != device.host.name) 
+		if (x && x != device.host.name)
 			A.I(`Found new device (${device.host.name}) with mac ${device.host.mac} and gave it previous known name ${x}`);
 		if (!x) x = findName(device.host.name);
 		else if (findName(x)) x = findName(x);
