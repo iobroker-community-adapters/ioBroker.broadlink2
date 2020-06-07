@@ -20,7 +20,7 @@ class Device extends EventEmitter {
         super();
         var self = this;
         this._val = {};
-        this.s = new A.Sequence();
+        // this.s = new A.Sequence();
         this.bl = bl;
         this.host = host;
         this.type = "Unknown";
@@ -54,6 +54,38 @@ class Device extends EventEmitter {
             A.W(`could not bind socket for ${A.O(this.host)}`);
         }
 
+    }
+    static get errors() {
+        return {
+            0xffff: "Authentication failed",
+            0xfffe: "You have been logged out",
+            0xfffd: "The device is offline",
+            0xfffc: "Command not supported",
+            0xfffb: "The device storage is full",
+            0xfffa: "Structure is abnormal",
+            0xfff9: "Control key is expired",
+            0xfff8: "Send error",
+            0xfff7: "Write error",
+            0xfff6: "Read error",
+            0xfff5: "SSID could not be found in AP configuration",
+        };
+    }
+
+    checkError(res, index) {
+        let err = "";
+        if (!res) err = "No result delivered! No err check possible!";
+        else {
+            const pl = res.payload;
+            if (!pl) err = "no payload returned!";
+            else {
+                const e = pl[index] + pl[index + 1] << 8;
+                if (e) err = (Device.errors[e]) ? Device.errors[e] : `Unknown error ${e} in response!`;
+            }
+        }
+        if (!!err && res)
+            res.err = err;
+        if (err) A.I(`Error '${err}' in device.checkError for ${this}`);
+        return err;
     }
 
     toString() {
@@ -141,9 +173,14 @@ class Device extends EventEmitter {
     async _send(packet) {
         const timeout = this.timeout || 2000;
         const self = this;
-        if (!this.cs || this.tout) throw new Error('socket not created/bound or closed or waiting!');
+        let count = 3;
+        while (!this.cs || this.tout) {
+            if (!count--)
+                throw new Error(`socket not created/bound/closed ${this.cs} or waiting ${this.tout}!`);
+            await A.wait(100 + (3 - count) * 300);
+        }
         this.cs.removeAllListeners('message');
-        await this.s.catch(e => A.Dr(e, 'Something went wrong in previous send: %O', e));
+        // await this.s.catch(e => A.Dr(e, 'Something went wrong in previous send: %O', e));
         return new Promise((res, rej) => {
 
             function reject(what) {
@@ -236,6 +273,7 @@ class Device extends EventEmitter {
         const what = await this.sendPacket(0x65, payload);
         const command = what.command;
         payload = what.payload;
+        if (this.checkError(what, 0x22)) return Promise.reject(what);
         if (command === 0xe9) {
             //                A.If('auth payload: %O', payload);
             self.key = Buffer.alloc(0x10, 0);
@@ -249,9 +287,9 @@ class Device extends EventEmitter {
         } else {
             if (!what.err)
                 what.err = 0xe9;
-            return A.reject(what);
+            return Promise.reject(what);
         }
-        return A.resolve(self);
+        return self;
         // .catch(e => A.Df('catch auth error %s! on %s with mac %s', e, self.host.name, self.host.address));
     }
 
@@ -320,12 +358,12 @@ class Device extends EventEmitter {
         let pb = new Buffer.alloc(packet.length - 0x26);
         packet.copy(pb, 0, 0x26);
         //        A.If('sendPacket from id %s mac %s command %s, payload: %s, packet: %s, key:%s, iv:%s', this.id.toString('hex'), this.host.maco.toString('hex'), command.toString(16), payload.toString('hex'), pb.toString('hex'), this.key.toString('hex'), this.iv.toString('hex'));
+        let err = null;
         if (timeout < 0)
             return this._send(packet).catch((e) => {
                 err = "SendPacketSingleErr " + A.O(e);
                 return null;
             });
-        let err = null;
         for (let n = 0; n < 3; n++) {
             // eslint-disable-next-line no-await-in-loop
             // eslint-disable-next-line no-loop-func
@@ -334,7 +372,7 @@ class Device extends EventEmitter {
                 return null;
             });
             if (res) return res;
-            await A.wait(10);
+            await A.wait(20 + 20 * n);
         }
         A.W("sendPacket error: could not send after 3 trials!: " + err);
         return null;
@@ -365,6 +403,8 @@ class MP1 extends Device {
         packet[0x07] = 0xc0;
         packet[0x08] = 0x01;
         const res = await this.checkOff(this.sendPacket, 0x6a, packet);
+        if (this.checkError(res, 0x22));
+
         //            A.I(`getVal on '${this.constructor.name}' returned ${A.O(res)}`);
         if (res && res.payload && !res.err) {
             let state = res.payload[0x0e];
@@ -407,6 +447,7 @@ class MP1 extends Device {
         packet[0x0d] = sid_mask;
         packet[0x0e] = st ? sid_mask : 0;
         const ret = await this.checkOff(this.sendPacket, 0x6a, packet);
+        this.checkError(ret, 0x22);
         if (!ret || ret.err || !ret.payload) return vret;
         return (vret['sw' + sw] = st);
     }
@@ -429,6 +470,7 @@ class SP1 extends Device {
         var packet = Buffer.alloc(4, 4);
         packet[0] = st ? 1 : 0;
         const ret = await this.checkOff(this.sendPacket, 0x66, packet);
+        this.checkError(ret, 0x22);
         // console.log("setVal SP1", ret);
         if (!ret || ret.err || !ret.payload) return this._val;
         return (this._val = st);
@@ -450,6 +492,7 @@ class SP2 extends Device {
         //        A.I(`getVal on '${this.constructor.name}' called! on ${A.O(this.host)}`);
         packet[0] = 1;
         const res = await this.checkOff(this.sendPacket, 0x6a, packet);
+        this.checkError(res, 0x22);
         //            A.I(`getVal on '${this.constructor.name}' returned ${A.O(res)}`);
         if (res && res.payload && !res.err) {
             let payload = res.payload;
@@ -479,6 +522,7 @@ class SP2 extends Device {
         //        packet[4] = (st ? 1 : 0) + (nl ? 2 : 0);
         packet[4] = st ? 1 : 0;
         const ret = await this.checkOff(this.sendPacket, 0x6a, packet);
+        this.checkError(ret, 0x22);
         // console.log("setVal SP2", ret);
         if (!ret || ret.err || !ret.payload) return self._val;
         return A.resolve(self._val.state = st);
@@ -515,6 +559,7 @@ class SP3P extends Device {
             self._val.state = x.state;
         }
         const ret = await this.checkOff(this.sendPacket, 0x6a, packet);
+        this.checkError(ret, 0x22);
         // console.log("setVal SP3P", ret);
         if (!ret || ret.err || !ret.payload) return self._val;
         self._val.state = st;
@@ -531,6 +576,7 @@ class SP3P extends Device {
         //        A.I(`getVal on '${this.constructor.name}' called! on ${A.O(this.host)}`);
         packet[0] = 1;
         const res = await this.checkOff(this.sendPacket, 0x6a, packet);
+        this.checkError(res, 0x22);
         //            A.I(`getVal on '${this.constructor.name}' returned ${A.O(res)}`);
         if (res && res.payload && !res.err) {
             let payload = res.payload;
@@ -565,6 +611,7 @@ class SP3P extends Device {
         packet[5] = 1;
         packet[9] = 45;
         const ret = await this.checkOff(this.sendPacket, 0x6a, packet);
+        this.checkError(ret, 0x22);
         //            A.I(`payload get energy: ${A.O(ret)}`);
         if (ret && ret.payload && ret.payload[0] === 8)
             return parseFloat(ret.payload[7].toString(16) + ret.payload[6].toString(16) + ret.payload[5].toString(16)) / 100.0;
@@ -586,6 +633,7 @@ class A1 extends Device {
         //        A.I(`getVal on '${this.constructor.name}' called! on ${A.O(this.host)}`);
         packet[0] = 1;
         const res = await this.checkOff(this.sendPacket, 0x6a, packet);
+        this.checkError(res, 0x22);
         //            A.I(`getVal on '${this.constructor.name}' returned ${A.O(res)}`);
         if (res && res.payload && !res.err) {
             let payload = res.payload;
@@ -637,6 +685,7 @@ class S1 extends Device {
         //        A.I(`getVal on '${this.constructor.name}' called! on ${A.O(this.host)}`);
         packet[0] = 6;
         const res = await this.checkOff(this.sendPacket, 0x6a, packet);
+        this.checkError(res, 0x22);
         //            A.I(`getVal on '${this.constructor.name}' returned ${A.O(res)}`);
         if (res && res.payload && !res.err) {
             //                A.If('S1 %s returned len &d %O', self.host.name, res.payload.length, res.payload);
@@ -652,7 +701,6 @@ class S1 extends Device {
 class RM extends Device {
     constructor(host, mac, devtype, bl) {
         super(host, mac, devtype, bl);
-        this.sendwait = new A.Sequence();
         this.type = "RM";
         this._request_header = Buffer.from([]);
         this._code_sending_header = Buffer.from([]);
@@ -665,6 +713,7 @@ class RM extends Device {
         var packet = Buffer.concat([this._request_header, Buffer.from([type])]);
         //        A.I(`getVal on '${this.constructor.name}' called! on ${A.O(this.host)}`);
         const res = await this.checkOff(this.sendPacket, 0x6a, packet);
+        this.checkError(res, 0x22);
         //            A.I(`getVal on '${this.constructor.name}' returned ${A.O(res)}`);
         if (res && res.payload && !res.err) {
             var off = this._request_header.length + offset;
@@ -685,6 +734,7 @@ class RM extends Device {
         var packet = Buffer.concat([this._request_header, Buffer.from([0x04])]);
         //        A.I(`send checkData on '${this.constructor.name}'`);
         const res = await this.checkOff(this.sendPacket, 0x6a, packet, -1000);
+//        this.checkError(res, 0x22);
         //             A.I(`checkData on '${this.constructor.name}' returned ${A.O(res)}`);
         if (res && res.payload && !res.err) {
             let data = res.payload.slice(this._request_header.length + 4);
@@ -715,15 +765,17 @@ class RM extends Device {
         return {};
     }
 
-    sendVal(data) {
+    async sendVal(data) {
         var self = this;
         var packet = Buffer.concat([this._code_sending_header, Buffer.from([0x02, 0x00, 0x00, 0x00]), data]);
-        return this.sendwait.addp(() => self.checkOff(self.sendPacket, 0x6a, packet, 2000)); //.then(x => A.I(`setVal/sendData for ${this.host.name} returned ${A.O(x)}`, x));
+        const ret = await self.checkOff(self.sendPacket, 0x6a, packet, 1000); //.then(x => A.I(`setVal/sendData for ${this.host.name} returned ${A.O(x)}`, x));
+        return this.checkError(ret, 0x22);
     }
 
-    enterLearning() {
+    async enterLearning() {
         var packet = Buffer.concat([this._request_header, Buffer.from([0x03])]);
-        return this.checkOff(this.sendPacket, 0x6a, packet); //.then(x => A.I(`enterLearning for ${this.host.name} returned ${A.O(x)}`, x));
+        const ret = await this.checkOff(this.sendPacket, 0x6a, packet); //.then(x => A.I(`enterLearning for ${this.host.name} returned ${A.O(x)}`, x));
+        return this.checkError(ret, 0x22);
     }
 
 }
@@ -740,16 +792,18 @@ class RMP extends RM {
         this.learning = true;
         const l = {};
 
-        function enterRFSweep() {
+        async function enterRFSweep() {
             var packet = Buffer.alloc(16, 0);
             packet[0] = 0x19;
-            return self.checkOff(self.sendPacket, 0x6a, packet); //.then(x => A.I(`enterRFSweep for ${this.host.name} returned ${A.O(x)}`, x));
+            const ret = await self.checkOff(self.sendPacket, 0x6a, packet); //.then(x => A.I(`enterRFSweep for ${this.host.name} returned ${A.O(x)}`, x));
+            return this.checkError(ret, 0x22);
         }
 
         async function checkRFData(check2) {
             var packet = Buffer.alloc(16, 0);
             packet[0] = check2 ? 0x1b : 0x1a;
             const res = await self.checkOff(self.sendPacket, 0x6a, packet);
+            this.checkError(res, 0x22);
             if (res && res.payload && !res.err) {
                 if (res.payload[4] === 1)
                     return true;
@@ -757,10 +811,11 @@ class RMP extends RM {
             return false;
         }
 
-        function cancelRFSweep() {
+        async function cancelRFSweep() {
             var packet = Buffer.alloc(16, 0);
             packet[0] = 0x1e;
-            return self.checkOff(self.sendPacket, 0x6a, packet); // .then(x => A.I(`CancelRFSwwep for ${this.host.name} returned ${A.O(x)}`, x));
+            const ret = await self.checkOff(self.sendPacket, 0x6a, packet); // .then(x => A.I(`CancelRFSwwep for ${this.host.name} returned ${A.O(x)}`, x));
+            return this.checkError(ret, 0x22);
         }
 
         if (!rf)
@@ -781,7 +836,7 @@ class RMP extends RM {
         await A.wait(100);
         const f = await checkRFData();
         if (f) l.rf = f;
-        cancelRFSweep();
+        await cancelRFSweep();
         if (l.rf) {
             let d = await self.checkData();
             if (d) {
@@ -869,6 +924,7 @@ class T1 extends Device {
         payload[data.length + 3] = (cc >> 8) & 0xff;
         //        A.If('sendT1packet: %O', payload);
         const res = await this.sendPacket(cmd, payload);
+        this.checkError(res, 0x22);
         //            A.If('sendT1packet got back from cmd %O',res);
         if (res && res.payload && !res.err) {
             //                let pl = res.payload;
@@ -1064,7 +1120,7 @@ class LB1 extends Device {
         LB1.colorModeArr = Object.keys(LB1.colorMode);
 
     }
-    async _sendCommand(command, type /* set = true, query = false */ ) {
+    async _sendCommand(command, type = true /* set = true, query = false */ ) {
         const packet = Buffer.alloc(16 + Math.ceil(command.length / 16) * 16, 0);
         packet[0x02] = 0xa5;
         packet[0x03] = 0xa5;
@@ -1086,6 +1142,11 @@ class LB1 extends Device {
         packet[0x07] = checksum >> 8; // # Checksum 2 position
 
         const res = await this.checkOff(this.sendPacket, 0x6a, packet);
+        const ret = {
+            payload: res
+        };
+        const e = this.checkError(ret, 0x36);
+        if (e && res) res.err = e;
         return res;
     }
 
@@ -1100,7 +1161,7 @@ class LB1 extends Device {
         ret = Object.assign(ret, JSON.parse(payload));
         ret.bulb_colormode = LB1.colorModeArr[ret.bulb_colormode];
         ret.bulb_scenes = JSON.parse(ret.bulb_scenes);
-        console.log(ret);
+        // console.log(ret);
 
     }
 
@@ -1109,7 +1170,7 @@ class LB1 extends Device {
         let ret = this._val;
         if (A.T(ret) === 'object')
             ret.here = false;
-        const res = await this._sendCommand("{}");
+        const res = await this._sendCommand("{}", false);
         //            A.I(`getVal on '${this.constructor.name}' returned ${A.O(res)}`);
         if (res && res.payload && !res.err) {
             //                ret.nightlight = !!(payload[0x4] & 2);
@@ -1123,10 +1184,13 @@ class LB1 extends Device {
         return this.getVal();
     }
     async setItem(item, value) {
-        let ret = this._val;
         switch (item) {
             case "pwr":
                 value = !value ? 0 : 1;
+                break;
+                // default:
+                //     value = value.toString();
+
         }
         const cmd = JSON.stringify({
             [item]: value
@@ -1135,7 +1199,7 @@ class LB1 extends Device {
         const res = await this._sendCommand(cmd, true);
         if (res && !res.err && res.payload) {
             this.retVal(res);
-            A.I(`SendCmdRes was ${A.O(res)}: ${""+res.payload}`);
+            // A.I(`SendCmdRes was ${A.O(res)}: ${""+res.payload}`);
             return res;
         }
         A.W(`Error when sending to LB-Device! ${res}`);

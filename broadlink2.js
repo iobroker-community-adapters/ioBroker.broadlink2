@@ -211,9 +211,9 @@ A.stateChange = async function (id, state) {
 				break;
 			case 'LB':
 				await checkLB(device, state, id);
-				temp = await device.getAll();
-				if (temp && temp.here && device.update)
-					await device.update(temp);
+				// temp = await device.getAll();
+				// if (temp && temp.here && device.update)
+					await device.update(device._val);
 				break;
 			default:
 				return A.W(`stateChange error invalid id type: ${id}=${id0} ${A.O(state)}`);
