@@ -89,7 +89,7 @@ class Device extends EventEmitter {
     }
 
     toString() {
-        return `${this.type}:${this.name}, ${this.host.mac}, ${this.host.address}`;
+        return `${this.type} ${this.name}, ${this.host.mac}, ${this.host.address}`;
     }
 
     close() {
