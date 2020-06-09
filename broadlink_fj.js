@@ -172,7 +172,7 @@ class Device extends EventEmitter {
     }
 
     async _send(packet) {
-        const timeout = this.timeout || 2000;
+        const timeout = this.timeout || 900;
         const self = this;
         let count = 3;
         while (!this.cs || this.tout) {
@@ -189,7 +189,7 @@ class Device extends EventEmitter {
                     clearTimeout(self.tout);
                     self.tout = null;
                 }
-                self.cs.removeAllListeners('message');
+                // self.cs.removeAllListeners('message');
                 A.N(rej, what);
             }
 
@@ -198,26 +198,29 @@ class Device extends EventEmitter {
                     clearTimeout(self.tout);
                     self.tout = null;
                 }
-                self.cs.removeAllListeners('message');
+                // self.cs.removeAllListeners('message');
                 A.N(res, what);
             }
 
-            self.cs.on('message', response => {
+            self.cs.once('message', response => {
                 self.lastResponse = Date.now();
-                var enc_payload = Buffer.alloc(response.length - 0x38, 0);
+                const enc_payload = Buffer.alloc(response.length - 0x38, 0);
                 response.copy(enc_payload, 0, 0x38);
 
-                var decipher = crypto.createDecipheriv('aes-128-cbc', self.key, self.iv);
+                const decipher = crypto.createDecipheriv('aes-128-cbc', self.key, self.iv);
                 decipher.setAutoPadding(false);
-                var payload = decipher.update(enc_payload);
+                let payload = decipher.update(enc_payload);
                 var p2 = decipher.final();
                 if (p2) {
                     payload = Buffer.concat([payload, p2]);
                 }
 
-                var command = response[0x26];
-                var err = response[0x22] | (response[0x23] << 8);
-                let obj = {
+                const command = response[0x26];
+                let err = response[0x22] | (response[0x23] << 8);
+                if (Device.errors[err]) {
+                    err = Device.errors[err];
+                }
+                const obj = {
                     command: command,
                     cmdHex: Broadlink.toHex(command),
                     payload: payload,
@@ -225,7 +228,7 @@ class Device extends EventEmitter {
                 //                A.If('message received, err=%s: %O',Broadlink.toHex(err), obj);
                 if (command === 7) {
                     A.If('message command=7 received, err=%s: %O', Broadlink.toHex(err), obj);
-                    return;
+                    return resume(obj);
                 }
                 //                A.If('received message from %s:%O',self.name,obj);
                 if (err === 0)
@@ -234,11 +237,13 @@ class Device extends EventEmitter {
                 //                A.Wf(`Got error %O from device %s`, obj,self.host.name)
                 return reject(obj);
             });
+
             self.tout = setTimeout(() => reject({
                 here: false,
                 err: `timed out on send`,
                 name: self.host.name
             }), timeout);
+            
             self.cs.send(packet, 0, packet.length, self.host.port, self.host.address, err => err ? reject(err) : null);
         });
     }
