@@ -172,13 +172,22 @@ class Device extends EventEmitter {
     }
 
     async _send(packet) {
-        const timeout = this.timeout || 900;
+        const timeout = this.timeout || 600;
         const self = this;
         let count = 3;
-        while (!this.cs || this.tout) {
-            if (!count--)
-                throw new Error(`socket not created/bound/closed ${this.cs} or waiting ${this.tout}!`);
-            await A.wait(100 + (3 - count) * 300);
+
+        if (!this.cs) {
+            const msg = `socket not created/bound/closed ${this}!`;
+            A.W(msg);
+            throw new Error(msg);
+        }
+        while (this.tout) {
+            if (!count--) {
+                const msg = `${this} still waiting for previous command ${this.tout}!`;
+                A.W(msg);
+                throw new Error(msg);
+            }
+            await A.wait(100 + (3 - count) * 200);
         }
         this.cs.removeAllListeners('message');
         // await this.s.catch(e => A.Dr(e, 'Something went wrong in previous send: %O', e));
@@ -243,7 +252,7 @@ class Device extends EventEmitter {
                 err: `timed out on send`,
                 name: self.host.name
             }), timeout);
-            
+
             self.cs.send(packet, 0, packet.length, self.host.port, self.host.address, err => err ? reject(err) : null);
         });
     }
@@ -740,7 +749,7 @@ class RM extends Device {
         var packet = Buffer.concat([this._request_header, Buffer.from([0x04])]);
         //        A.I(`send checkData on '${this.constructor.name}'`);
         const res = await this.checkOff(this.sendPacket, 0x6a, packet, -1000);
-//        this.checkError(res, 0x22);
+        //        this.checkError(res, 0x22);
         //             A.I(`checkData on '${this.constructor.name}' returned ${A.O(res)}`);
         if (res && res.payload && !res.err) {
             let data = res.payload.slice(this._request_header.length + 4);
