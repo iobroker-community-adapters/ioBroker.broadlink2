@@ -73,7 +73,8 @@ class Device extends EventEmitter {
 
     checkError(res, index) {
         let err = "";
-        if (!res) err = "No result delivered! No err check possible!";
+        // if (!res) err = "No result delivered! No err check possible!";
+        if (!res) return "No result delivered! No err check possible!";
         else {
             const pl = res.payload;
             if (!pl) err = "no payload returned!";
@@ -924,7 +925,7 @@ class T1 extends Device {
         payload[data.length + 3] = (cc >> 8) & 0xff;
         //        A.If('sendT1packet: %O', payload);
         const res = await this.sendPacket(cmd, payload);
-        this.checkError(res, 0x22);
+        // this.checkError(res, 0x22);
         //            A.If('sendT1packet got back from cmd %O',res);
         if (res && res.payload && !res.err) {
             //                let pl = res.payload;
