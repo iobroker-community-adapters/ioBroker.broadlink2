@@ -189,7 +189,7 @@ class Device extends EventEmitter {
                     clearTimeout(self.tout);
                     self.tout = null;
                 }
-                // self.cs.removeAllListeners('message');
+                self.cs.removeAllListeners('message');
                 A.N(rej, what);
             }
 
@@ -198,7 +198,7 @@ class Device extends EventEmitter {
                     clearTimeout(self.tout);
                     self.tout = null;
                 }
-                // self.cs.removeAllListeners('message');
+                self.cs.removeAllListeners('message');
                 A.N(res, what);
             }
 
