@@ -381,7 +381,10 @@ async function doPoll() {
 		}
 	}
 	firsttime = false;
-	if (na.length) await brlink.discover(discoverAll ? na : undefined);
+	if (na.length) {
+		if (discoverAll) await brlink.discover();
+		else for (const d of na) await brlink.discover(d, 2000);
+	}
 }
 
 function setState(name) {
