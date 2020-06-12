@@ -171,7 +171,7 @@ A.stateChange = async function (id, state) {
 		//		A.D(`Somebody (${state.from}) id0 ${id0} changed ${id} of "${id0}" to ${A.O(state)}`);
 		if (id0 === scenesName) {
 			const obj = await A.getObject(id);
-			if (obj && obj.native && obj.native.scene) await sendScene(obj.native.scene, state)
+			if (obj && obj.native && obj.native.scene) await sendScene(obj.native.scene, state);
 			else return A.D(`Invalid command "${id}" in scenes`);
 		}
 		if (id0 === statesName) {
@@ -213,7 +213,7 @@ A.stateChange = async function (id, state) {
 				await checkLB(device, state, id);
 				// temp = await device.getAll();
 				// if (temp && temp.here && device.update)
-					await device.update(device._val);
+				await device.update(device._val);
 				break;
 			default:
 				return A.W(`stateChange error invalid id type: ${id}=${id0} ${A.O(state)}`);
@@ -221,19 +221,29 @@ A.stateChange = async function (id, state) {
 	}
 };
 
-function deviceScan() {
-	if (!brlink) return Promise.reject(A.W(`No current driver to start discover!`));
-	if (brlink.scanning) return Promise.reject(A.W(`Scan operation in progress, no new scan can be started until it finished!`));
-	return A.makeState({
+async function deviceScan() {
+	if (!brlink) throw new Error(A.W(`No current driver to start discover!`));
+	if (brlink.scanning) throw new Error(A.W(`Scan operation in progress, no new scan can be started until it finished!`));
+	try {
+		await A.makeState({
 			id: scanName,
 			write: true,
 			role: 'button',
 			type: typeof true,
-		}, brlink.scanning = true, true)
-		.then(() => brlink.discover())
-		.then(() => A.wait(2000)) // 6s for the scan of ip' should be OKs
-		.then(() => A.makeState(scanName, brlink.scanning = false, true))
-		.catch(err => A.W(`Error in deviceScan: ${brlink.scanning = false, A.O(err)}`));
+		}, brlink.scanning = true, true);
+		await brlink.discover();
+		for (const a of additional) {
+			A.D(`Try to discover ${a}`);
+			await brlink.discover({
+				address: a
+			}, 3000);
+		}
+		await A.wait(1000); // 6s for the scan of ip' should be OKs
+		await A.makeState(scanName, brlink.scanning = false, true);
+	} catch (err) {
+		A.W(`Error in deviceScan: ${brlink.scanning = false, A.O(err)}`);
+	}
+	return null;
 }
 
 function sendScene(scene, st) {
@@ -444,6 +454,7 @@ async function updateValues(device, val, values) {
 }
 
 let rename = [];
+let additional = [];
 
 function findName(name) {
 	for (let i of rename)
@@ -502,6 +513,12 @@ async function createStatesDevice(device) {
 						type: typeof true,
 						native: {
 							host: device.host
+						},
+						custom: {
+							iobroker: {
+								enabled: true,
+								device: device.host
+							}
 						}
 					}, val.state, true);
 				}
@@ -857,7 +874,15 @@ async function main() {
 	if (rename.length === 1 && rename[0].length === 1)
 		rename = [];
 	rename = rename.map(x => [x[0], x[1].replace(A.adapter.FORBIDDEN_CHARS, '_')]);
-
+	if (A.C.additional) {
+		if (!Array.isArray(A.C.additional)) {
+			A.C.additional = typeof A.C.additional == "string" ? A.C.additional.split(",").map(i => i.trim().toLowerCase()) : [];
+		}
+		if (A.C.additional.length == 1 && !A.C.additional[0])
+			A.C.additional = [];
+	}
+	A.C.additional.map(i => additional.push(i));
+	A.I(`Scanning additional IP's: ${additional.join(", ")}`);
 	A.If('Devices to add: %s', add, add.map(x => x.join('=')).join(','));
 	A.If('Devices to rename: %s', rename.map(x => x.join('=')).join(','));
 

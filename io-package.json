@@ -100,7 +100,8 @@
                 "off": "+"
             }
         ],
-        "poll": "30"
+        "poll": "30",
+        "additional": ""
     },
     "objects": [],
     "config": {

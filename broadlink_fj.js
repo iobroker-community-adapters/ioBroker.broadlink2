@@ -1345,6 +1345,7 @@ class Broadlink extends EventEmitter {
         }
         //        this.address = addresses[0].split('.');
         //      this.lastaddr = addresses[addresses.length-1];
+        this._afound = [...this._addresses];
         for (let a in this._addresses) {
             let al = this._addresses[a].split('.');
             al[3] = 255;
@@ -1454,17 +1455,6 @@ class Broadlink extends EventEmitter {
         return new Device(host, mac, devtype, this);
     }
 
-    send(packet, ip) {
-        if (!this._cs) return Promise.reject('socket not created/bound or closed');
-        this._cs.setBroadcast(true);
-        return new Promise((res, rej) => this._cs.send(packet, 0, packet.length, 80, ip, (err, obj) => {
-            if (err)
-                rej(err);
-            else res(obj);
-        }));
-
-    }
-
     parsePublic(msg, rinfo) {
         const self = this;
         const host = Object.assign({}, rinfo);
@@ -1516,6 +1506,14 @@ class Broadlink extends EventEmitter {
         const self = this;
         ms = ms || 5000;
 
+        function send(packet, ip) {
+            return new Promise((res, rej) => self._cs.send(packet, 0, packet.length, 80, ip, (err, obj) => {
+                if (err)
+                    rej(err);
+                else res(obj);
+            }));
+        }
+
         return new Promise((res, rej) => {
 
             if (!self._cs)
@@ -1531,11 +1529,13 @@ class Broadlink extends EventEmitter {
                 try {
                     self._cs.bind({
                         exclusive: false
-                    }, A.N(() => {
+                    }, A.N(async () => {
                         self._cs.setMulticastTTL(20);
-                        let port = self._cs.address().port;
-                        let address = self._cs.address().address;
-                        let now = new Date();
+                        const port = self._cs.address().port;
+                        let address = typeof what == "object" && what.address ? what.address : self._cs.address().address;
+                        if (self._afound.length == 1) address = self._afound[0];
+                        address = address.split('.').map(i => Number(i));
+                        const now = new Date();
                         //		var starttime = now.getTime();
 
                         let timezone = now.getTimezoneOffset() / -3600;
@@ -1586,17 +1586,23 @@ class Broadlink extends EventEmitter {
                             addr.push(what);
                         if (!addr.length)
                             addr = addr.concat(this._addresses);
-                        A.Df('discover from %O', addr);
-                        return A.repeat(5, () => A.seriesOf(addr, a => self.send(packet, a), 10), null, 500)
-                            .catch(e => A.I('error when sending scan messages: ' + e))
-                            .then(() => A.wait(ms))
-                            .then(() => {
-                                self._cs.removeAllListeners();
-                                self._cs.close();
-                                self._bound = self._cs = null;
-                                //                        A.I("stop listening!");
-                                return res(Promise.resolve());
-                            });
+                        A.Df('discover  %O from %s', addr, address.join("."));
+                        if (addr.length > 1)
+                            this._cs.setBroadcast(true);
+
+                        for (let i = 0; i < 5; i++) {
+                            for (const a of addr) {
+                                await send(packet, a);
+                                await A.wait(10);
+                            }
+                            await A.wait(100);
+                        }
+                        await A.wait(ms);
+                        self._cs.removeAllListeners();
+                        self._cs.close();
+                        self._bound = self._cs = null;
+                        //                        A.I("stop listening!");
+                        return res(true);
                     }));
                     self._bound = true;
                 } catch (e) {
