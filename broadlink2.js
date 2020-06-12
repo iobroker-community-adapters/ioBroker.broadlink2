@@ -883,7 +883,7 @@ async function main() {
 		}
 		if (A.C.additional.length == 1 && !A.C.additional[0])
 			A.C.additional = [];
-	}
+	} else A.C.additional = [];
 	A.C.additional.map(i => additional.push(i));
 	A.I(`Scanning additional IP's: ${additional.join(", ")}`);
 	A.If('Devices to add: %s', add, add.map(x => x.join('=')).join(','));
