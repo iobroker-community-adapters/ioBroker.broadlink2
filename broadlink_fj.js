@@ -1136,7 +1136,8 @@ class LB1 extends Device {
 
     }
     async _sendCommand(command, type = true /* set = true, query = false */ ) {
-        const packet = Buffer.alloc(16 + Math.ceil(command.length / 16) * 16, 0);
+        // packet = bytearray(16+(int(len(command)/16) + 1)*16)
+        const packet = Buffer.alloc(16 + (parseInt(command.length / 16) +1) * 16, 0);
         packet[0x02] = 0xa5;
         packet[0x03] = 0xa5;
         packet[0x04] = 0x5a;
@@ -1144,8 +1145,8 @@ class LB1 extends Device {
         packet[0x08] = type ? 0x02 : 0x01; // # 0x01 => query, # 0x02 => set
         packet[0x09] = 0x0b;
         packet[0x0a] = command.length;
-        for (const c in command) packet[0x0e + c] = command.charCodeAt(c);
-
+        for (let c = 0; c < command.length; c++) 
+            packet[0x0e + c] = command[c].charCodeAt(0);
         let checksum = 0xbeaf;
         for (let i = 0; i < packet.length; i++) {
             checksum += packet[i];
@@ -1155,7 +1156,7 @@ class LB1 extends Device {
         packet[0x00] = (0x0c + command.length) & 0xff;
         packet[0x06] = checksum & 0xff; // # Checksum 1 position
         packet[0x07] = checksum >> 8; // # Checksum 2 position
-
+        A.I(`Send Command: ${packet.toString('hex')}`);
         const res = await this.checkOff(this.sendPacket, 0x6a, packet);
         const ret = {
             payload: res
