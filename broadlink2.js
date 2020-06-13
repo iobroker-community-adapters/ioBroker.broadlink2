@@ -89,18 +89,24 @@ A.stateChange = async function (id, state) {
 	let thisDevice;
 
 	async function startLearning(name, type) {
+
+		async function learnMsg(text) {
+			A.I(text);
+			await A.makeState(name, text, true);
+		}
+
 		thisDevice = scanList[name];
 		if (!thisDevice) throw Error(`wrong name "${name}" in startLearning`);
 		if (thisDevice.learning) {
 			const err = A.W(`Device ${name} is still in learning mode and cannot start it again!`);
 			throw new Error(err);
 		}
-		A.I(`Start ${type}-learning for device: ${name}`);
+		// A.I(`Start ${type}-learning for device: ${name}`);
 
-		await A.makeState(name, thisDevice.learning = true, true);
-		const l = await thisDevice.learn(type === learnRf);
-		await A.makeState(name, thisDevice.learning = false, true);
-		A.I(`Stop learning ${type} for ${name}!`);
+		// await A.makeState(name, thisDevice.learning = true, true);
+		const l = type === learnRf && thisDevice.learnRf ? await thisDevice.learnRf(learnMsg) : await thisDevice.learn(learnMsg);
+		await A.makeState(name, "", true);
+		// A.I(`Stop learning ${type} for ${name}!`);
 		if (l.data) try {
 			const hex = l.data;
 			const res = await A.getObjectList({
@@ -590,8 +596,8 @@ async function createStatesDevice(device) {
 					id: x,
 					role: "value",
 					write: true,
-					type: typeof true,
-				}, false, true);
+					type: typeof "",
+				}, "", true);
 				await A.makeState({
 					id: x + learnName + learnIr,
 					write: true,
@@ -604,7 +610,7 @@ async function createStatesDevice(device) {
 					write: true,
 					type: typeof ''
 				}, ' ', true);
-				if (device.type === 'RMP' || device.type == "RM4")
+				if (device.learnRf)
 					await A.makeState({
 						id: x + learnName + learnRf,
 						write: true,

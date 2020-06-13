@@ -758,26 +758,28 @@ class RM extends Device {
         return null;
     }
 
-    async learn() {
+    async learn(msg) {
         const self = this;
+        if (msg) msg(`Start learning with ${this.host.name}: Please press button on remote in next 30 seconds!`)
         this.learning = true;
-        A.If('Should learn on %s', this.host.name);
+//        A.If('Should learn on %s', this.host.name);
+        const res = {};
         await self.checkData();
         await self.enterLearning();
-        for (let i = 0; i < 30; i++) {
+        for (let i = 30; i > 0; i--) {
             await A.wait(1000);
             const r = await self.checkData();
             if (r) {
-                self.learning = false;
                 const data = r.toString('hex');
                 // A.I("Received from device: " + data);
-                return {
-                    data
-                };
+                res.data = data; 
+                break;
             }
+            if (msg) msg(`Please press button on remote in next ${i-1} seconds!`)
         }
+        if (msg) msg(res.data ? `Learning funished and packet received!` : `Timeout: No data received when learning!`);
         self.learning = false;
-        return {};
+        return res;
     }
 
     async sendVal(data) {
@@ -801,65 +803,63 @@ class RMP extends RM {
         this.type = "RMP";
     }
 
-    async learn(rf) {
-        const self = this;
-        A.Df('Start learning with %s on %s', rf, self.host.name);
+    async  enterRFSweep(start) {
+        var packet = Buffer.alloc(16, 0);
+        packet[0] = start ? 0x19 : 0x1e;
+        const ret = await this.checkOff(this.sendPacket, 0x6a, packet); //.then(x => A.I(`enterRFSweep for ${this.host.name} returned ${A.O(x)}`, x));
+        return this.checkError(ret, 0x22);
+    }
+
+    async checkRFData(check2) { // check2=true = fund_rf_packet, false= check_frequency
+        var packet = Buffer.alloc(16, 0);
+        packet[0] = check2 ? 0x1b : 0x1a;
+        const res = await this.checkOff(this.sendPacket, 0x6a, packet);
+        this.checkError(res, 0x22);
+        if (res && res.payload && !res.err) {
+            if (res.payload[4] === 1)
+                return true;
+        }
+        return null;
+    }
+    
+    async learnRf(msg) {
+        // const self = this;
+        if (msg) msg(`Start RF-sweep with ${this.host.name}: Please press button on RF remote until mfrequency found!`)
+//        A.Df('Start learning with %s on %s', rf, self.host.name);
         this.learning = true;
         const l = {};
-
-        async function enterRFSweep() {
-            var packet = Buffer.alloc(16, 0);
-            packet[0] = 0x19;
-            const ret = await self.checkOff(self.sendPacket, 0x6a, packet); //.then(x => A.I(`enterRFSweep for ${this.host.name} returned ${A.O(x)}`, x));
-            return this.checkError(ret, 0x22);
-        }
-
-        async function checkRFData(check2) {
-            var packet = Buffer.alloc(16, 0);
-            packet[0] = check2 ? 0x1b : 0x1a;
-            const res = await self.checkOff(self.sendPacket, 0x6a, packet);
-            this.checkError(res, 0x22);
-            if (res && res.payload && !res.err) {
-                if (res.payload[4] === 1)
-                    return true;
-            }
-            return false;
-        }
-
-        async function cancelRFSweep() {
-            var packet = Buffer.alloc(16, 0);
-            packet[0] = 0x1e;
-            const ret = await self.checkOff(self.sendPacket, 0x6a, packet); // .then(x => A.I(`CancelRFSwwep for ${this.host.name} returned ${A.O(x)}`, x));
-            return this.checkError(ret, 0x22);
-        }
-
-        if (!rf)
-            return super.learn();
-
-        A.If('Should learn RF-sweep on %s', this.host.name);
-        await self.checkData().catch(() => null);
-        await enterRFSweep();
-        for (let i = 0; i < 30; i++) {
+        let f = false;
+        await this.checkData().catch(() => null);
+        await this.enterRFSweep(true);
+        for (let i = 30; i > 0; i--) {
             await A.wait(1000);
-            const r = await self.checkData();
-            if (r) {
-                l.data = r.toString('hex');
-                self.learning = false;
+             f = await this.checkRFData(false);
+//            const r = await self.checkData();
+            if (f) break;
+            if (msg) msg(`Continue to press button on RF remote for maximal ${i} seconds!`)
+        }
+        if (!f) {
+            if (msg) msg(`Could not find frequency, will stop learning!`);
+            await this.enterRFSweep(false);
+            this.learning = false;
+            return l;
+        }
+        if (msg) msg(`found Frequency 1 of 2, you can release button now!`);
+        await A.wait(1000);
+        if (msg) msg(`To complete learning single press button you want to lear now!`);
+        await this.checkRFData(true);
+        for (let i=10; i > 0; i--) {
+            await A.wait(1000);
+            const data = await this.checkData();
+            if (data) {
+                l.data = data.toString('hex');
                 break;
             }
+            if (msg) msg(`Please single press button you want to lear n in next ${i-1} seconds!`);
         }
-        await A.wait(100);
-        const f = await checkRFData();
-        if (f) l.rf = f;
-        await cancelRFSweep();
-        if (l.rf) {
-            let d = await self.checkData();
-            if (d) {
-                d = d.toString('hex');
-                if (d && d != "000000000000000000000000")
-                    l.data = d;
-            }
-        }
+        if (msg) msg(l.data ? `Found learned button!` : `Could not learn button, will exit learning now!`);
+
+        this.learning = false;
         // console.log(l);
         return l;
     }
@@ -879,7 +879,7 @@ class RM4 extends RM {
 class RM4P extends RMP {
     constructor(host, mac, devtype, bl) {
         super(host, mac, devtype, bl);
-        this.type = "RM4";
+        this.type = "RM4P";
         this._request_header = Buffer.from([0x04, 0x00]);
         this._code_sending_header = Buffer.from([0xd0, 0x00]);
     }
@@ -1156,7 +1156,7 @@ class LB1 extends Device {
         packet[0x00] = (0x0c + command.length) & 0xff;
         packet[0x06] = checksum & 0xff; // # Checksum 1 position
         packet[0x07] = checksum >> 8; // # Checksum 2 position
-        A.I(`Send Command: ${packet.toString('hex')}`);
+        // A.I(`Send Command: ${packet.toString('hex')}`);
         const res = await this.checkOff(this.sendPacket, 0x6a, packet);
         const ret = {
             payload: res
