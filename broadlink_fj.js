@@ -113,6 +113,7 @@ class Device extends EventEmitter {
         super();
         // var self = this;
         this._val = {};
+        this.reAuth = Date.now() - 1000*60*5;
         // this.s = new A.Sequence();
         this.bl = bl;
         this.host = host;
@@ -127,8 +128,8 @@ class Device extends EventEmitter {
 
         this.count = Math.random() & 0xffff;
         this.key = new Buffer([0x09, 0x76, 0x28, 0x34, 0x3f, 0xe9, 0x9e, 0x23, 0x76, 0x5c, 0x15, 0x13, 0xac, 0xcf, 0x8b, 0x02]);
-        this.iv = new Buffer([0x56, 0x2e, 0x17, 0x99, 0x6d, 0x09, 0x3d, 0x28, 0xdd, 0xb3, 0xba, 0x69, 0x5a, 0x2e, 0x6f, 0x58]);
         this.id = new Buffer([0, 0, 0, 0]);
+        this.iv = new Buffer([0x56, 0x2e, 0x17, 0x99, 0x6d, 0x09, 0x3d, 0x28, 0xdd, 0xb3, 0xba, 0x69, 0x5a, 0x2e, 0x6f, 0x58]);
         this.udp = new Udp(host);
 /*
         this.cs = dgram.createSocket({
@@ -170,6 +171,10 @@ class Device extends EventEmitter {
         return this.udp && this.udp.bound;
     }
 
+    get doReAuth() {
+        return (["RM4", "RM4P", "LB1"].indexOf(this.type) >= 0 && Date.now() - this.reAuth > 10 * 60 * 1000);
+    }
+
     checkError(res, index) {
         let err = "";
         // if (!res) err = "No result delivered! No err check possible!";
@@ -179,6 +184,10 @@ class Device extends EventEmitter {
             if (!pl) err = "no payload returned!";
             else {
                 const e = pl[index] + pl[index + 1] << 8;
+                if (e == 0xfff9) {
+                    A.I(`This.device had  0xfff9: please re-auth!`);
+                    this.reAuth = true;
+                }
                 if (e) err = (Device.errors[e]) ? Device.errors[e] : `Unknown error ${e} in response!`;
             }
         }
@@ -327,6 +336,8 @@ class Device extends EventEmitter {
 
                 const command = response[0x26];
                 let err = response[0x22] | (response[0x23] << 8);
+                if (err == 0xfff9) this.reAuth = true;
+
                 if (Device.errors[err]) {
                     err = Device.errors[err];
                 }
@@ -354,12 +365,18 @@ class Device extends EventEmitter {
                 name: self.host.name
             }), timeout);
 
-            return self.udp.send(packet, 0, packet.length, self.host.port, self.host.address);
+            return self.udp.send(packet, 0, packet.length, self.host.port, self.host.address).then(r => r, r => r).then(r => r ? r : reject({
+                here: false,
+                err: `send udp packet error`,
+                name: self.host.name
+            }));
         });
     }
 
     async auth() {
         const self = this;
+        this.key = new Buffer([0x09, 0x76, 0x28, 0x34, 0x3f, 0xe9, 0x9e, 0x23, 0x76, 0x5c, 0x15, 0x13, 0xac, 0xcf, 0x8b, 0x02]);
+        this.id = new Buffer([0, 0, 0, 0]);
         let payload = Buffer.alloc(0x50, 0);
         payload[0x04] = 0x31;
         payload[0x05] = 0x31;
@@ -398,6 +415,7 @@ class Device extends EventEmitter {
             self.id = Buffer.alloc(0x04, 0);
             payload.copy(self.id, 0, 0x00, 0x04);
             //                            A.I(`I emit deviceReady for ${A.O(self.host)}`);
+            self.reAuth = Date.now();
             A.N(self.emit.bind(self), "deviceReady", self);
             //                self.emit("deviceReady", self);
         } else {
@@ -410,7 +428,12 @@ class Device extends EventEmitter {
     }
 
     async sendPacket(command, payload, timeout) {
-
+        const that = this;
+        if (this.doReAuth)  A.wait(1000).then(() => {
+            that.reAuth = Date.now() - 9 * 60 * 1000;
+            A.I(`Need to re-auth ${this}!`);
+            return A.retry(3, that.auth.bind(that)).catch(err => A.W(`Failed to authenticate device ${that} with err ${err}`));
+        });
 
         this.timeout = timeout || 700;
         if (this.timeout < 0) {
@@ -492,7 +515,8 @@ class Device extends EventEmitter {
                 await this.udp.renew(3);
             await A.wait(20 + 20 * n);
         }
-        A.W("sendPacket error: could not send after 3 trials!: " + err);
+        A.I("sendPacket error: could not send after 3 trials!: " + err);
+        // if (this.errorcount>10) await this.auth().catch(x => A.W(`Re-Auth failed with ${x} for ${this}`));
         return null;
         // return A.retry(3, this._send.bind(this), packet);
     }
@@ -1571,11 +1595,15 @@ class Broadlink extends EventEmitter {
             //            mac = msg[0x3a:0x40];
             msg.copy(mac, 0, 0x3a, 0x40);
             host.devtype = Number(msg[0x34]) + Number(msg[0x35]) * 256;
+            host.oname = msg.subarray(0x40);
+            host.oname = host.oname.subarray(0, host.oname.indexOf(0)).toString();
+            host.cloud = parseInt(msg.subarray(-1)[0]);
         } else {
             msg.copy(mac, 0, 0x2a, 0x30);
         }
 
         host.maco = mac;
+        // A.I(`Found host ${A.O(host)}`);
         mac = Array.prototype.map.call(new Uint8Array(mac), x => x.toString(16)).reverse();
         mac = mac.map(x => x.length < 2 ? '0' + x : x).join(':');
 
@@ -1597,7 +1625,7 @@ class Broadlink extends EventEmitter {
                         self._devices[dev.name] = dev;
                     }).then(() => self.emit("deviceReady", dev));
             });
-            A.retry(3, dev.auth.bind(dev)).catch(A.nop);
+            A.retry(3, dev.auth.bind(dev)).catch(err => A.W(`Failed to authenticate device ${dev} with err ${err}`));
         }
         return host;
     }
