@@ -431,7 +431,7 @@ class Device extends EventEmitter {
         const that = this;
         if (this.doReAuth)  A.wait(1000).then(() => {
             that.reAuth = Date.now() - 9 * 60 * 1000;
-            A.I(`Need to re-auth ${this}!`);
+            A.D(`Need to re-auth ${this}!`);
             return A.retry(3, that.auth.bind(that)).catch(err => A.W(`Failed to authenticate device ${that} with err ${err}`));
         });
 
