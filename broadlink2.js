@@ -157,7 +157,7 @@ A.stateChange = async function (id, state) {
 
 	function checkLB(device, state, id) {
 		const item = id.split('.').slice(-1)[0];
-		A.I(`would like to set ${device.name}.${item} to ${state.val}`);
+		// A.I(`would like to set ${device.name}.${item} to ${state.val}`);
 		return device.setItem(item, state.val);
 	}
 

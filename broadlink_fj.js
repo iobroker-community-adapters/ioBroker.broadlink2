@@ -15,10 +15,103 @@ const EventEmitter = require('events'),
     crypto = require('crypto'),
     A = require('@frankjoke/myadapter').MyAdapter;
 
+
+class Udp extends EventEmitter {
+    constructor(host) {
+        super();
+        this.retry = 3;
+        this.cs = null;
+        this.address = null;
+        this.port = null;
+        this.host = host || {};
+        this._bound = false;
+        this._ready = this.createSocket().catch();
+    }
+
+    async createSocket() {
+        const that = this;
+        this._bound = false;
+        const cs = dgram.createSocket({
+            type: 'udp4',
+            reuseAddr: true
+        });
+        this.cs = cs;
+        // this.address = cs.address();
+        cs.on('error', err => {
+            A.I(`UDP Socket error ${err}`);
+            that.renew();
+        });
+        // cs.on('listening', );
+        cs.on('message', (msg, rinfo) => {
+            // A.I(`Message received on ${that.address}:${that.port} = '${msg.length}', ${A.O(rinfo)}`);
+            that.emit('message', msg, rinfo);
+        });
+        that._bound = await new Promise((res,rej) => {
+            try {
+                cs.bind({
+                    exclusive: false
+                }, () => {
+                    const addr = cs.address();
+                    that.retry = 3;
+                    Object.assign(that,addr);
+                    that._bound = true;
+                    // A.I(`UDP listening on ${that.address}:${that.port}`);
+                    res(true);
+                });
+            } catch (e) {
+                A.W(`could not bind socket for ${A.O(that.host)}`);
+                rej(false);
+            }
+            });
+        return that.bound;
+    }
+
+    toString() {
+        return `Udp(${A.O(this.host)}=${this._bound})`;
+    }
+
+    close() {
+        if (this.cs && this.bound) {
+            this.cs.removeAllListeners();
+            this.cs.close();
+            this.cs = null;
+            this._bound = false;
+        }
+    }
+
+    send(...args) {
+        const that = this;
+        if (this.cs && this._bound)
+            return new Promise((res, rej) => that.cs.send(...args, (err) => {
+                if (err) {
+                    A.I(`Send error ${err} on ${that}`);
+                    rej(null);
+                }
+                res(true);
+                }));
+        return Promise.resolve(null);
+    }
+
+    async renew(n) {
+        if (n) this.retry = n;
+        if (this._bound)
+            this.close();
+        this.cs = null;
+        while (this.retry>0) {
+            this.retry--;
+            if (await this.createSocket()) break;
+        }
+    }
+
+    get bound() {
+        return this.cs && this._bound;
+    }
+}
+
 class Device extends EventEmitter {
     constructor(host, mac, devtype, bl) {
         super();
-        var self = this;
+        // var self = this;
         this._val = {};
         // this.s = new A.Sequence();
         this.bl = bl;
@@ -36,6 +129,8 @@ class Device extends EventEmitter {
         this.key = new Buffer([0x09, 0x76, 0x28, 0x34, 0x3f, 0xe9, 0x9e, 0x23, 0x76, 0x5c, 0x15, 0x13, 0xac, 0xcf, 0x8b, 0x02]);
         this.iv = new Buffer([0x56, 0x2e, 0x17, 0x99, 0x6d, 0x09, 0x3d, 0x28, 0xdd, 0xb3, 0xba, 0x69, 0x5a, 0x2e, 0x6f, 0x58]);
         this.id = new Buffer([0, 0, 0, 0]);
+        this.udp = new Udp(host);
+/*
         this.cs = dgram.createSocket({
             type: 'udp4',
             reuseAddr: true
@@ -47,13 +142,13 @@ class Device extends EventEmitter {
         });
         try {
             this.cs.bind({
-                exclusive: true
+                exclusive: false
             });
             this.bound = true;
         } catch (e) {
             A.W(`could not bind socket for ${A.O(this.host)}`);
         }
-
+*/
     }
     static get errors() {
         return {
@@ -71,6 +166,10 @@ class Device extends EventEmitter {
         };
     }
 
+    get bound() {
+        return this.udp && this.udp.bound;
+    }
+
     checkError(res, index) {
         let err = "";
         // if (!res) err = "No result delivered! No err check possible!";
@@ -85,12 +184,12 @@ class Device extends EventEmitter {
         }
         if (!!err && res)
             res.err = err;
-        if (err) A.I(`Error '${err}' in device.checkError for ${this}`);
+        if (err) A.D(`Error '${err}' in device.checkError for ${this}`);
         return err;
     }
 
     toString() {
-        return `${this.type} ${this.name}, ${this.host.mac}, ${this.host.address}`;
+        return `${this.type}:${this.name}, ${this.host.mac}, ${this.host.address}`;
     }
 
     close() {
@@ -98,10 +197,10 @@ class Device extends EventEmitter {
             //            clearTimeout(self.tout);
             this.tout = null;
         }
-        if (this.bound) {
-            this.cs.close();
-            this.cs.removeAllListeners();
-            this.bound = false;
+        if (this.udp) {
+            this.udp.close();
+            // this.cs.removeAllListeners();
+            this.udp = null;
         }
         if (this.bl && this.bl._devices)
             this.bl._devices[this.host.mac] = null;
@@ -175,9 +274,11 @@ class Device extends EventEmitter {
         const timeout = this.timeout || 600;
         const self = this;
         let count = 3;
-
-        if (!this.cs) {
-            const msg = `socket not created/bound/closed ${this}!`;
+        if (!this.bound)
+            await this._ready.then(() => true, ()=> false);
+        if (!this.bound) {
+            // debugger;
+            const msg = `socket not created/bound/closed ${this}, ${this.udp}!`;
             A.W(msg);
             throw new Error(msg);
         }
@@ -189,7 +290,7 @@ class Device extends EventEmitter {
             }
             await A.wait(100 + (3 - count) * 200);
         }
-        this.cs.removeAllListeners('message');
+        this.udp.removeAllListeners('message');
         // await this.s.catch(e => A.Dr(e, 'Something went wrong in previous send: %O', e));
         return new Promise((res, rej) => {
 
@@ -198,7 +299,7 @@ class Device extends EventEmitter {
                     clearTimeout(self.tout);
                     self.tout = null;
                 }
-                self.cs.removeAllListeners('message');
+                self.udp.removeAllListeners('message');
                 A.N(rej, what);
             }
 
@@ -207,11 +308,11 @@ class Device extends EventEmitter {
                     clearTimeout(self.tout);
                     self.tout = null;
                 }
-                self.cs.removeAllListeners('message');
+                self.udp.removeAllListeners('message');
                 A.N(res, what);
             }
 
-            self.cs.once('message', response => {
+            self.udp.once('message', response => {
                 self.lastResponse = Date.now();
                 const enc_payload = Buffer.alloc(response.length - 0x38, 0);
                 response.copy(enc_payload, 0, 0x38);
@@ -253,7 +354,7 @@ class Device extends EventEmitter {
                 name: self.host.name
             }), timeout);
 
-            self.cs.send(packet, 0, packet.length, self.host.port, self.host.address, err => err ? reject(err) : null);
+            return self.udp.send(packet, 0, packet.length, self.host.port, self.host.address);
         });
     }
 
@@ -387,6 +488,8 @@ class Device extends EventEmitter {
                 return null;
             });
             if (res) return res;
+            if (n==2)
+                await this.udp.renew(3);
             await A.wait(20 + 20 * n);
         }
         A.W("sendPacket error: could not send after 3 trials!: " + err);
@@ -1211,14 +1314,14 @@ class LB1 extends Device {
         const cmd = JSON.stringify({
             [item]: value
         });
-        A.I(`About to send to LB1: ${cmd}`);
+        // A.I(`About to send to LB1: ${cmd}`);
         const res = await this._sendCommand(cmd, true);
         if (res && !res.err && res.payload) {
             this.retVal(res);
             // A.I(`SendCmdRes was ${A.O(res)}: ${""+res.payload}`);
             return res;
         }
-        A.W(`Error when sending to LB-Device! ${res}`);
+        // A.W(`Error when sending to LB-Device! ${res}`);
         return null;
     }
 }
