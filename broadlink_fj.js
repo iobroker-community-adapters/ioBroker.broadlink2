@@ -295,13 +295,14 @@ class Device extends EventEmitter {
         const timeout = this.timeout || 600;
         const self = this;
         let count = 4;
-        if (!this.bound)
-            await this._ready.then(() => true, () => false);
         if (!this.bound) {
-            // debugger;
-            const msg = `socket not created/bound/closed ${this}, ${this.udp}!`;
-            A.W(msg);
-            throw new Error(msg);
+            await this._ready.then(() => true, () => false);
+            if (!this.bound) {
+                // debugger;
+                const msg = `socket not created/bound/closed ${this}, ${this.udp}!`;
+                A.W(msg);
+                throw new Error(msg);
+            }
         }
         while (this.tout) {
             if (!count--) {
