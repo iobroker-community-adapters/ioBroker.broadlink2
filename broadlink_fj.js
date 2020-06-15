@@ -108,16 +108,21 @@ class Udp extends EventEmitter {
     }
 }
 
+function msMinutes(x) {
+    const m = x | 1;
+    return m * 60 * 1000;
+}
+
 class Device extends EventEmitter {
     constructor(host, mac, devtype, bl) {
         super();
         // var self = this;
         this._val = {};
-        this.reAuth = Date.now() - 1000*60*5;
+        this.reAuth = Date.now() - msMinutes(2);
         // this.s = new A.Sequence();
         this.bl = bl;
         this.host = host;
-        this.type = "Unknown";
+        // this.type = "Unknown";
         this.typ = "UK";
         delete this.host.family;
         delete this.host.size;
@@ -151,6 +156,12 @@ class Device extends EventEmitter {
         }
 */
     }
+
+    get type() {
+        const name = this.constructor.name;
+        return name == "Device" ?  "Unknown" : this.udp ? name : "closed";
+    }
+
     static get errors() {
         return {
             0xffff: "Authentication failed",
@@ -170,9 +181,10 @@ class Device extends EventEmitter {
     get bound() {
         return this.udp && this.udp.bound;
     }
-
     get doReAuth() {
-        return (["RM4", "RM4P", "LB1"].indexOf(this.type) >= 0 && Date.now() - this.reAuth > 10 * 60 * 1000);
+        if (this.learning)
+            return false;
+        return ((this.type.startsWith("RM") || this.type.startsWith("LB")) && Date.now() - this.reAuth > msMinutes(5));
     }
 
     checkError(res, index) {
@@ -186,7 +198,7 @@ class Device extends EventEmitter {
                 const e = pl[index] + pl[index + 1] << 8;
                 if (e == 0xfff9) {
                     A.I(`This.device had  0xfff9: please re-auth!`);
-                    this.reAuth = true;
+                    this.reAuth = Date.now() - msMinutes(5);
                 }
                 if (e) err = (Device.errors[e]) ? Device.errors[e] : `Unknown error ${e} in response!`;
             }
@@ -214,7 +226,7 @@ class Device extends EventEmitter {
         if (this.bl && this.bl._devices)
             this.bl._devices[this.host.mac] = null;
 
-        this.type = 'closed';
+        // this.type = 'closed';
         this.emit('close');
     }
 
@@ -282,7 +294,7 @@ class Device extends EventEmitter {
     async _send(packet) {
         const timeout = this.timeout || 600;
         const self = this;
-        let count = 3;
+        let count = 4;
         if (!this.bound)
             await this._ready.then(() => true, ()=> false);
         if (!this.bound) {
@@ -295,9 +307,9 @@ class Device extends EventEmitter {
             if (!count--) {
                 const msg = `${this} still waiting for previous command ${this.tout}!`;
                 A.W(msg);
-                throw new Error(msg);
+                return Promise.reject(null);
             }
-            await A.wait(100 + (3 - count) * 200);
+            await A.wait(100 + (4 - count) * 200);
         }
         this.udp.removeAllListeners('message');
         // await this.s.catch(e => A.Dr(e, 'Something went wrong in previous send: %O', e));
@@ -336,7 +348,7 @@ class Device extends EventEmitter {
 
                 const command = response[0x26];
                 let err = response[0x22] | (response[0x23] << 8);
-                if (err == 0xfff9) this.reAuth = true;
+                if (err == 0xfff9) this.reAuth = Date.now() - msMinutes(5);
 
                 if (Device.errors[err]) {
                     err = Device.errors[err];
@@ -430,7 +442,7 @@ class Device extends EventEmitter {
     async sendPacket(command, payload, timeout) {
         const that = this;
         if (this.doReAuth)  A.wait(1000).then(() => {
-            that.reAuth = Date.now() - 9 * 60 * 1000;
+            that.reAuth = Date.now() - msMinutes(4);
             A.D(`Need to re-auth ${this}!`);
             return A.retry(3, that.auth.bind(that)).catch(err => A.W(`Failed to authenticate device ${that} with err ${err}`));
         });
@@ -598,7 +610,7 @@ class MP1 extends Device {
 class SP1 extends Device {
     constructor(host, mac, devtype, bl) {
         super(host, mac, devtype, bl);
-        this.type = "SP1";
+        // this.type = "SP1";
         this._val = undefined;
     }
     async setVal(state) {
@@ -621,9 +633,10 @@ class SP1 extends Device {
 }
 
 class SP2 extends Device {
+    // eslint-disable-next-line no-useless-constructor
     constructor(host, mac, devtype, bl) {
         super(host, mac, devtype, bl);
-        this.type = "SP2";
+        // this.type = "SP2";
     }
     async getVal() {
         //"""Returns the power state of the smart plug."""
@@ -674,7 +687,7 @@ class SP2 extends Device {
 class SP3P extends Device {
     constructor(host, mac, devtype, bl) {
         super(host, mac, devtype, bl);
-        this.type = 'SP3P';
+        // this.type = 'SP3P';
         this._val = {};
     }
 
@@ -764,7 +777,7 @@ class SP3P extends Device {
 class A1 extends Device {
     constructor(host, mac, devtype, bl) {
         super(host, mac, devtype, bl);
-        this.type = "A1";
+        // this.type = "A1";
         this._val = {};
     }
     async getVal() {
@@ -793,7 +806,7 @@ class A1 extends Device {
 class S1 extends Device {
     constructor(host, mac, devtype, bl) {
         super(host, mac, devtype, bl);
-        this.type = "S1";
+        // this.type = "S1";
         this._val = {};
         this._sensorTypes = {
             0x31: 'DoorSensor', // 49 as hex
@@ -843,7 +856,7 @@ class S1 extends Device {
 class RM extends Device {
     constructor(host, mac, devtype, bl) {
         super(host, mac, devtype, bl);
-        this.type = "RM";
+        // this.type = "RM";
         this._request_header = Buffer.from([]);
         this._code_sending_header = Buffer.from([]);
 
@@ -925,9 +938,10 @@ class RM extends Device {
 }
 
 class RMP extends RM {
+    // eslint-disable-next-line no-useless-constructor
     constructor(host, mac, devtype, bl) {
         super(host, mac, devtype, bl);
-        this.type = "RMP";
+        // this.type = "RMP";
     }
 
     async  enterRFSweep(start) {
@@ -996,7 +1010,7 @@ class RMP extends RM {
 class RM4 extends RM {
     constructor(host, mac, devtype, bl) {
         super(host, mac, devtype, bl);
-        this.type = "RM4";
+        // this.type = "RM4";
         this._request_header = Buffer.from([0x04, 0x00]);
         this._code_sending_header = Buffer.from([0xd0, 0x00]);
     }
@@ -1006,7 +1020,7 @@ class RM4 extends RM {
 class RM4P extends RMP {
     constructor(host, mac, devtype, bl) {
         super(host, mac, devtype, bl);
-        this.type = "RM4P";
+        // this.type = "RM4P";
         this._request_header = Buffer.from([0x04, 0x00]);
         this._code_sending_header = Buffer.from([0xd0, 0x00]);
     }
@@ -1026,9 +1040,10 @@ class RM4P extends RMP {
 }
 
 class T1 extends Device {
+    // eslint-disable-next-line no-useless-constructor
     constructor(host, mac, devtype, bl) {
         super(host, mac, devtype, bl);
-        this.type = "T1";
+        // this.type = "T1";
     }
     // --- start of other test
     async sendT1packet(cmd, data) {
@@ -1248,7 +1263,7 @@ class T1 extends Device {
 class LB1 extends Device {
     constructor(host, mac, devtype, bl) {
         super(host, mac, devtype, bl);
-        this.type = "LB1";
+        // this.type = "LB1";
         LB1.colorMode = {
             'lovely color': 0,
             'flashlight': 1,

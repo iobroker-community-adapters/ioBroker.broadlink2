@@ -1,3 +1,4 @@
+/* eslint-disable no-continue */
 /* eslint-disable no-await-in-loop */
 /* eslint-disable complexity */
 /**
@@ -353,6 +354,7 @@ async function doPoll() {
 	discoverAll = discoverAll >= 9 ? 0 : ++discoverAll;
 	for (const item of Object.entries(scanList)) {
 		const [key, device] = item;
+		if (device.learning) continue;
 		if (!device.getAll || device.dummy) {
 			if (!device.searchc) {
 				device.searchm = 2;
@@ -377,7 +379,7 @@ async function doPoll() {
 			};
 		//				A.Ir(x, 'Device %s will reject %O', device.name, x);
 		if (!x.here) {
-			A.Df('device %s not reachable, waiting for it again %O', device.name);
+			A.Df('device %s not reachable, waiting for it again %O', device.name, x);
 			if (device.lastResponse && device.lastResponse < Date.now() - 1000 * 60 * 5) {
 				if (device.close)
 					device.close();
