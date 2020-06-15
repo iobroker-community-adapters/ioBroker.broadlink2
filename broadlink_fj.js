@@ -46,14 +46,14 @@ class Udp extends EventEmitter {
             // A.I(`Message received on ${that.address}:${that.port} = '${msg.length}', ${A.O(rinfo)}`);
             that.emit('message', msg, rinfo);
         });
-        that._bound = await new Promise((res,rej) => {
+        that._bound = await new Promise((res, rej) => {
             try {
                 cs.bind({
                     exclusive: false
                 }, () => {
                     const addr = cs.address();
                     that.retry = 3;
-                    Object.assign(that,addr);
+                    Object.assign(that, addr);
                     that._bound = true;
                     // A.I(`UDP listening on ${that.address}:${that.port}`);
                     res(true);
@@ -62,7 +62,7 @@ class Udp extends EventEmitter {
                 A.W(`could not bind socket for ${A.O(that.host)}`);
                 rej(false);
             }
-            });
+        });
         return that.bound;
     }
 
@@ -88,7 +88,7 @@ class Udp extends EventEmitter {
                     rej(null);
                 }
                 res(true);
-                }));
+            }));
         return Promise.resolve(null);
     }
 
@@ -97,7 +97,7 @@ class Udp extends EventEmitter {
         if (this._bound)
             this.close();
         this.cs = null;
-        while (this.retry>0) {
+        while (this.retry > 0) {
             this.retry--;
             if (await this.createSocket()) break;
         }
@@ -136,30 +136,30 @@ class Device extends EventEmitter {
         this.id = new Buffer([0, 0, 0, 0]);
         this.iv = new Buffer([0x56, 0x2e, 0x17, 0x99, 0x6d, 0x09, 0x3d, 0x28, 0xdd, 0xb3, 0xba, 0x69, 0x5a, 0x2e, 0x6f, 0x58]);
         this.udp = new Udp(host);
-/*
-        this.cs = dgram.createSocket({
-            type: 'udp4',
-            reuseAddr: true
-        });
-        this.cs.on('close', function () {
-            A.I('closed ' + A.O(self.host));
-            self.emit('close');
-            this.cs = null;
-        });
-        try {
-            this.cs.bind({
-                exclusive: false
-            });
-            this.bound = true;
-        } catch (e) {
-            A.W(`could not bind socket for ${A.O(this.host)}`);
-        }
-*/
+        /*
+                this.cs = dgram.createSocket({
+                    type: 'udp4',
+                    reuseAddr: true
+                });
+                this.cs.on('close', function () {
+                    A.I('closed ' + A.O(self.host));
+                    self.emit('close');
+                    this.cs = null;
+                });
+                try {
+                    this.cs.bind({
+                        exclusive: false
+                    });
+                    this.bound = true;
+                } catch (e) {
+                    A.W(`could not bind socket for ${A.O(this.host)}`);
+                }
+        */
     }
 
     get type() {
         const name = this.constructor.name;
-        return name == "Device" ?  "Unknown" : this.udp ? name : "closed";
+        return name == "Device" ? "Unknown" : this.udp ? name : "closed";
     }
 
     static get errors() {
@@ -182,7 +182,7 @@ class Device extends EventEmitter {
         return this.udp && this.udp.bound;
     }
     get doReAuth() {
-        if (this.learning)
+        if (this.learning || !this.udp || this.inReAuth)
             return false;
         return ((this.type.startsWith("RM") || this.type.startsWith("LB")) && Date.now() - this.reAuth > msMinutes(5));
     }
@@ -296,7 +296,7 @@ class Device extends EventEmitter {
         const self = this;
         let count = 4;
         if (!this.bound)
-            await this._ready.then(() => true, ()=> false);
+            await this._ready.then(() => true, () => false);
         if (!this.bound) {
             // debugger;
             const msg = `socket not created/bound/closed ${this}, ${this.udp}!`;
@@ -441,11 +441,17 @@ class Device extends EventEmitter {
 
     async sendPacket(command, payload, timeout) {
         const that = this;
-        if (this.doReAuth)  A.wait(1000).then(() => {
-            that.reAuth = Date.now() - msMinutes(4);
-            A.D(`Need to re-auth ${this}!`);
-            return A.retry(3, that.auth.bind(that)).catch(err => A.W(`Failed to authenticate device ${that} with err ${err}`));
-        });
+
+        if (this.doReAuth) {
+            that.inReAuth = true;
+            that.reAuth = Date.now() - msMinutes(3);
+            A.wait(2000).then(async () => {
+                A.D(`Need to re-auth ${that}!`);
+                const res = await A.retry(3, that.auth.bind(that), null, 100).catch(err => A.W(`Failed to authenticate device ${that} with err ${err}`));
+                A.D(`Reauth result of ${that} is: ${res} ${(Date.now() - that.reAuth) / 1000.0} seconds`);
+            });
+            that.inReAuth = false;
+        }
 
         this.timeout = timeout || 700;
         if (this.timeout < 0) {
@@ -523,7 +529,7 @@ class Device extends EventEmitter {
                 return null;
             });
             if (res) return res;
-            if (n==2)
+            if (n == 2)
                 await this.udp.renew(3);
             await A.wait(20 + 20 * n);
         }
@@ -902,7 +908,7 @@ class RM extends Device {
         const self = this;
         if (msg) msg(`Start learning with ${this.host.name}: Please press button on remote in next 30 seconds!`)
         this.learning = true;
-//        A.If('Should learn on %s', this.host.name);
+        //        A.If('Should learn on %s', this.host.name);
         const res = {};
         await self.checkData();
         await self.enterLearning();
@@ -912,7 +918,7 @@ class RM extends Device {
             if (r) {
                 const data = r.toString('hex');
                 // A.I("Received from device: " + data);
-                res.data = data; 
+                res.data = data;
                 break;
             }
             if (msg) msg(`Please press button on remote in next ${i-1} seconds!`)
@@ -944,7 +950,7 @@ class RMP extends RM {
         // this.type = "RMP";
     }
 
-    async  enterRFSweep(start) {
+    async enterRFSweep(start) {
         var packet = Buffer.alloc(16, 0);
         packet[0] = start ? 0x19 : 0x1e;
         const ret = await this.checkOff(this.sendPacket, 0x6a, packet); //.then(x => A.I(`enterRFSweep for ${this.host.name} returned ${A.O(x)}`, x));
@@ -962,11 +968,11 @@ class RMP extends RM {
         }
         return null;
     }
-    
+
     async learnRf(msg) {
         // const self = this;
         if (msg) msg(`Start RF-sweep with ${this.host.name}: Please press button on RF remote until mfrequency found!`)
-//        A.Df('Start learning with %s on %s', rf, self.host.name);
+        //        A.Df('Start learning with %s on %s', rf, self.host.name);
         this.learning = true;
         const l = {};
         let f = false;
@@ -974,8 +980,8 @@ class RMP extends RM {
         await this.enterRFSweep(true);
         for (let i = 30; i > 0; i--) {
             await A.wait(1000);
-             f = await this.checkRFData(false);
-//            const r = await self.checkData();
+            f = await this.checkRFData(false);
+            //            const r = await self.checkData();
             if (f) break;
             if (msg) msg(`Continue to press button on RF remote for maximal ${i} seconds!`)
         }
@@ -989,7 +995,7 @@ class RMP extends RM {
         await A.wait(1000);
         if (msg) msg(`To complete learning single press button you want to lear now!`);
         await this.checkRFData(true);
-        for (let i=10; i > 0; i--) {
+        for (let i = 10; i > 0; i--) {
             await A.wait(1000);
             const data = await this.checkData();
             if (data) {
@@ -1279,7 +1285,7 @@ class LB1 extends Device {
     }
     async _sendCommand(command, type = true /* set = true, query = false */ ) {
         // packet = bytearray(16+(int(len(command)/16) + 1)*16)
-        const packet = Buffer.alloc(16 + (parseInt(command.length / 16) +1) * 16, 0);
+        const packet = Buffer.alloc(16 + (parseInt(command.length / 16) + 1) * 16, 0);
         packet[0x02] = 0xa5;
         packet[0x03] = 0xa5;
         packet[0x04] = 0x5a;
@@ -1287,7 +1293,7 @@ class LB1 extends Device {
         packet[0x08] = type ? 0x02 : 0x01; // # 0x01 => query, # 0x02 => set
         packet[0x09] = 0x0b;
         packet[0x0a] = command.length;
-        for (let c = 0; c < command.length; c++) 
+        for (let c = 0; c < command.length; c++)
             packet[0x0e + c] = command[c].charCodeAt(0);
         let checksum = 0xbeaf;
         for (let i = 0; i < packet.length; i++) {
@@ -1319,8 +1325,9 @@ class LB1 extends Device {
         ret = Object.assign(ret, JSON.parse(payload));
         ret.bulb_colormode = LB1.colorModeArr[ret.bulb_colormode];
         ret.bulb_scenes = JSON.parse(ret.bulb_scenes);
+        ret.pwr = !!ret.pwr;
         // console.log(ret);
-
+        return ret;
     }
 
     async getVal() {
