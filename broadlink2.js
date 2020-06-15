@@ -627,11 +627,11 @@ async function createStatesDevice(device) {
 					name: 'pwr',
 					type: typeof true,
 					write: true,
-					role: "switch",
+					role: "switch.light",
 				}, {
 					name: 'brightness',
 					type: typeof 1,
-					role: "level",
+					role: "level.dimmer",
 					write: true,
 					min: 0,
 					max: 100,
