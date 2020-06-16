@@ -975,7 +975,7 @@ class RMP extends RM {
 
     async learnRf(msg) {
         // const self = this;
-        if (msg) msg(`Start RF-sweep with ${this.host.name}: Please press button on RF remote until mfrequency found!`)
+        if (msg) msg(`Start RF-sweep with ${this.host.name}: Please press button on RF remote until frequency found!`)
         //        A.Df('Start learning with %s on %s', rf, self.host.name);
         this.learning = true;
         const l = {};
@@ -1006,7 +1006,7 @@ class RMP extends RM {
                 l.data = data.toString('hex');
                 break;
             }
-            if (msg) msg(`Please single press button you want to lear n in next ${i-1} seconds!`);
+            if (msg) msg(`Please single press button you want to learn in next ${i-1} seconds!`);
         }
         if (msg) msg(l.data ? `Found learned button!` : `Could not learn button, will exit learning now!`);
 
