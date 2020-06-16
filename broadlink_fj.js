@@ -450,7 +450,7 @@ class Device extends EventEmitter {
             that.inReAuth = true;
             that.reAuth = Date.now() - msMinutes(-2);
             A.wait(2000).then(async () => {
-                A.D(`Need to re-auth ${that}!`);
+                // A.D(`Need to re-auth ${that}!`);
                 const res = await A.retry(3, that.auth.bind(that), 100).catch(err => A.W(`Failed to authenticate device ${that} with err ${err}`));
                 A.D(`Reauth result of ${that} is: ${res} ${(Date.now() - that.reAuth) / 1000.0} seconds`);
             });
