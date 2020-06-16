@@ -108,8 +108,10 @@ class Udp extends EventEmitter {
     }
 }
 
+const authMinutes = 5;
+
 function msMinutes(x) {
-    const m = x | 1;
+    const m = x < 0 ? authMinutes + x : x | authMinutes;
     return m * 60 * 1000;
 }
 
@@ -118,7 +120,7 @@ class Device extends EventEmitter {
         super();
         // var self = this;
         this._val = {};
-        this.reAuth = Date.now() - msMinutes(2);
+        this.reAuth = Date.now() - msMinutes(-3);
         // this.s = new A.Sequence();
         this.bl = bl;
         this.host = host;
@@ -184,7 +186,7 @@ class Device extends EventEmitter {
     get doReAuth() {
         if (this.learning || !this.udp || this.inReAuth)
             return false;
-        return ((this.type.startsWith("RM") || this.type.startsWith("LB")) && Date.now() - this.reAuth > msMinutes(5));
+        return ((this.type.startsWith("RM") || this.type.startsWith("LB")) && Date.now() - this.reAuth > msMinutes());
     }
 
     checkError(res, index) {
@@ -198,7 +200,7 @@ class Device extends EventEmitter {
                 const e = pl[index] + pl[index + 1] << 8;
                 if (e == 0xfff9) {
                     A.I(`This.device had  0xfff9: please re-auth!`);
-                    this.reAuth = Date.now() - msMinutes(5);
+                    this.reAuth = Date.now() - msMinutes();
                 }
                 if (e) err = (Device.errors[e]) ? Device.errors[e] : `Unknown error ${e} in response!`;
             }
@@ -349,7 +351,7 @@ class Device extends EventEmitter {
 
                 const command = response[0x26];
                 let err = response[0x22] | (response[0x23] << 8);
-                if (err == 0xfff9) this.reAuth = Date.now() - msMinutes(5);
+                if (err == 0xfff9) this.reAuth = Date.now() - msMinutes();
 
                 if (Device.errors[err]) {
                     err = Device.errors[err];
@@ -417,7 +419,7 @@ class Device extends EventEmitter {
         payload[0x36] = '1'.charCodeAt(0);
 
         const what = await this.sendPacket(0x65, payload);
-        self.reAuth = Date.now() - msMinutes(4);
+        self.reAuth = Date.now() - msMinutes(-1);
         if (this.checkError(what, 0x22)) return Promise.reject(what);
         const command = what.command;
         payload = what.payload;
@@ -446,7 +448,7 @@ class Device extends EventEmitter {
 
         if (this.doReAuth) {
             that.inReAuth = true;
-            that.reAuth = Date.now() - msMinutes(3);
+            that.reAuth = Date.now() - msMinutes(-2);
             A.wait(2000).then(async () => {
                 A.D(`Need to re-auth ${that}!`);
                 const res = await A.retry(3, that.auth.bind(that), 100).catch(err => A.W(`Failed to authenticate device ${that} with err ${err}`));

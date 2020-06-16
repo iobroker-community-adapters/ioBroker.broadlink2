@@ -239,8 +239,8 @@ function startAdapter(options) {
 		//  * @param {ioBroker.Message} obj
 		//  */
 		message(obj) {
-			if (typeof obj === "object" && obj.message) 
-				MyAdapter.processMessage(MyAdapter.D(`received Message ${MyAdapter.O(obj)}`, obj))
+			if (typeof obj === "object" && obj.message)
+				MyAdapter.processMessage(MyAdapter.D(`received Message ${MyAdapter.O(obj)}`, obj));
 			// 	if (obj.command === "send") {
 			// 		// e.g. send email or pushover or whatever
 			// 		this.log.info("send command");
@@ -413,6 +413,7 @@ class MyAdapter {
 			};
 		aoptions = Object.assign({}, options);
 		aname = aoptions.name;
+		if (!amain) return;
 		if (amodule && amodule.parent) {
 			amodule.exports = (options) => (adapter = startAdapter(options));
 		} else {
@@ -724,11 +725,19 @@ class MyAdapter {
 		);
 	}
 
-	static retry(nretry, fn,  wait, ...args) {  //change args!!!
+	static async retry(nretry, fn,  wait, ...args) {  //change args!!!
         // assert(typeof fn === 'function', 'retry (,fn,) error: fn is not a function!');
         nretry = this.toInteger(nretry);
-        nretry = nretry || 2;
-        return Promise.resolve(fn(...args)).catch(err => nretry <= 0 ? this.reject(err) : this.wait(wait > 0 ? wait : 0).then(() => this.retry(nretry - 1, fn, wait, ...args)));
+		nretry = nretry || 2;
+		while (nretry > 0) try {
+			const res = await fn(...args);
+			return res;
+		} catch(err) {
+			nretry--;
+			if (!nretry) return err;
+			await this.wait(wait || 0);
+		}
+		return null;
     }
 
 	static async pSequence(arr, promise, wait) {
@@ -868,7 +877,7 @@ class MyAdapter {
 		if (!callback) {
 			const x = dostop < 0 ? 0 : dostop || 0;
 			MyAdapter.Df("Adapter will exit now with code %s and method %s!", x, adapter && adapter.terminate ? "adapter.terminate" : "process.exit");
-			if (adapter && adapter.terminate) adapter.terminate(x); 
+			if (adapter && adapter.terminate) adapter.terminate(x);
 			else process.exit(x);
 		} else
 			try {
@@ -1129,7 +1138,7 @@ class MyAdapter {
 		if (states[id])
 			return states[id];
 		if (!id.startsWith(this.ain) && states[this.ain + id])
-			return states[this.ain + id]
+			return states[this.ain + id];
 		let nid = sstate[id];
 		if (nid && states[nid])
 			return states[nid];

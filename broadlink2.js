@@ -44,36 +44,37 @@ A.init(module, 'broadlink2', main); // associate adapter and main with MyAdapter
 
 //A.I('Adapter starting...');
 // eslint-disable-next-line
-A.objChange = function (obj, val) { //	This is needed for name changes
+A.objChange = async function (obj, val) { //	This is needed for name changes
 	//	A.I(A.F(obj,' =O> ',val));
 	val = val || A.D(' objChange val not defined');
-	if (typeof obj === 'string' && obj.indexOf(learnedName) > 0)
-		return A.getObject(obj)
-			.then(oobj => {
-				A.Df('get object %O gets changed to  %O', oobj, obj);
-				const nst = oobj.common,
-					ncn = nst.name,
-					nid = ncn.replace(A.adapter.FORBIDDEN_CHARS, '_'),
-					dev = obj.split('.'),
-					fnn = dev.slice(2, -1).concat(nid).join('.');
-				if (nid === dev[4] || nid.startsWith(defaultName)) // no need to rename!
-					return null;
-				if (!A.states[fnn] ? (!oobj.native.code ? A.W(`Cannot rename to ${oobj.common.name} because it does not have a learned code: ${obj}`, true) : false) :
-					A.W(`Cannot rename to ${ncn} because the name is already used: ${obj}`, true)) {
-					oobj.common.name = dev[4];
-					return A.setObject(obj, oobj)
-						.catch(e => A.W(`rename back err ${e} on ${A.O(oobj)}!`));
-				}
-				nst.id = (dev[2] + learnedName + nid);
-				nst.native = oobj.native;
-				//				nst.val = codeName + oobj.native.code;
-				if (nid !== dev[4])
-					return A.makeState(nst, false, true)
-						.then(() => A.removeState(A.I(`rename ${obj} to ${fnn}!`, obj)).catch(() => true));
-			}).then(() => A.wait(20))
-			//			.then(() => getObjects())
-			.catch(err => A.W(`objChange error: ${obj} ${err}`));
-	return A.resolve();
+	if (typeof obj === 'string' && obj.indexOf(learnedName) > 0) try {
+		const oobj = A.getObject(obj);
+		A.Df('get object %O gets changed to  %O', oobj, obj);
+		const nst = oobj.common,
+			ncn = nst.name,
+			nid = ncn.replace(A.adapter.FORBIDDEN_CHARS, '_'),
+			dev = obj.split('.'),
+			fnn = dev.slice(2, -1).concat(nid).join('.');
+		if (nid === dev[4] || nid.startsWith(defaultName)) // no need to rename!
+			return null;
+		if (!A.states[fnn] ? (!oobj.native.code ? A.W(`Cannot rename to ${oobj.common.name} because it does not have a learned code: ${obj}`, true) : false) :
+			A.W(`Cannot rename to ${ncn} because the name is already used: ${obj}`, true)) {
+			oobj.common.name = dev[4];
+			return A.setObject(obj, oobj)
+				.catch(e => A.W(`rename back err ${e} on ${A.O(oobj)}!`));
+		}
+		nst.id = (dev[2] + learnedName + nid);
+		nst.native = oobj.native;
+		//				nst.val = codeName + oobj.native.code;
+		if (nid !== dev[4]) {
+			await A.makeState(nst, false, true);
+			await A.removeState(A.I(`rename ${obj} to ${fnn}!`, obj)).catch(A.nothing);
+			A.wait(100);
+		}
+	} catch (err) {
+		A.W(`objChange error: ${obj} ${err}`);
+	}
+	return true;
 };
 
 function sendCode(device, value) {
@@ -390,8 +391,9 @@ async function doPoll() {
 	}
 	firsttime = false;
 	if (na.length) {
-		if (discoverAll) await brlink.discover();
-		else for (const d of na) await brlink.discover(d, 2000);
+		A.D(`should discover/search ${na}`);
+		if (!discoverAll) await brlink.discover();
+		for (const d of na) await brlink.discover(d, 2000);
 	}
 }
 
