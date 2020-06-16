@@ -294,7 +294,7 @@ class Device extends EventEmitter {
     }
 
     async _send(packet) {
-        const timeout = this.timeout || 600;
+        const timeout = this.timeout || 1000;
         const self = this;
         let count = 4;
         if (!this.bound) {
