@@ -13,7 +13,7 @@ const EventEmitter = require('events'),
     dns = require('dns'),
     os = require('os'),
     crypto = require('crypto'),
-    A = require('@frankjoke/myadapter').MyAdapter;
+    A = require('./fjadapter');
 
 
 class Udp extends EventEmitter {
@@ -417,9 +417,10 @@ class Device extends EventEmitter {
         payload[0x36] = '1'.charCodeAt(0);
 
         const what = await this.sendPacket(0x65, payload);
+        self.reAuth = Date.now() - msMinutes(4);
+        if (this.checkError(what, 0x22)) return Promise.reject(what);
         const command = what.command;
         payload = what.payload;
-        if (this.checkError(what, 0x22)) return Promise.reject(what);
         if (command === 0xe9) {
             //                A.If('auth payload: %O', payload);
             self.key = Buffer.alloc(0x10, 0);
@@ -448,7 +449,7 @@ class Device extends EventEmitter {
             that.reAuth = Date.now() - msMinutes(3);
             A.wait(2000).then(async () => {
                 A.D(`Need to re-auth ${that}!`);
-                const res = await A.retry(3, that.auth.bind(that), null, 100).catch(err => A.W(`Failed to authenticate device ${that} with err ${err}`));
+                const res = await A.retry(3, that.auth.bind(that), 100).catch(err => A.W(`Failed to authenticate device ${that} with err ${err}`));
                 A.D(`Reauth result of ${that} is: ${res} ${(Date.now() - that.reAuth) / 1000.0} seconds`);
             });
             that.inReAuth = false;
@@ -1648,7 +1649,7 @@ class Broadlink extends EventEmitter {
                         self._devices[dev.name] = dev;
                     }).then(() => self.emit("deviceReady", dev));
             });
-            A.retry(3, dev.auth.bind(dev)).catch(err => A.W(`Failed to authenticate device ${dev} with err ${err}`));
+            A.retry(3, dev.auth.bind(dev), 300).catch(err => A.W(`Failed to authenticate device ${dev} with err ${err}`));
         }
         return host;
     }

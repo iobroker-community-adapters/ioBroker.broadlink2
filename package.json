@@ -28,14 +28,13 @@
     "npm": ">=6.4.0"
   },
   "dependencies": {
-    "@frankjoke/myadapter": "^1.2.8",
-    "@iobroker/adapter-core": "^2.4.0"
+    "@iobroker/adapter-core": "^2.4.0",
+    "axios": "^0.19.2"
   },
   "devDependencies": {
-    "axios": "^0.19.2",
     "chai": "^4.2.0",
     "gulp": "^4.0.2",
-    "mocha": "^7.2.0"
+    "mocha": "^8.0.1"
   },
   "main": "broadlink2.js",
   "scripts": {

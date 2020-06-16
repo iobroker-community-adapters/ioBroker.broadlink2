@@ -451,11 +451,12 @@ class MyAdapter {
     static trim(x) {
         return Array.isArray(x) ? x.map(this.trim) : typeof x === 'string' ? x.trim() : `${x}`.trim();
     }
-    static number(str) {
-        if (!isNaN(str))
-            str = str % 1 === 0 ? parseInt(str) : parseFloat(str);
-        return str;
-    }
+
+    // static number(str) {
+    //     if (!isNaN(str))
+    //         str = str % 1 === 0 ? parseInt(str) : parseFloat(str);
+    //     return str;
+    // }
 
     static A(arg) {
         if (!arg)

@@ -10,7 +10,7 @@
 "use strict";
 const
 	Broadlink = require('./broadlink_fj.js'),
-	A = require('@frankjoke/myadapter').MyAdapter;
+	A = require('./fjadapter.js');
 //	utils = require('./lib/utils'),
 //	adapter = utils.Adapter('broadlink2'),
 
