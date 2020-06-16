@@ -1046,7 +1046,8 @@ async function main() {
 					name: id,
 					fun: Promise.reject,
 					host: dev.native.host,
-					dummy: true
+					dummy: true,
+					type: "closed",
 				};
 				if (brlink.getDev(dev.native.host.mac)) {
 					device = brlink.getDev(dev.native.host.mac);
