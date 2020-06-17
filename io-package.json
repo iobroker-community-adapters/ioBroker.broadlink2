@@ -1,13 +1,13 @@
 {
     "common": {
         "name": "broadlink2",
-        "version": "2.0.9",
-        "title": "Broadlink2 (RM+, SP+, A1, T1, S1C, LB+, ..) W-Lan devices",
+        "version": "2.1.0",
+        "title": "Broadlink2 (RM+,SP+,A1,T1,S1C,LB+,..) W-Lan devices",
         "titleLang": "Broadlink2 (RM++, SP++, A1, T1, S1C, Beok313, Floureon, LB+) W-Lan Broadlink-protocol devices",
         "news": {
-            "2.0.9": {
-                "en": "Beta for v2.1, added RM4 protocol and also check now device names according mac address",
-                "de": "Beta für V2.1, RM4-Protokoll hinzugefügt und auch automatische Erkennung von Geräten mittels mac-Adresse hinzugefügt"
+            "2.1.0": {
+                "en": "Added RM4+LB1 protocol and also check now device names according mac address or find additional ip addresses",
+                "de": "RM4+LB1-Protokolle hinzugefügt und auch automatische Erkennung von Geräten mittels mac-Adresse, oder in Konfig IP-Adresse hinzugefügt"
             },
             "2.0.3": {
                 "en": "Changed myAdapter to support js-controller v2.x & v3.x!",
@@ -61,11 +61,14 @@
             "IR/RF",
             "Remote",
             "Switch",
+            "Plug",
             "A1",
             "RM2",
             "RM3",
             "SP1",
-            "SP2"
+            "SP2",
+            "RM4",
+            "LB1"
         ],
         "readme": "https://github.com/frankjoke/ioBroker.broadlink2/blob/master/README.md",
         "loglevel": "info",
@@ -73,7 +76,7 @@
         "authors": [
             "Frank Joke <frankjoke@hotmail.com>"
         ],
-        "compact": true
+        "compact": false
 
     },
     "native": {
@@ -101,7 +104,9 @@
             }
         ],
         "poll": "30",
-        "additional": ""
+        "new": "0xabcd=RM4",
+        "rename": "LB:hostName-aa-bb-cc=LB:SmartBulb",
+        "additional": "192.168.1.199"
     },
     "objects": [],
     "config": {
