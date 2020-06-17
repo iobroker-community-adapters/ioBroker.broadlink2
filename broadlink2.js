@@ -931,11 +931,11 @@ async function main() {
 		if (obj.native && obj.native.host) {
 			if (macObjects[obj.native.host.mac]) {
 				const m1 = macObjects[obj.native.host.mac];
-				const n1 = m1.name;
+				const n1 = m1.host.name;
 				const n2 = obj.native.host.name;
 				if (n1 != n2)
 					A.W(`same broadlink mac in two different devices: '${m1.mac}' in '${n1}' and '${n2}', will keep first!`);
-			} else macObjects[obj.native.host.mac] = obj.native.host;
+			} else macObjects[obj.native.host.mac] = obj.native;
 		}
 	}
 	A.If('macObjects: %O', A.ownKeysSorted(macObjects));
@@ -950,7 +950,7 @@ async function main() {
 				native: {
 					scene: scene.scene
 				}
-			});
+			}, false);
 			await A.wait(1);
 		}
 		brlink.start15001();
@@ -998,7 +998,7 @@ async function main() {
 				continue;
 			}
 			states[option.name] = option.native.state;
-			await A.makeState(option, undefined, true);
+			await A.makeState(option, false, true);
 			await A.wait(1);
 		}
 		for (const item of Object.entries(scanList)) {
@@ -1059,7 +1059,23 @@ async function main() {
 				}
 			}
 		}
-
+		for (const k of Object.keys(macObjects)) {
+			const m = macObjects[k];
+			let f = false;
+			let d = null;
+			for (const found of Object.keys(scanList)) {
+				const dev = scanList[found];
+				if (dev.host.mac == m.host.mac) {
+					f = true;
+					break;
+				} else d = dev;
+			}
+			if (!f) {
+				A.I(`Did not find ${A.O(m)}`);
+				if (notFound.indexOf(m.host.name) < 0)
+					notFound.push(m.host.name);
+			}
+		}
 		await doPoll();
 		await A.makeState({
 			id: sceneName,
