@@ -855,6 +855,7 @@ async function createStatesDevice(device) {
 	return true;
 }
 
+let aif = "";
 const macList = {};
 const macObjects = {};
 async function main() {
@@ -881,6 +882,9 @@ async function main() {
 	if (add.length === 1 && add[0].length === 1)
 		add = [];
 
+	if (typeof A.C.interface === "string" && A.C.interface.length >=7)
+		aif = A.C.interface;
+
 	if (!A.C.rename)
 		A.C.rename = '';
 	rename = A.C.rename.split(',').map(x => x.split('=').map(s => s.trim()));
@@ -899,7 +903,7 @@ async function main() {
 	A.If('Devices to add: %s', add, add.map(x => x.join('=')).join(','));
 	A.If('Devices to rename: %s', rename.map(x => x.join('=')).join(','));
 
-	brlink = new Broadlink(add);
+	brlink = new Broadlink(add, aif);
 	brlink.on("deviceReady", device => {
 		// const typ = device.type.slice(0, 2);
 		device.typ = device.type.slice(0, 2);

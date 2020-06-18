@@ -17,15 +17,14 @@ const EventEmitter = require('events'),
 
 
 class Udp extends EventEmitter {
-    constructor(host) {
+    constructor(port, address) {
         super();
         this.retry = 3;
         this.cs = null;
-        this.address = null;
-        this.port = null;
-        this.host = host || {};
+        this.address = address;
+        this.port = port;
         this._bound = false;
-        this._ready = this.createSocket().catch();
+        this._ready = this.createSocket().catch(A.nothing);
     }
 
     async createSocket() {
@@ -48,18 +47,25 @@ class Udp extends EventEmitter {
         });
         that._bound = await new Promise((res, rej) => {
             try {
-                cs.bind({
+                const pa = {
                     exclusive: false
-                }, () => {
+                };
+                if (that.port)
+                    pa.port = that.port;
+                if (that.port !== undefined && that.address)
+                    pa.address = that.address;
+                // A.I(`Try to bind ${A.O(cs)} to ${that.address}:${that.port}`);
+                cs.bind(pa, () => {
                     const addr = cs.address();
                     that.retry = 3;
-                    Object.assign(that, addr);
+                    that.port = addr.port;
+                    that.address = addr.address;
                     that._bound = true;
-                    // A.I(`UDP listening on ${that.address}:${that.port}`);
+                    A.D(`UDP listening on ${that.address}:${that.port}`);
                     res(true);
                 });
             } catch (e) {
-                A.W(`could not bind socket for ${A.O(that.host)}`);
+                A.W(`could not bind socket ${e} for ${that.address}:${that.port}`);
                 rej(false);
             }
         });
@@ -67,7 +73,7 @@ class Udp extends EventEmitter {
     }
 
     toString() {
-        return `Udp(${A.O(this.host)}=${this._bound})`;
+        return `Udp(${this.address}:${this.port}=${this._bound})`;
     }
 
     close() {
@@ -81,13 +87,14 @@ class Udp extends EventEmitter {
 
     send(...args) {
         const that = this;
+        // A.I(`Send ${args} via ${this.address}:${this.port}`);
         if (this.cs && this._bound)
-            return new Promise((res, rej) => that.cs.send(...args, (err) => {
+            return new Promise((res, rej) => that.cs.send(...args, (err, obj) => {
                 if (err) {
                     A.I(`Send error ${err} on ${that}`);
-                    rej(null);
+                    return rej(err);
                 }
-                res(true);
+                res(obj);
             }));
         return Promise.resolve(null);
     }
@@ -101,6 +108,10 @@ class Udp extends EventEmitter {
             this.retry--;
             if (await this.createSocket()) break;
         }
+    }
+
+    get socket() {
+        return this.cs;
     }
 
     get bound() {
@@ -137,7 +148,7 @@ class Device extends EventEmitter {
         this.key = new Buffer([0x09, 0x76, 0x28, 0x34, 0x3f, 0xe9, 0x9e, 0x23, 0x76, 0x5c, 0x15, 0x13, 0xac, 0xcf, 0x8b, 0x02]);
         this.id = new Buffer([0, 0, 0, 0]);
         this.iv = new Buffer([0x56, 0x2e, 0x17, 0x99, 0x6d, 0x09, 0x3d, 0x28, 0xdd, 0xb3, 0xba, 0x69, 0x5a, 0x2e, 0x6f, 0x58]);
-        this.udp = new Udp(host);
+        this.udp = new Udp();
         /*
                 this.cs = dgram.createSocket({
                     type: 'udp4',
@@ -1377,8 +1388,9 @@ class LB1 extends Device {
 }
 
 class Broadlink extends EventEmitter {
-    constructor(add) {
+    constructor(add, aif) {
         super();
+        this._interface = aif;
         this._devices = {};
         this._cs = null;
         this._ls = null;
@@ -1531,61 +1543,22 @@ class Broadlink extends EventEmitter {
         return this._devices;
     }
 
-    start15001() {
+    async start15001() {
         const self = this;
-        if (this._ls)
-            return A.resolve();
-        const PORT = 15001;
-        //        const MULTICAST_ADDR = "255.255.255.255";
-        const socket = dgram.createSocket({
-            type: "udp4",
-            reuseAddr: true
-        });
-        socket.on("close", function () {
-            if (self._ls) {
-                self._ls = null;
-                self.start15001();
-            }
-        });
-        socket.on("message", function (message, rinfo) {
-            let host = self.parsePublic(message, rinfo);
-            //            A.Df(`15001 Message from: %O`, host);
-            //            self.emit("15001", host);
-            if (!self._devices[host.mac] || self._devices[host.mac].dummy)
-                self.discover(host);
-        });
-        return new Promise((res, rej) => {
-            try {
-                socket.bind(PORT, function () {
-                    //                    socket.addMembership(MULTICAST_ADDR);
-                    //                    for (let i=0; i<self.addresses.length-2; i++)
-                    //                    socket.addMembership(self.addresses[i]);
-                    const address = socket.address();
-                    A.If(`UDP socket listening on ${address.address}:${address.port}`);
-                });
-                this._ls = socket;
-                A.N(res, true);
-            } catch (e) {
-                return A.N(rej, e);
-            }
-        });
-
-    }
-
-    send15001(buffer, addr, port) {
-        const message = Buffer.from(`Message from process ${process.pid}`);
-        if (!this._ls)
-            return A.resolve();
-        return new Promise((res, rej) => {
-            const toout = setTimeout(() => A.N(rej, 'timeout'), 1000);
-            this._ls.send(message, 0, message.length, port, addr, function () {
-                clearTimeout(toout);
-                return A.N(res, true);
+        if (this._ls) await this._ls.renew();
+        else {
+            this._ls = new Udp(15001);
+            await Promise.resolve(this._ls._ready);
+            this._ls.on("message", function (message, rinfo) {
+                let host = self.parsePublic(message, rinfo);
+                //            A.Df(`15001 Message from: %O`, host);
+                //            self.emit("15001", host);
+                if (!self._devices[host.mac] || self._devices[host.mac].dummy)
+                    self.discover(host);
             });
-        });
+            }
+        return true;
     }
-
-
     genDevice(devtype, host, mac) {
         //        A.Df('got device type %s @host:%O', devtype.toString(16), host);
         host.devtype = devtype;
@@ -1660,115 +1633,90 @@ class Broadlink extends EventEmitter {
         return this._devices && this._devices[name.trim()];
     }
 
-    discover(what, ms) {
+
+    async discover(what, ms) {
         const self = this;
         ms = ms || 5000;
 
-        function send(packet, ip) {
-            return new Promise((res, rej) => self._cs.send(packet, 0, packet.length, 80, ip, (err, obj) => {
-                if (err)
-                    rej(err);
-                else res(obj);
-            }));
+        if (self._cs) await self._cs.close();
+
+        let address = "0.0.0.0";
+        //  address = typeof what == "object" && what.address ? what.address : address;
+        if (this._interface) address = this._interface;
+        else if (self._afound.length == 1) address = self._afound[0];
+        self._cs = new Udp(0, address);
+        self._cs.on("message", (m,r) => self.parsePublic(m, r));
+        await Promise.resolve(self._cs._ready);
+        self._cs.socket.setMulticastTTL(20);
+        let {port} = self._cs;
+        address = address.split('.').map(i => parseInt(i));
+        const now = new Date();
+        //		var starttime = now.getTime();
+        let timezone = now.getTimezoneOffset() / -60;
+        let packet = Buffer.alloc(0x30, 0);
+        let year = now.getYear();
+
+        if (timezone < 0) {
+            packet[0x08] = 0xff + timezone - 1;
+            packet[0x09] = 0xff;
+            packet[0x0a] = 0xff;
+            packet[0x0b] = 0xff;
+        } else {
+            packet[0x08] = timezone;
+            packet[0x09] = 0;
+            packet[0x0a] = 0;
+            packet[0x0b] = 0;
         }
+        packet[0x0c] = year & 0xff;
+        packet[0x0d] = year >> 8;
+        packet[0x0e] = now.getMinutes();
+        packet[0x0f] = now.getHours();
+        let subyear = year % 100;
+        packet[0x10] = subyear;
+        packet[0x11] = now.getDay();
+        packet[0x12] = now.getDate();
+        packet[0x13] = now.getMonth();
+        packet[0x18] = address[0];
+        packet[0x19] = address[1];
+        packet[0x1a] = address[2];
+        packet[0x1b] = address[3];
+        packet[0x1c] = port & 0xff;
+        packet[0x1d] = port >> 8;
+        packet[0x26] = 6;
+        let checksum = 0xbeaf;
 
-        return new Promise((res, rej) => {
+        for (let i = 0; i < packet.length; i++) {
+            checksum += packet[i];
+        }
+        checksum = checksum & 0xffff;
+        packet[0x20] = checksum & 0xff;
+        packet[0x21] = checksum >> 8;
+        let addr = [];
+        if (Array.isArray(what))
+            addr = addr.concat(what.map(x => x.address));
+        else if (what && what.address)
+            addr.push(what.address);
+        else if (typeof what === 'string')
+            addr.push(what);
+        if (!addr.length)
+            addr = addr.concat(this._addresses);
+        A.If('discover  %O from %s:%s', addr, address.join("."), port);
+        if (addr.length > 1)
+            this._cs.socket.setBroadcast(true);
 
-            if (!self._cs)
-                self._cs = dgram.createSocket({
-                    type: 'udp4',
-                    reuseAddr: true
-                }, (m, r) => A.N(self.parsePublic.bind(self), m, r));
-
-
-            self._cs.on('close', arg => self.emit('close', (self._bound = self._cs = null, rej(arg))));
-
-            if (!self._bound) {
-                try {
-                    self._cs.bind({
-                        exclusive: false
-                    }, A.N(async () => {
-                        self._cs.setMulticastTTL(20);
-                        const port = self._cs.address().port;
-                        let address = typeof what == "object" && what.address ? what.address : self._cs.address().address;
-                        if (self._afound.length == 1) address = self._afound[0];
-                        address = address.split('.').map(i => Number(i));
-                        const now = new Date();
-                        //		var starttime = now.getTime();
-
-                        let timezone = now.getTimezoneOffset() / -3600;
-                        let packet = Buffer.alloc(0x30, 0);
-                        let year = now.getYear();
-
-                        if (timezone < 0) {
-                            packet[0x08] = 0xff + timezone - 1;
-                            packet[0x09] = 0xff;
-                            packet[0x0a] = 0xff;
-                            packet[0x0b] = 0xff;
-                        } else {
-                            packet[0x08] = timezone;
-                            packet[0x09] = 0;
-                            packet[0x0a] = 0;
-                            packet[0x0b] = 0;
-                        }
-                        packet[0x0c] = year & 0xff;
-                        packet[0x0d] = year >> 8;
-                        packet[0x0e] = now.getMinutes();
-                        packet[0x0f] = now.getHours();
-                        let subyear = year % 100;
-                        packet[0x10] = subyear;
-                        packet[0x11] = now.getDay();
-                        packet[0x12] = now.getDate();
-                        packet[0x13] = now.getMonth();
-                        packet[0x18] = parseInt(address[0]);
-                        packet[0x19] = parseInt(address[1]);
-                        packet[0x1a] = parseInt(address[2]);
-                        packet[0x1b] = parseInt(address[3]);
-                        packet[0x1c] = port & 0xff;
-                        packet[0x1d] = port >> 8;
-                        packet[0x26] = 6;
-                        let checksum = 0xbeaf;
-
-                        for (let i = 0; i < packet.length; i++) {
-                            checksum += packet[i];
-                        }
-                        checksum = checksum & 0xffff;
-                        packet[0x20] = checksum & 0xff;
-                        packet[0x21] = checksum >> 8;
-                        let addr = [];
-                        if (Array.isArray(what))
-                            addr = addr.concat(what.map(x => x.address));
-                        else if (what && what.address)
-                            addr.push(what.address);
-                        else if (typeof what === 'string')
-                            addr.push(what);
-                        if (!addr.length)
-                            addr = addr.concat(this._addresses);
-                        A.Df('discover  %O from %s', addr, address.join("."));
-                        if (addr.length > 1)
-                            this._cs.setBroadcast(true);
-
-                        for (let i = 0; i < 5; i++) {
-                            for (const a of addr) {
-                                await send(packet, a);
-                                await A.wait(10);
-                            }
-                            await A.wait(100);
-                        }
-                        await A.wait(ms);
-                        self._cs.removeAllListeners();
-                        self._cs.close();
-                        self._bound = self._cs = null;
-                        //                        A.I("stop listening!");
-                        return res(true);
-                    }));
-                    self._bound = true;
-                } catch (e) {
-                    self._cs = self._bound = null;
-                    return rej(e);
-                }
+        for (let i = 0; i < 5; i++) {
+            for (const a of addr) {
+                // A.I(`Send packet ${packet.slice(8,0x28).toString('hex')} to ${a}:80 from ${address.join(".")}:${port}`);
+                await self._cs.send(packet, 80, a);
+                await A.wait(50);
             }
-        });
+            await A.wait(50);
+        }
+        let n = 5 * addr.length * 50 + 50;
+        if (n>ms)
+            n = ms;
+        return A.wait(ms - n);
+//        return true;
     }
 
     getAll(mac) {
