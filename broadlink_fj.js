@@ -304,7 +304,7 @@ class Device extends EventEmitter {
         return this._val = obj;
     }
 
-    async _send(packet) {
+    async _send(packet, cmd) {
         const timeout = this.timeout || 1000;
         const self = this;
         let count = 4;
@@ -368,6 +368,7 @@ class Device extends EventEmitter {
                     err = Device.errors[err];
                 }
                 const obj = {
+                    cmd,
                     command: command,
                     cmdHex: Broadlink.toHex(command),
                     payload: payload,
@@ -378,7 +379,7 @@ class Device extends EventEmitter {
                     return resume(obj);
                 }
                 //                A.If('received message from %s:%O',self.name,obj);
-                if (err === 0)
+                if (!err)
                     return resume(obj);
                 obj.err = err;
                 //                A.Wf(`Got error %O from device %s`, obj,self.host.name)
@@ -532,14 +533,14 @@ class Device extends EventEmitter {
         //        A.If('sendPacket from id %s mac %s command %s, payload: %s, packet: %s, key:%s, iv:%s', this.id.toString('hex'), this.host.maco.toString('hex'), command.toString(16), payload.toString('hex'), pb.toString('hex'), this.key.toString('hex'), this.iv.toString('hex'));
         let err = null;
         if (timeout < 0)
-            return this._send(packet).catch((e) => {
+            return this._send(packet, command).catch((e) => {
                 err = "SendPacketSingleErr " + A.O(e);
                 return null;
             });
         for (let n = 0; n < 3; n++) {
             // eslint-disable-next-line no-await-in-loop
             // eslint-disable-next-line no-loop-func
-            const res = await this._send(packet).catch((e) => {
+            const res = await this._send(packet, command).catch((e) => {
                 err = "SendPacketErr " + A.O(e);
                 return null;
             });
@@ -548,7 +549,7 @@ class Device extends EventEmitter {
                 await this.udp.renew(3);
             await A.wait(20 + 20 * n);
         }
-        A.I("sendPacket error: could not send after 3 trials!: " + err);
+        A.I(`sendPacket error: could not send command ${'0x'+command.tostring('hex')} after 3 trials!: ${err}`);
         // if (this.errorcount>10) await this.auth().catch(x => A.W(`Re-Auth failed with ${x} for ${this}`));
         return null;
         // return A.retry(3, this._send.bind(this), packet);
