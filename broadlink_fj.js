@@ -1736,23 +1736,17 @@ class Broadlink extends EventEmitter {
     }
 
     close() {
-        const cl = this._ls;
-        this._ls = null;
-        if (cl)
-            cl.close();
+        if (this._ls) this._ls.close();
 
-        if (this.bound) {
-            this._cs.close();
-            this._cs.removeAllListeners();
-            this._bound = this._cs = null;
-        }
+        if (this._cs)  this._cs.close();
+        
         if (A.ownKeys(this._devices).length > 0)
             for (let m of A.ownKeys(this._devices)) {
                 //                console.log(m);
                 let dev = this._devices[m];
                 if (dev) dev.close();
             }
-        this._bound = this._cs = this._devices = null;
+        this._ls = this._cs = this._devices = null;
     }
 
 }
