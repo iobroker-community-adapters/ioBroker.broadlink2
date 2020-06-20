@@ -143,7 +143,7 @@ class Device extends EventEmitter {
         this.devtype = devtype;
         this.host.devhex = Broadlink.toHex(devtype, 4);
         this.host.name = this.host.devhex + '_' + mac;
-
+        this._cmdByte = 0;
         this.count = Math.random() & 0xffff;
         this.key = new Buffer([0x09, 0x76, 0x28, 0x34, 0x3f, 0xe9, 0x9e, 0x23, 0x76, 0x5c, 0x15, 0x13, 0xac, 0xcf, 0x8b, 0x02]);
         this.id = new Buffer([0, 0, 0, 0]);
@@ -304,7 +304,8 @@ class Device extends EventEmitter {
         return this._val = obj;
     }
 
-    async _send(packet, cmd) {
+    async _send(packet) {
+        const cmd = packet[this._cmdByte];
         const timeout = this.timeout || 1000;
         const self = this;
         let count = 4;
@@ -541,12 +542,16 @@ class Device extends EventEmitter {
             // eslint-disable-next-line no-await-in-loop
             // eslint-disable-next-line no-loop-func
             const res = await this._send(packet, command).catch((e) => {
-                err = "SendPacketErr " + A.O(e);
-                return null;
+                if (e && e.err) {
+                    const err = e.err;
+                    if (Device.errors[err] || Object.entries(Device.errors).filter(i => i[1] == err).length)
+                        return Promise.reject(e);
+                }
+               
             });
-            if (res) return res;
-            if (n == 2)
-                await this.udp.renew(3);
+            if (res && !res.err) return res;
+            // if (n == 2)
+            //     await this.udp.renew(3);
             await A.wait(20 + 20 * n);
         }
         A.I(`sendPacket error: could not send command ${'0x'+command.toString(16)} after 3 trials!: ${err}`);
@@ -982,7 +987,7 @@ class RMP extends RM {
         const res = await this.checkOff(this.sendPacket, 0x6a, packet);
         this.checkError(res, 0x22);
         if (res && res.payload && !res.err) {
-            if (res.payload[4] === 1)
+            if (res.payload[this._request_header.length + 4] === 1)
                 return true;
         }
         return null;
@@ -1035,6 +1040,7 @@ class RMP extends RM {
 class RM4 extends RM {
     constructor(host, mac, devtype, bl) {
         super(host, mac, devtype, bl);
+        this._cmdByte = 2;
         // this.type = "RM4";
         this._request_header = Buffer.from([0x04, 0x00]);
         this._code_sending_header = Buffer.from([0xd0, 0x00]);
