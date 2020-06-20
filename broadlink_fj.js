@@ -555,7 +555,7 @@ class Device extends EventEmitter {
             //     await this.udp.renew(3);
             await A.wait(20 + 20 * n);
         }
-        A.I(`sendPacket error: command ${'0x'+command.toString(16)}/${'0x'+cmd.toString(16)} error after 3 trials!: ${err} for ${that}`);
+        A.D(`sendPacket error: command ${'0x'+command.toString(16)}/${'0x'+cmd.toString(16)} error after 3 trials!: ${err} for ${that}`);
         // if (this.errorcount>10) await this.auth().catch(x => A.W(`Re-Auth failed with ${x} for ${this}`));
         return null;
         // return A.retry(3, this._send.bind(this), packet);
@@ -902,6 +902,7 @@ class RM extends Device {
             var off = this._request_header.length + offset;
             let payload = res.payload;
             ret.here = true;
+            // A.I(`Payload receifed ${payload.toString('hex')} on ${this}`);
             return payload[off] + payload[off + 1] / divider;
         } else return undefined;
 

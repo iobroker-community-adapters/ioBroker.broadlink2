@@ -40,7 +40,8 @@ The adapter tries to find the device at first by it's name and then by it's mac 
 
 * Enter prefix of network address in configuration which should be removed when generating device names
 * Enter the number of seconds between polls. On each poll all SP* devices expluding SP1 are asked what the switch status is. This feature can be disabled by setting the poll delay to 0. On some RM devices with temperature readout the temperature will be updated as well.
-* You can add now ip addresses of to be found/included devices which are also on another network than the network of the adapter. In this case you need to make sure that the computer on which the adapter is running kno0ws by internal or external routing tables how to connect to this other network. 
+* You can add now ip addresses of to be found/included devices which are also on another network than the network of the adapter. In this case you need to make sure that the computer on which the adapter is running kno0ws by internal or external routing tables how to connect to this other network.
+* The `use IP interface` option can be set to use a specified interface address, this may help if you have lan and wlan on the system running iobroker and you do not want to scan on first interface but on wlan only, it may help also if local interface is different from external one in some docker or VM environments. You need to enter the IPv4 address of the interface to be used as source address, otherwise adapter will use 0.0.0.0 and listen to all local interfaces only.
 
 ## How-To learn codes on RM's
 
