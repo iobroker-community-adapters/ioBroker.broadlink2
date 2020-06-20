@@ -458,7 +458,7 @@ class Device extends EventEmitter {
 
     async sendPacket(command, payload, timeout) {
         const that = this;
-
+        const cmd = payload && Number(payload[0]);
         if (this.doReAuth) {
             that.inReAuth = true;
             that.reAuth = Date.now() - msMinutes(-2);
@@ -544,17 +544,18 @@ class Device extends EventEmitter {
             const res = await this._send(packet, command).catch((e) => {
                 if (e && e.err) {
                     const err = e.err;
-                    if (Device.errors[err] || Object.entries(Device.errors).filter(i => i[1] == err).length)
-                        return Promise.reject(e);
+                    if (Device.errors[err] || Object.entries(Device.errors).filter(i => i[1] == err).length) {
+                        A.I(`Unrecoverable Send packet error ${err} on ${that}`)
+                        return null;
+                    }
                 }
-               
             });
             if (res && !res.err) return res;
             // if (n == 2)
             //     await this.udp.renew(3);
             await A.wait(20 + 20 * n);
         }
-        A.I(`sendPacket error: could not send command ${'0x'+command.toString(16)} after 3 trials!: ${err}`);
+        A.I(`sendPacket error: command ${'0x'+command.toString(16)}/${'0x'+cmd.toString(16)} error after 3 trials!: ${err} for ${that}`);
         // if (this.errorcount>10) await this.auth().catch(x => A.W(`Re-Auth failed with ${x} for ${this}`));
         return null;
         // return A.retry(3, this._send.bind(this), packet);
