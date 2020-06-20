@@ -164,7 +164,7 @@ A.stateChange = async function (id, state) {
 	}
 
 	//	A.D(`stateChange of "${id}": ${A.O(state)}`); 
-	if (!state.ack) {
+	if (state && !state.ack) {
 		if (id.startsWith(A.ain))
 			id = id.slice(A.ain.length);
 		let idx = id.split('.'),
