@@ -945,8 +945,8 @@ class RM extends Device {
     }
 
     async sendVal(data) {
-        var self = this;
-        var packet = Buffer.concat([this._code_sending_header, Buffer.from([0x02, 0x00, 0x00, 0x00]), data]);
+        const self = this;
+        const packet = Buffer.concat([this._code_sending_header, Buffer.from([0x02, 0x00, 0x00, 0x00]), data]);
         const ret = await self.checkOff(self.sendPacket, 0x6a, packet, 1000); //.then(x => A.I(`setVal/sendData for ${this.host.name} returned ${A.O(x)}`, x));
         return this.checkError(ret, 0x22);
     }
@@ -967,15 +967,18 @@ class RMP extends RM {
     }
 
     async enterRFSweep(start) {
-        var packet = Buffer.alloc(16, 0);
-        packet[0] = start ? 0x19 : 0x1e;
+        const packet = Buffer.concat([this._request_header, Buffer.from([start ? 0x19 : 0x1e])]);
+
+        // var packet = Buffer.alloc(16, 0);
+        // packet[0] = start ? 0x19 : 0x1e;
         const ret = await this.checkOff(this.sendPacket, 0x6a, packet); //.then(x => A.I(`enterRFSweep for ${this.host.name} returned ${A.O(x)}`, x));
         return this.checkError(ret, 0x22);
     }
 
     async checkRFData(check2) { // check2=true = fund_rf_packet, false= check_frequency
-        var packet = Buffer.alloc(16, 0);
-        packet[0] = check2 ? 0x1b : 0x1a;
+        const packet = Buffer.concat([this._request_header, Buffer.from([check2 ? 0x1b : 0x1a])]);
+        // var packet = Buffer.alloc(16, 0);
+        // packet[0] = check2 ? 0x1b : 0x1a;
         const res = await this.checkOff(this.sendPacket, 0x6a, packet);
         this.checkError(res, 0x22);
         if (res && res.payload && !res.err) {
