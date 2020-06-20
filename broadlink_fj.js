@@ -549,7 +549,7 @@ class Device extends EventEmitter {
                 await this.udp.renew(3);
             await A.wait(20 + 20 * n);
         }
-        A.I(`sendPacket error: could not send command ${'0x'+command.tostring('hex')} after 3 trials!: ${err}`);
+        A.I(`sendPacket error: could not send command ${'0x'+command.toString('hex')} after 3 trials!: ${err}`);
         // if (this.errorcount>10) await this.auth().catch(x => A.W(`Re-Auth failed with ${x} for ${this}`));
         return null;
         // return A.retry(3, this._send.bind(this), packet);
