@@ -932,14 +932,15 @@ async function main() {
 	A.unload = () => brlink.close.bind(brlink)(A.I('Close all connections...'));
 	for (const ob of Object.entries(A.objects)) {
 		const [key, obj] = ob;
-		if (obj.native && obj.native.host) {
-			if (macObjects[obj.native.host.mac]) {
-				const m1 = macObjects[obj.native.host.mac];
+		if (obj.native && obj.native.host && obj._id.split(".").length == 3) {
+			const omac = obj.native.host.mac;
+			if (macObjects[omac]) {
+				const m1 = macObjects[omac];
 				const n1 = m1.host.name;
 				const n2 = obj.native.host.name;
 				if (n1 != n2)
-					A.W(`same broadlink mac in two different devices: '${m1.mac}' in '${n1}' and '${n2}', will keep first!`);
-			} else macObjects[obj.native.host.mac] = obj.native;
+					A.W(`same broadlink mac in two different devices: '${omac}' in '${n1}' and '${n2}', will use first!`);
+			} else macObjects[omac] = obj.native;
 		}
 	}
 	A.If('macObjects: %O', A.ownKeysSorted(macObjects));
