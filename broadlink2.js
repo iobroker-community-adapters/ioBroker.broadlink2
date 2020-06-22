@@ -180,12 +180,14 @@ A.stateChange = async function (id, state) {
 		if (id0 === scenesName) {
 			const obj = await A.getObject(id);
 			if (obj && obj.native && obj.native.scene) await sendScene(obj.native.scene, state);
-			else return A.D(`Invalid command "${id}" in scenes`);
+			else A.D(`Invalid command "${id}" in scenes`);
+			return true;
 		}
 		if (id0 === statesName) {
 			const obj = await A.getObject(id);
 			if (obj && obj.native && obj.native.state) await sendState(obj.native.state, state.val);
-			else return A.D(`Invalid command "${id}" in states`);
+			else A.D(`Invalid command "${id}" in states`);
+			return true;
 		}
 		let device = scanList[id0];
 		if (!device) return A.W(`stateChange error no device found: ${id} ${A.O(state)}`);
@@ -418,28 +420,41 @@ function setState(name) {
 	return A.changeState(str.state.id, str.state ? true : str.index);
 }
 
-function sendState(state, val) {
+async function sendState(state, val) {
 	var send = A.T(val, 0) && state.on[val];
+	// A.If("SendState %O=%O, %O", state, val, send);
 	if (A.T(val, true))
 		send = val ? state.on[0] : state.off[0];
+	// A.If("SendState %O=%O, %s", state, val, send);
 	if (state.mult && val > 9) {
 		const vals = val.toString().split('').map(x => parseInt(x));
-		return A.seriesOf(vals, num => sendState(state, num), 300);
+		for (const num of vals) {
+			await sendState(state, num);
+			await A.wait(300);
+		}
+		return true;
+		// return A.seriesOf(vals, num => sendState(state, num), 300);
 	}
-	const sobj = adapterObjects.filter(x => x.common.name === send);
-	if (sobj.length > 1)
-		A.W(`sendState error: multiple commands for name ${send}, ill use only first instance: ${sobj[0]._id}!`);
-	return (sobj && sobj.length ? A.getObject(sobj[0]._id.slice(A.ain.length)) : Promise.resolve(null)).catch(() => null)
-		.then(obj => {
-			if (!obj)
-				return A.W(`sendState could not find command or scene named '${send}'`);
-			return A.stateChange(obj._id, {
-				val: true,
-				ack: false
-			});
-		})
-		.then(() => A.makeState(state.id, val, true))
-		.catch(A.pE);
+	try {
+		const sobj = adapterObjects.filter(x => x.common.name === send);
+		if (sobj.length > 1)
+			A.W(`sendState error: multiple commands for name ${send}, ill use only first instance: ${sobj[0]._id}!`);
+		if (!sobj.length)
+			return A.W(`sendState error: Could not findcommand '${send}', to send for : ${state.name}!`);
+		const obj = await A.getObject(sobj[0]._id.slice(A.ain.length));
+
+		if (!obj)
+			return A.W(`sendState could not find command or scene named '${send}'`);
+		A.Df("SendState Objects %O=%O, %O", state, val, sobj);
+			await A.stateChange(obj._id, {
+			val: true,
+			ack: false
+		});
+		await A.makeState(state.id, val, true);
+	} catch (err) {
+		A.W(`SendState Error: ${state.name} = ${A.O(err)}`);
+	}
+	return true;
 }
 
 async function updateValues(device, val, values) {
@@ -882,7 +897,7 @@ async function main() {
 	if (add.length === 1 && add[0].length === 1)
 		add = [];
 
-	if (typeof A.C.interface === "string" && A.C.interface.length >=7)
+	if (typeof A.C.interface === "string" && A.C.interface.length >= 7)
 		aif = A.C.interface.trim();
 
 	if (!A.C.rename)
@@ -1039,7 +1054,7 @@ async function main() {
 		for (let i of A.ownKeys(A.objects))
 			if (i.startsWith(A.ain))
 				adapterObjects.push(A.objects[i]);
-		A.Df('%s has %d old states!', A.name, adapterObjects.length);
+		A.If('%s has %d old states!', A.name, adapterObjects.length);
 		didFind = Object.keys(scanList);
 		for (const dev of A.obToArray(A.objects).filter(x => x._id.startsWith(A.ain) && x.native && x.native.host)) {
 			//		.then(() => A.seriesOf(A.obToArray(A.objects).filter(x => x._id.startsWith(A.ain) && x.native && x.native.host), dev => {

@@ -143,7 +143,7 @@ const objects = {},
 
 
 let adapter, aoptions, aname, amain, timer,
-	_onUnload, _objChange, _stateChange, _onStop,
+	_onUnload, _objChange, _stateChange, _onStop, _messages,
 	stopping = false,
 	inDebug = false,
 	curDebug = 1,
@@ -298,25 +298,40 @@ class MyAdapter {
 		_stateChange = val;
 	}
 
+	static get stateChange() {
+		return _stateChange;
+	}
+
 	static set objChange(val) {
 		_objChange = val;
 	}
+	static get objChange() {
+		return _objChange;
+	}
+
 	static set onStop(val) {
 		_onStop = val;
 	}
 	static set messages(val) {
-		messages = val;
+		_messages = val;
+	}
+	static get messages() {
+		return _messages;
 	}
 	static set onUnload(val) {
 		_onUnload = val;
 	}
 
-	static processMessage(obj) {
-		return (obj.command === "debug" ? this.resolve(`debug set to '${inDebug = isNaN(parseInt(obj.message)) ?  this.parseLogic(obj.message) : parseInt(obj.message)}'`) : messages(obj))
-			.then(res => this.D(`Message from '${obj.from}', command '${obj.command}', message '${this.S(obj.message)}' executed with result:"${this.S(res)}"`, res),
-				err => this.W(`invalid Message ${this.O(obj)} caused error ${this.O(err)}`, err))
-			.then(res => obj.callback ? adapter.sendTo(obj.from, obj.command, res, obj.callback) : undefined)
-			.then(() => this.c2p(adapter.getMessage)().then(obj => obj ? this.processMessage(obj) : true));
+	static async processMessage(obj) {
+		if (obj.command ===  "debug")
+				inDebug = isNaN(parseInt(obj.message)) ? this.parseLogic(obj.message) : parseInt(obj.message);
+		const res = _messages ? await _messages(obj) : null;
+		// this.D(`Message from '${obj.from}', command '${obj.command}', message '${this.S(obj.message)}' executed with result:"${this.S(res)}"`);
+			// err => this.W(`invalid Message ${this.O(obj)} caused error ${this.O(err)}`, err))
+		// return (obj.command === "debug" ? this.resolve(`debug set to '${inDebug = isNaN(parseInt(obj.message)) ?  this.parseLogic(obj.message) : parseInt(obj.message)}'`) : messages(obj))
+		if (obj.callback) 
+			await adapter.sendTo(obj.from, obj.command, res, obj.callback);
+		return true;
 	}
 
 	static getObjects(name) {
@@ -1093,11 +1108,10 @@ class MyAdapter {
 
 	static async changeState(id, value, options) {
 		//        this.If('ChangeState got called on %s with ack:%s = %O', id,ack,value)
-		const {
-			always,
-			ts,
-			ack
-		} = options;
+		options = options || {};
+		const always = options.always;
+		const ts = options.ts;
+		const ack = options.ack;
 		if (value === undefined) {
 			this.Wf("You tried to set state '%s' to 'undefined' with %j!", id, options);
 			return null;
