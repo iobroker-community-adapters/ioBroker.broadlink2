@@ -209,8 +209,7 @@ class Device extends EventEmitter {
         if (!res) return "No result delivered! No err check possible!";
         else {
             const pl = res.payload;
-            if (!pl) err = "no payload returned!";
-            else {
+            if (pl) {
                 const e = pl[index] + pl[index + 1] << 8;
                 if (e == 0xfff9) {
                     A.I(`This.device had  0xfff9: please re-auth!`);
@@ -544,16 +543,21 @@ class Device extends EventEmitter {
         for (let n = 0; n < 3; n++) {
             // eslint-disable-next-line no-await-in-loop
             // eslint-disable-next-line no-loop-func
-            const res = await this._send(packet, command).catch((e) => {
+            let res = null;
+            try {
+                res = await this._send(packet, command);
+            } catch (e) {
                 if (e && e.err) {
                     const err = e.err;
                     if (Device.errors[err] || Object.entries(Device.errors).filter(i => i[1] == err).length) {
-                        A.I(`Unrecoverable Send packet error ${err} on ${that}`)
+                        A.I(`Unrecoverable Send packet error ${err} on ${that}`);
                         return null;
                     }
                 }
-            });
+                res = e;
+            }
             if (res && !res.err) return res;
+            if (res) err = res.err;
             // if (n == 2)
             //     await this.udp.renew(3);
             await A.wait(20 + 20 * n);
@@ -1433,14 +1437,14 @@ class IP {
         const arr = [...this.addrToArr()];
         if (!arr || !this.netmaskBits)
             return undefined;
-        const b = 31-this.netmaskBits;
+        const b = 31 - this.netmaskBits;
         for (let i = 0; i <= b; i++) {
-            const ai = 3- parseInt(i/8);
+            const ai = 3 - parseInt(i / 8);
             const ii = i % 8;
             arr[ai] |= 1 << ii;
         }
         return arr;
-        
+
     }
 
     cidrToAll(cidr) {
