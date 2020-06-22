@@ -959,6 +959,8 @@ async function main() {
 			return A.Wf(`Device found already: %s with %O`, x, device.host);
 		A.If('Device %s dedected: address=%s, mac=%s, typ=%s, id=%s devtype=%s%s', x, device.host.address, device.host.mac, device.host.type, device.host.devhex, device.host.devname,
 			device.host.name === device.name ? '' : ', originalName=' + device.host.name);
+		if (!device.update)
+			createStatesDevice(device);
 		scanList[x] = device;
 	});
 
