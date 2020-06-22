@@ -14,6 +14,9 @@ const EventEmitter = require('events'),
     os = require('os'),
     crypto = require('crypto'),
     A = require('./fjadapter');
+const {
+    setForeignObject
+} = require('./fjadapter');
 
 
 class Udp extends EventEmitter {
@@ -1399,6 +1402,63 @@ class LB1 extends Device {
     }
 }
 
+
+class IP {
+    constructor(ip) {
+        if (typeof ip === "object")
+            Object.assign(this, ip);
+        else if (typeof ip === "string") {
+            if (!this.cidrToAll(ip))
+                this.address = ip;
+
+        }
+        if (!this.addrToArr())
+            this.address = undefined;
+        return this;
+    }
+
+    addrToArr(address) {
+        address = address || this.address;
+        const spl = address.split('.').map(i => parseInt(i.trim()));
+        if (spl.filter(i => isNaN(i)).length)
+            return undefined;
+        if (spl.length != 4)
+            return undefined;
+        this.addrs = spl;
+        return spl;
+
+    }
+
+    get broadcast() {
+        const arr = [...this.addrToArr()];
+        if (!arr || !this.netmaskBits)
+            return undefined;
+        const b = 31-this.netmaskBits;
+        for (let i = 0; i <= b; i++) {
+            const ai = 3- parseInt(i/8);
+            const ii = i % 8;
+            arr[ai] |= 1 << ii;
+        }
+        return arr;
+        
+    }
+
+    cidrToAll(cidr) {
+        cidr = cidr || this.cidr;
+        const spl = cidr.split('/').map(i => i.trim());
+        if (spl.length != 2)
+            return undefined;
+        this.netmaskBits = parseInt(spl[1]);
+        if (!this.address)
+            this.address = spl[0];
+        if (this.addrToArr())
+            this.cidr = this.addrs.join('.') + "/" + this.netmaskBits;
+        const bc = this.broadcast;
+        if (bc)
+            this.bcaddr = bc.join('.');
+
+    }
+}
 class Broadlink extends EventEmitter {
     constructor(add, aif) {
         super();
@@ -1406,7 +1466,7 @@ class Broadlink extends EventEmitter {
         this._devices = {};
         this._cs = null;
         this._ls = null;
-        this._addresses = [];
+        this._ipif = [];
         this._devlist = {
             SP1: {
                 0x0000: 'SP1',
@@ -1511,11 +1571,11 @@ class Broadlink extends EventEmitter {
                     if (interfaces[k].hasOwnProperty(k2)) {
                         address = interfaces[k][k2];
                         if (address.family === 'IPv4' && !address.internal) {
-                            const ipif = Object.assign({}, address);
-                            delete ipif.family;
-                            delete ipif.internal;
-                            A.Df('interface to be used: %O:', ipif);
-                            this._addresses.push(address.address);
+                            const ipif = Object.assign({}, new IP(address.cidr));
+                            // delete ipif.family;
+                            // delete ipif.internal;
+                            A.If('interface to be used: %O:', ipif);
+                            this._ipif.push(ipif);
                         }
                     }
                 }
@@ -1523,12 +1583,8 @@ class Broadlink extends EventEmitter {
         }
         //        this.address = addresses[0].split('.');
         //      this.lastaddr = addresses[addresses.length-1];
-        this._afound = [...this._addresses];
-        for (let a in this._addresses) {
-            let al = this._addresses[a].split('.');
-            al[3] = 255;
-            this._addresses[a] = al.join('.');
-        }
+        this._afound = this._ipif.map(i => i.address);
+        this._addresses = this._ipif.map(i => i.bcaddr);
         this._addresses.push('255.255.255.255');
         this._addresses.push('224.0.0.251');
         if (!add)
@@ -1537,6 +1593,9 @@ class Broadlink extends EventEmitter {
             if (Array.isArray(k) && k.length === 2) {
                 let cl = k[1].toUpperCase();
                 let dt = Number(k[0]);
+                for (const c of Object.keys(this._devlist))
+                    if (c[dt])
+                        delete c[dt];
                 if (this._devlist[cl])
                     this._devlist[cl][dt] = cl.toLowerCase();
             }
@@ -1568,7 +1627,7 @@ class Broadlink extends EventEmitter {
                 if (!self._devices[host.mac] || self._devices[host.mac].dummy)
                     self.discover(host);
             });
-            }
+        }
         return true;
     }
     genDevice(devtype, host, mac) {
@@ -1655,12 +1714,15 @@ class Broadlink extends EventEmitter {
         let address = "0.0.0.0";
         //  address = typeof what == "object" && what.address ? what.address : address;
         if (this._interface) address = this._interface;
-        else if (self._afound.length == 1) address = self._afound[0];
-        self._cs = new Udp(0, address);
-        self._cs.on("message", (m,r) => self.parsePublic(m, r));
+
+        // else if (self._afound.length == 1) address = self._afound[0];
+        self._cs = new Udp(0, this._afound.indexOf(address) >= 0 ? address : undefined);
+        self._cs.on("message", (m, r) => self.parsePublic(m, r));
         await Promise.resolve(self._cs._ready);
         self._cs.socket.setMulticastTTL(20);
-        let {port} = self._cs;
+        let {
+            port
+        } = self._cs;
         address = address.split('.').map(i => parseInt(i));
         const now = new Date();
         //		var starttime = now.getTime();
@@ -1703,16 +1765,11 @@ class Broadlink extends EventEmitter {
         checksum = checksum & 0xffff;
         packet[0x20] = checksum & 0xff;
         packet[0x21] = checksum >> 8;
-        let addr = [];
-        if (Array.isArray(what))
-            addr = addr.concat(what.map(x => x.address));
-        else if (what && what.address)
-            addr.push(what.address);
-        else if (typeof what === 'string')
-            addr.push(what);
-        if (!addr.length)
-            addr = addr.concat(this._addresses);
+
+        const addr = what && what.address ? [what.address] : this._addresses;
+
         A.If('discover  %O from %s:%s', addr, address.join("."), port);
+
         if (addr.length > 1)
             this._cs.socket.setBroadcast(true);
 
@@ -1725,10 +1782,10 @@ class Broadlink extends EventEmitter {
             await A.wait(50);
         }
         let n = 5 * addr.length * 50 + 50;
-        if (n>ms)
+        if (n > ms)
             n = ms;
         return A.wait(ms - n);
-//        return true;
+        //        return true;
     }
 
     getAll(mac) {
@@ -1750,8 +1807,8 @@ class Broadlink extends EventEmitter {
     close() {
         if (this._ls) this._ls.close();
 
-        if (this._cs)  this._cs.close();
-        
+        if (this._cs) this._cs.close();
+
         if (A.ownKeys(this._devices).length > 0)
             for (let m of A.ownKeys(this._devices)) {
                 //                console.log(m);

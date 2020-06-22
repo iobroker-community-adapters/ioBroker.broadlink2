@@ -883,7 +883,7 @@ async function main() {
 		add = [];
 
 	if (typeof A.C.interface === "string" && A.C.interface.length >=7)
-		aif = A.C.interface;
+		aif = A.C.interface.trim();
 
 	if (!A.C.rename)
 		A.C.rename = '';
