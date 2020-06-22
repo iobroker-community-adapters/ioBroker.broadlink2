@@ -10,6 +10,8 @@
  */
 "use strict";
 
+const { ADDRGETNETWORKPARAMS } = require("dns");
+
 //@ts-disable TS80006
 //@js-disable TS80006
 
@@ -984,6 +986,16 @@ class MyAdapter {
 			.catch(res => nretry <= 0 ? this.resolve(res) : this.wait(len > 0 ? len : 0).then(() => this.repeat(nretry - 1, fn, arg)));
 	}
 */
+
+	static async repeat(nretry, fn, wait, ...args) {
+		nretry = nretry <= 0 ? 2 : nretry || 2;
+		while (nretry--) {
+			await fn(...args);
+			await this.wait(parseInt(wait) || 10);
+		}
+		return true;
+	}
+
 	static exec(command) {
 		//		assert(typeof command === "string", "exec (fn) error: fn is not a string!");
 		const istest = command.startsWith("!");

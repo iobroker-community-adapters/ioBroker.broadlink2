@@ -256,15 +256,28 @@ async function deviceScan() {
 	return null;
 }
 
-function sendScene(scene, st) {
-	const s = A.T(scene, []) ? A.trim(scene) : A.T(scene, '') ? A.trim(scene.split(',')) : `error in scene: neither a string nor an Array!: ${A.O(scene)}`;
+async function sendScene(scene, st) {
+	const s = A.T(scene, []) ?
+		A.trim(scene) :
+		A.T(scene, '') ?
+		A.trim(scene.split(',')) :
+		`error in scene: neither a string nor an Array!: ${A.O(scene)}`;
 	const sn = s.map(ss => A.trim(ss) === parseInt(ss).toString() ? parseInt(ss) : A.trim(ss));
-	return A.seriesOf(sn, i => {
-		if (typeof i === 'number')
-			return A.wait(i);
+	let ff = true;
+	for (const jj of sn) {
+		let i = jj;
+		if (ff)
+			await A.wait(50);
+		ff = true;
+		if (typeof i === 'number') {
+			await A.wait(i);
+			continue;
+		}
 		const mm = i.match(/^\s*(\d+)\s*\(\s*(\S+)\s*\)\s*(\d*)\s*$/);
-		if (mm)
-			return A.repeat(mm[1], () => sendScene([mm[2]], st).then(() => A.wait(mm[3] ? mm[3] : 300)));
+		if (mm) {
+			await A.repeat(mm[1], () => sendScene([mm[2]], st).then(() => A.wait(mm[3] ? mm[3] : 100)));
+			continue;
+		}
 		if (i.split('=').length === 2) {
 			let s = A.trim(i.split('='));
 			i = s[0];
@@ -283,21 +296,26 @@ function sendScene(scene, st) {
 			code = j[1],
 			dev = scanList[id],
 			typ = dev ? dev.type.slice(0, 2) : '';
-		if (dev && typ === 'RM' && code.startsWith(codeName))
-			return sendCode(scanList[id], code);
+		if (dev && typ === 'RM' && code.startsWith(codeName)) {
+			await sendCode(scanList[id], code);
+			continue;
+		}
+		if (typ === 'RM' || typ == 'SP' || i.startsWith(scenesName + '.')) {
+			await A.stateChange(i, st);
+			continue;
+		}
 
-		if (typ === 'RM' || typ == 'SP' || i.startsWith(scenesName + '.'))
-			return A.stateChange(i, st);
-
-		if (i.startsWith(statesName + '.'))
-			return A.stateChange(i, {
+		if (i.startsWith(statesName + '.')) {
+			await A.stateChange(i, {
 				val: st.val
 			});
+			continue;
+		}
 
-		return A.getState(i).then(() =>
+		await A.getState(i).then(() =>
 			A.setForeignState(i, st, false),
 			(err) => A.W(`id ${i[0]} not found in scene ${scene} with err: ${A.O(err)}`));
-	}, 100);
+	}
 }
 
 A.messages = (msg) => {
@@ -446,7 +464,7 @@ async function sendState(state, val) {
 		if (!obj)
 			return A.W(`sendState could not find command or scene named '${send}'`);
 		A.Df("SendState Objects %O=%O, %O", state, val, sobj);
-			await A.stateChange(obj._id, {
+		await A.stateChange(obj._id, {
 			val: true,
 			ack: false
 		});

@@ -321,13 +321,13 @@ class Device extends EventEmitter {
                 throw new Error(msg);
             }
         }
-        while (this.tout) {
+        while (self.tout) {
             if (!count--) {
                 const msg = `${this} still waiting for previous command ${this.tout}!`;
                 A.W(msg);
                 return Promise.reject(null);
             }
-            await A.wait(100 + (4 - count) * 200);
+            await A.wait(20 + (4 - count) * 100);
         }
         this.udp.removeAllListeners('message');
         // await this.s.catch(e => A.Dr(e, 'Something went wrong in previous send: %O', e));
@@ -336,8 +336,8 @@ class Device extends EventEmitter {
             function reject(what) {
                 if (self.tout) {
                     clearTimeout(self.tout);
-                    self.tout = null;
                 }
+                self.tout = null;
                 self.udp.removeAllListeners('message');
                 A.N(rej, what);
             }
@@ -345,8 +345,8 @@ class Device extends EventEmitter {
             function resume(what) {
                 if (self.tout) {
                     clearTimeout(self.tout);
-                    self.tout = null;
                 }
+                self.tout = null;
                 self.udp.removeAllListeners('message');
                 A.N(res, what);
             }
