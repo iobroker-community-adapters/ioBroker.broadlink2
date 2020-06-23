@@ -114,6 +114,10 @@ The adapter understands also 'sendTo' commands.
 
 ## Changelog
 
+### 2.1.1 
+
+* bug corrections for States and Scenes
+
 ### 2.1.0
 
 * Added RM4 protocol for newest RM4 and RM3-Minis 

@@ -1,11 +1,11 @@
 {
     "common": {
         "name": "broadlink2",
-        "version": "2.1.0",
+        "version": "2.1.1",
         "title": "Broadlink W-Lan devices (RM+, SP+, A1, T1, S1C, LB+, ..)",
         "titleLang": "Broadlink2 (RM++, SP++, A1, T1, S1C, Beok313, Floureon, LB+) W-Lan Broadlink-protocol devices",
         "news": {
-            "2.1.0": {
+            "2.1.1": {
                 "en": "Added RM4+LB1 protocol and also check now device names according mac address or find additional ip addresses",
                 "de": "RM4+LB1-Protokolle hinzugefügt und auch automatische Erkennung von Geräten mittels mac-Adresse, oder in Konfig IP-Adresse hinzugefügt"
             },

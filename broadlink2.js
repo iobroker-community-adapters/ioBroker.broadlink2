@@ -560,12 +560,12 @@ async function createStatesDevice(device) {
 						native: {
 							host: device.host
 						},
-						custom: {
-							iobroker: {
-								enabled: true,
-								device: device.host
-							}
-						}
+						// custom: {
+						// 	broadlink: {
+						// 		enabled: true,
+						// 		device: device.host
+						// 	}
+						// }
 					}, val.state, true);
 				}
 				await updateValues(device, val, [{
