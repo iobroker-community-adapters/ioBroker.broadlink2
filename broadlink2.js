@@ -935,17 +935,26 @@ async function main() {
 	A.I(`Scanning additional IP's: ${additional.join(", ")}`);
 	A.If('Devices to add: %s', add, add.map(x => x.join('=')).join(','));
 	A.If('Devices to rename: %s', rename.map(x => x.join('=')).join(','));
+	for (let i of A.ownKeys(A.objects))
+		if (i.startsWith(A.ain))
+			adapterObjects.push(A.objects[i]);
+	const hosts = adapterObjects.filter(i => i._id.split(".").length === 3 && i.native && i.native.host).map(i => i.native);
+	A.If('%s has %d old devices!', A.name, hosts.length);
 
 	brlink = new Broadlink(add, aif);
 	brlink.on("deviceReady", device => {
 		// const typ = device.type.slice(0, 2);
 		device.typ = device.type.slice(0, 2);
 		const mac = device.host.mac;
-		if (macList[mac] && macList[mac].host.name == device.host.name)
+		if (macList[mac])
 			return A.D(`Device ${device.host.name} already found!`);
 		macList[mac] = device;
-		device.removeAllListeners('error');
-		device.on('error', A.W);
+		const oldDevv = hosts.find(i => i.host.mac == mac);
+		if (oldDevv) {
+			device.host = oldDevv.host;
+		}
+		// device.removeAllListeners('error');
+		// device.on('error', A.W);
 		//		A.If('what is name of %O', device);
 		let x = macObjects[device.host.mac] && macObjects[device.host.mac].name;
 		if (x && x != device.host.name)
@@ -965,19 +974,17 @@ async function main() {
 	});
 
 	A.unload = () => brlink.close.bind(brlink)(A.I('Close all connections...'));
-	for (const ob of Object.entries(A.objects)) {
-		const [key, obj] = ob;
-		if (obj.native && obj.native.host && obj._id.split(".").length == 3) {
-			const omac = obj.native.host.mac;
-			if (macObjects[omac]) {
-				const m1 = macObjects[omac];
-				const n1 = m1.host.name;
-				const n2 = obj.native.host.name;
-				if (n1 != n2)
-					A.W(`same broadlink mac in two different devices: '${omac}' in '${n1}' and '${n2}', will use first!`);
-			} else macObjects[omac] = obj.native;
-		}
+	for (const obj of hosts) {
+		const omac = obj.host.mac;
+		if (macObjects[omac]) {
+			const m1 = macObjects[omac];
+			const n1 = m1.host.name;
+			const n2 = obj.host.name;
+			if (n1 != n2)
+				A.W(`same broadlink mac in two different devices: '${omac}' in '${n1}' and '${n2}', will use first!`);
+		} else macObjects[omac] = obj;
 	}
+
 	A.If('macObjects: %O', A.ownKeysSorted(macObjects));
 	try {
 		A.D('Config IP-Address end to remove: ' + A.C.ip);
@@ -1071,10 +1078,6 @@ async function main() {
 			}
 			await createStatesDevice(dev);
 		}
-		for (let i of A.ownKeys(A.objects))
-			if (i.startsWith(A.ain))
-				adapterObjects.push(A.objects[i]);
-		A.If('%s has %d old states!', A.name, adapterObjects.length);
 		didFind = Object.keys(scanList);
 		for (const dev of A.obToArray(A.objects).filter(x => x._id.startsWith(A.ain) && x.native && x.native.host)) {
 			//		.then(() => A.seriesOf(A.obToArray(A.objects).filter(x => x._id.startsWith(A.ain) && x.native && x.native.host), dev => {
