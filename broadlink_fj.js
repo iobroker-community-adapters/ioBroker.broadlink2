@@ -307,7 +307,8 @@ class Device extends EventEmitter {
     }
 
     async _send(packet) {
-        const cmd = packet[this._cmdByte];
+        // const cmd = packet[this._cmdByte];
+        const cmd = packet[0];
         const timeout = this.timeout || 1000;
         const self = this;
         let count = 4;
@@ -371,7 +372,7 @@ class Device extends EventEmitter {
                     err = Device.errors[err];
                 }
                 const obj = {
-                    cmd,
+                    cmd: Number(payload[self._cmdByte]),
                     command: command,
                     cmdHex: Broadlink.toHex(command),
                     payload: payload,
@@ -904,10 +905,10 @@ class RM extends Device {
         //        A.I(`getVal on '${this.constructor.name}' called! on ${A.O(this.host)}`);
         const res = await this.checkOff(this.sendPacket, 0x6a, packet);
         this.checkError(res, 0x22);
-        //            A.I(`getVal on '${this.constructor.name}' returned ${A.O(res)}`);
         if (res && res.payload && !res.err) {
-            var off = this._request_header.length + offset;
-            let payload = res.payload;
+            const off = this._request_header.length + offset;
+            const payload = res.payload;
+            // A.I(`_readSensor '${this.constructor.name}':${type},${offset},${divider} returned ${A.O(res)}`);
             ret.here = true;
             // A.I(`Payload receifed ${payload.toString('hex')} on ${this}`);
             return payload[off] + payload[off + 1] / divider;
@@ -1054,6 +1055,13 @@ class RM4 extends RM {
         this._request_header = Buffer.from([0x04, 0x00]);
         this._code_sending_header = Buffer.from([0xd0, 0x00]);
     }
+    async getVal() {
+        const ret = this._val;
+        const res = await this._readSensor(0x24, 4, 10.0);
+        if (res !== undefined) ret.temperature = res;
+        return ret;
+    }
+
 }
 
 
@@ -1063,6 +1071,12 @@ class RM4P extends RMP {
         // this.type = "RM4P";
         this._request_header = Buffer.from([0x04, 0x00]);
         this._code_sending_header = Buffer.from([0xd0, 0x00]);
+    }
+    async getVal() {
+        const ret = this._val;
+        const res = await this._readSensor(0x24, 4, 10.0);
+        if (res !== undefined) ret.temperature = res;
+        return ret;
     }
     async getHumidity() {
         const ret = this._val;
