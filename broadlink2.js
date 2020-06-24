@@ -412,7 +412,7 @@ async function doPoll() {
 	}
 	firsttime = false;
 	if (na.length) {
-		A.D(`should discover/search ${na}`);
+		A.Df("should discover/search %O",na);
 		if (!discoverAll) await brlink.discover();
 		for (const d of na) await brlink.discover(d, 2000);
 	}

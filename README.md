@@ -114,7 +114,7 @@ The adapter understands also 'sendTo' commands.
 
 ## Changelog
 
-### 2.1.1 
+### 2.1.2
 
 * bug corrections for States and Scenes
 * Names are now taken from DNS end which mean you may rename devices in router and set their fixed IP address there

@@ -1,12 +1,12 @@
 {
     "common": {
         "name": "broadlink2",
-        "version": "2.1.1",
+        "version": "2.1.2",
         "title": "Broadlink W-Lan devices (RM+, SP+, A1, T1, S1C, LB+, ..)",
         "titleLang": "Broadlink2 (RM++, SP++, A1, T1, S1C, Beok313, Floureon, LB+) W-Lan Broadlink-protocol devices",
         "news": {
-            "2.1.1": {
-                "en": "Bug fix of RM4 temperature and Scenes/States, also new naming convention for found devices",
+            "2.1.2": {
+                "en": "Bug fix of RM4 temperature and Scenes/States, also new naming convention for found devices"
             },
             "2.1.0": {
                 "en": "Added RM4+LB1 protocol and also check now device names according mac address or find additional ip addresses",
