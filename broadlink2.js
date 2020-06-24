@@ -401,6 +401,7 @@ async function doPoll() {
 		//				A.Ir(x, 'Device %s will reject %O', device.name, x);
 		if (!x.here) {
 			A.Df('device %s not reachable, waiting for it again %O', device.name, x);
+			na.push(device.host);
 			if (device.lastResponse && device.lastResponse < Date.now() - 1000 * 60 * 5) {
 				if (device.close)
 					device.close();
@@ -950,8 +951,10 @@ async function main() {
 			return A.D(`Device ${device.host.name} already found!`);
 		macList[mac] = device;
 		const oldDevv = hosts.find(i => i.host.mac == mac);
-		if (oldDevv) {
+		if (oldDevv && device.host.name != oldDevv.host.name) {
+			device.host.oname = device.host.name;
 			device.host.name = oldDevv.host.name;
+			A.D(`Device '${device.host.oname}' renamed to '${device.host.name} because it was found in device list.`);
 		}
 		// device.removeAllListeners('error');
 		// device.on('error', A.W);
