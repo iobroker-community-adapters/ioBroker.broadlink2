@@ -944,14 +944,14 @@ async function main() {
 	brlink = new Broadlink(add, aif);
 	brlink.on("deviceReady", device => {
 		// const typ = device.type.slice(0, 2);
-		device.typ = device.type.slice(0, 2);
+		device.typ = device.type.slice(0, 2);	
 		const mac = device.host.mac;
 		if (macList[mac])
 			return A.D(`Device ${device.host.name} already found!`);
 		macList[mac] = device;
 		const oldDevv = hosts.find(i => i.host.mac == mac);
 		if (oldDevv) {
-			device.host = oldDevv.host;
+			device.host.name = oldDevv.host.name;
 		}
 		// device.removeAllListeners('error');
 		// device.on('error', A.W);
