@@ -114,6 +114,8 @@ The adapter understands also 'sendTo' commands.
 
 ## Changelog
 
+### 2.9.9 development Beta for V3.0.0!
+
 ### 2.1.2
 
 * bug corrections for States and Scenes
