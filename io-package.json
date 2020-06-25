@@ -1,10 +1,13 @@
 {
     "common": {
         "name": "broadlink2",
-        "version": "2.1.2",
+        "version": "2.9.9",
         "title": "Broadlink W-Lan devices (RM+, SP+, A1, T1, S1C, LB+, ..)",
         "titleLang": "Broadlink2 (RM++, SP++, A1, T1, S1C, Beok313, Floureon, LB+) W-Lan Broadlink-protocol devices",
         "news": {
+            "2.9.9": {
+                "en": "Development Beta for broadlin2 3.0.0"
+            },
             "2.1.2": {
                 "en": "Bug fix of RM4 temperature and Scenes/States, also new naming convention for found devices"
             },
@@ -23,22 +26,6 @@
             "1.9.1": {
                 "en": "Added RM Mini new support with",
                 "de": "Broadlink RM Mini unterstützung"
-            },
-            "1.9.0": {
-                "en": "Added SP3S support with power meter reading and changed config page to work with admin 3.0",
-                "de": "Broadlink SP3S Steckdosen mit Power-Meter funktionieren nun und Adapter-Konfig funktioniert in Admin-3"
-            },
-            "1.8.0": {
-                "en": "Added states which you can set with on/off or level values",
-                "de": "States können erzeugt werden welche ein/aus simulieren oder levels können"
-            },
-            "1.7.0": {
-                "en": "A1 devices fields changed to correct original mistakes in unit and type",
-                "de": "Verarbeitung von A1-Geräten geändert um Daten besser anzuzeigen."
-            },
-            "1.6.0": {
-                "en": "Adapter handles RM, SP and A1 devices and can rescan them, it should be able to learn RF codes frr RM-Plus devices",
-                "de": "Adapter verarbeitet RM-, SP- und A1-Geräte und sollte auch Funkbefehle von RM-Plus lernen können"
             },
             "1.1.1": {
                 "en": "Adapter handles RM, SP and A1 devices and can rescan them",

@@ -1,0 +1,142 @@
+<html>
+    <!-- Load ioBroker scripts and styles-->
+    <link rel="stylesheet" type="text/css" href="../../css/adapter.css" />
+    <link rel="stylesheet" type="text/css" href="../../lib/css/materialize.css">
+
+    <script type="text/javascript" src="../../lib/js/jquery-3.2.1.min.js"></script>
+    <script type="text/javascript" src="../../socket.io/socket.io.js"></script>
+
+    <script type="text/javascript" src="../../js/translate.js"></script>
+    <script type="text/javascript" src="../../lib/js/materialize.js"></script>
+    <script type="text/javascript" src="../../js/adapter-settings.js"></script>
+
+    <!-- Load our own files -->
+    <link rel="stylesheet" type="text/css" href="style.css" />
+    <script type="text/javascript" src="words.js"></script>
+
+<script type="text/javascript">
+
+	// the function loadSettings has to exist ...
+	function load(settings, onChange) {
+		if (!settings) return;
+
+		$('.value').each(function () {
+			var key = $(this).attr('id');
+			var $key = $('#' + key + '.value');
+			if ($key.attr('type') === 'checkbox') {
+				$key.prop('checked', settings[key]).change(function () {
+					onChange();
+				});
+			} else {
+				$key.val(settings[key]).change(function () {
+					onChange();
+				}).keyup(function () {
+					onChange();
+				});
+			}
+		});
+
+		onChange(false);
+		values2table('scenes', settings.scenes, onChange);
+		values2table('switches', settings.switches, onChange);
+		//		}
+		if (M) M.updateTextFields();
+	}
+
+
+	function save(callback) {
+		// example: select elements with class=value and build settings object
+		var obj = {};
+		$('.value').each(function () {
+			var $this = $(this);
+			if ($this.attr('type') === 'checkbox') {
+				obj[$this.attr('id')] = $this.prop('checked');
+			} else {
+				obj[$this.attr('id')] = $this.val();
+			}
+		});
+		obj.scenes =  table2values('scenes');
+		obj.switches =  table2values('switches');
+		callback(obj);
+	}
+</script>
+
+<div class="m adapter-container">
+	<div class="row">
+		<div class="col s5">
+			<p class="flow-text translate">Broadlink2 adapter settings</p>
+		</div>
+		<div class="input-field col s1">
+			<img src="broadlink2.png"  class="logo"/>
+		</div>
+	</div>
+	<div class="row" style="height: 7%">
+		<div class="col s4">
+			<label class="translate" for="poll">Poll switches every x seconds (0 = no polling)</labbel>
+				<input class="value" type="number" id="poll"  min="10" max="3600" data-crypt="0" size="10" class="value number" />
+		</div>
+		<div class="col s4">
+			<label class="translate" for="new">new</label>
+			<input class="value" id="new" type="text" data-crypt="0" size="600"/>
+		</div>
+		<div class="col s4">
+			<label class="translate" for="interface">Use IP interface</label>
+			<input class="value" id="interface" type="text" data-crypt="0" size="60"/>
+		</div>
+	</div>
+	<div class="row" style="height: 7%">
+		<div class="col s6">
+			<label class="translate" for="rename">Rename Device</label>
+			<input class="value" id="rename" type="text" data-crypt="0" size="120" />
+		</div>
+		<div class="col s6">
+			<label class="translate" for="additional">Additional IP's to scan</label>
+			<input class="value" id="additional" type="text" data-crypt="0" size="120" />
+		</div>
+	</div>
+	<div class="row" style="height: 5%">
+		<div class="col s6">
+			<span class="translate">SceneDescription</span>
+		</div>
+		<div class="col s6">
+			<span class="translate">On save adapter restarts with new config immediately</span>
+		</div>
+	</div>
+	<div id="scenes" class="row" style="width: 100%; height: 25%">
+		<a title="Add Scene" class="btn-floating waves-effect waves-light teal table-button-add left">
+			<i class="material-icons">add</i>
+		</a>&nbsp;
+		<span class="translate">Scene setup</span>
+		<div style="width: 100%; height: calc(100% - 30px); overflow: auto;">
+			<table class="table-values highlight bordered" style="width: 100%;">
+				<thead>
+					<tr>
+						<th data-name="name" style="width: 15%" class="translate">scname</th>
+						<th data-name="scene" style="width: 80%" class="translate">scene</th>
+						<th data-buttons="delete" style="width: 5%"></th>
+					</tr>
+				</thead>
+			</table>
+		</div>
+	</div>
+	<div id="switches" class="row" style="width: 100%; height: 25%">
+		<a title="Add Switch" class="btn-floating waves-effect waves-light teal table-button-add left">
+			<i class="material-icons">add</i>
+		</a>&nbsp;
+		<span class="translate">Switch setup</span>
+		<div style="width: 100%; height: calc(100% - 60px); overflow: auto;">
+			<table class="table-values highlight bordered" style="width: 100%;">
+				<thead>
+					<tr>
+						<th data-name="name" style="width: 15%" class="translate">stname</th>
+						<th data-name="on" style="width: 40%" class="translate">on</th>
+						<th data-name="off" style="width: 40%" class="translate">off</th>
+						<th data-buttons="delete" style="width: 5%"></th>
+					</tr>
+				</thead>
+			</table>
+		</div>
+	</div>
+</div>
+
+</html>
