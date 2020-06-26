@@ -971,7 +971,7 @@ class RM extends Device {
     async sendVal(data) {
         const self = this;
         const packet = Buffer.concat([this._code_sending_header, Buffer.from([0x02, 0x00, 0x00, 0x00]), data]);
-        const ret = await self.checkOff(self.sendPacket, 0x6a, packet, 1000); //.then(x => A.I(`setVal/sendData for ${this.host.name} returned ${A.O(x)}`, x));
+        const ret = await self.checkOff(self.sendPacket, 0x6a, packet, -1000); //.then(x => A.I(`setVal/sendData for ${this.host.name} returned ${A.O(x)}`, x));
         return this.checkError(ret, 0x22);
     }
 
