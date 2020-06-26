@@ -74,6 +74,7 @@ Just create an object (state, type button) with value where you prepend "CODE_" 
 * If you set the state the to on or off onlöy the first on/off command will be sent
 * If only on commands are present the switch will send the respective command on a numeric value-1, with means it will send the first command if it receives an `0`, the second if it receives a `1`. In this way you can simulate multiple states within one state.
 * If you use only '+' as off command then you need to provide 10 on commands separated by ',' which reflect the numbers `0-9` on the remote control. You can send the sstate then a number, like `123`  (max is 9999) and it would send `1`, `2` and `3` with 1/3rd of a second delay between them! In this way you sen set for example the channel on TV to '33' by just write 'TVchannel=33' if the state name is TVchannel.
+* If you use `-number`as off command like `-17` then you can store a number to the state where 17 would be subtracted and the the (x-17)th item in the on state would be sent. This way you can setup different fixed temperatures for devices which have different codes for each temperature.
 
 ## Use send messages to adapter
 
