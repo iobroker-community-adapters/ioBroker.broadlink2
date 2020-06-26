@@ -635,6 +635,9 @@ async function createStatesDevice(device) {
 					role: "value",
 					write: true,
 					type: typeof "",
+					native: {
+						host: device.host
+					}
 				}, "", true);
 				await A.makeState({
 					id: x + learnName + learnIr,
