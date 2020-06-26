@@ -220,6 +220,8 @@ A.stateChange = async function (id, state) {
 					await device.update(temp);
 				break;
 			case 'LB':
+				if (device.name == id.split('.').slice(-1)[0])
+					await checkLB(device, state, id+".pwr");
 				await checkLB(device, state, id);
 				// temp = await device.getAll();
 				// if (temp && temp.here && device.update)
@@ -664,6 +666,12 @@ async function createStatesDevice(device) {
 			device.update = async (val) => {
 				await updateValues(device, val, [{
 					name: 'pwr',
+					type: typeof true,
+					write: true,
+					role: "switch.light",
+				}, {
+					name: 'pwr',
+					id: "",
 					type: typeof true,
 					write: true,
 					role: "switch.light",
