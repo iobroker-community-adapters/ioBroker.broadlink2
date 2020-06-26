@@ -221,7 +221,7 @@ A.stateChange = async function (id, state) {
 				break;
 			case 'LB':
 				if (device.name == id.split('.').slice(-1)[0])
-					await checkLB(device, state, id+".pwr");
+					await checkLB(device, state, id + ".pwr");
 				await checkLB(device, state, id);
 				// temp = await device.getAll();
 				// if (temp && temp.here && device.update)
@@ -414,7 +414,7 @@ async function doPoll() {
 	}
 	firsttime = false;
 	if (na.length) {
-		A.Df("should discover/search %O",na);
+		A.Df("should discover/search %O", na);
 		if (!discoverAll) await brlink.discover();
 		for (const d of na) await brlink.discover(d, 2000);
 	}
@@ -444,16 +444,19 @@ function setState(name) {
 async function sendState(state, val) {
 	var send = A.T(val, 0) && state.on[val];
 	// A.If("SendState %O=%O, %O", state, val, send);
-	if (A.T(val, true))
+	if (A.T(val, true) && state.off)
 		send = val ? state.on[0] : state.off[0];
 	// A.If("SendState %O=%O, %s", state, val, send);
-	if (state.mult && val > 9) {
-		const vals = val.toString().split('').map(x => parseInt(x));
-		for (const num of vals) {
-			await sendState(state, num);
-			await A.wait(300);
+	if (state.mult) {
+		if (state.mult < 0) send = state.on[val + state.mult];
+		else if (val > 9) {
+			const vals = val.toString().split('').map(x => parseInt(x));
+			for (const num of vals) {
+				await sendState(state, num);
+				await A.wait(300);
+			}
+			return true;
 		}
-		return true;
 		// return A.seriesOf(vals, num => sendState(state, num), 300);
 	}
 	try {
@@ -956,7 +959,7 @@ async function main() {
 	brlink = new Broadlink(add, aif);
 	brlink.on("deviceReady", device => {
 		// const typ = device.type.slice(0, 2);
-		device.typ = device.type.slice(0, 2);	
+		device.typ = device.type.slice(0, 2);
 		const mac = device.host.mac;
 		if (macList[mac])
 			return A.D(`Device ${device.host.name} already found!`);
@@ -1026,10 +1029,11 @@ async function main() {
 			}
 			if (!off || off === '')
 				off = null;
-			const mult = (off === '+');
+			const mult = (off === '+') ? 1 : parseInt(off);
 			if (mult)
 				off = null;
 			on = A.trim(A.split(on, ','));
+			let def = off ? false : 0;
 			const option = {
 				id: statesName + '.' + name,
 				name: name,
@@ -1038,8 +1042,8 @@ async function main() {
 				write: true,
 			};
 			if (!off) {
-				option.min = 0;
-				option.max = mult ? 9999 : on.length - 1;
+				def = option.min = mult < 0 ? -mult : 0;
+				option.max = mult > 0 ? 9999 : on.length - 1 + (mult < 0 ? -mult : 0);
 				if (mult)
 					option.states = null;
 				else
@@ -1049,6 +1053,7 @@ async function main() {
 				state: {
 					id: option.id,
 					name: option.name,
+					def,
 					on: on,
 					off: off ? A.trim(A.split(off, ',')) : null,
 					mult: mult
@@ -1059,7 +1064,7 @@ async function main() {
 				continue;
 			}
 			states[option.name] = option.native.state;
-			await A.makeState(option, false, true);
+			await A.makeState(option, def, true);
 			await A.wait(1);
 		}
 		for (const item of Object.entries(scanList)) {
