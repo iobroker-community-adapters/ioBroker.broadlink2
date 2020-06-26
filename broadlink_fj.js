@@ -14,10 +14,11 @@ const EventEmitter = require('events'),
     os = require('os'),
     crypto = require('crypto'),
     A = require('./fjadapter');
-const {
-    setForeignObject
-} = require('./fjadapter');
-const { isArray } = require('util');
+// const {
+//     setForeignObject
+// } = require('./fjadapter');
+// const { isArray } = require('util');
+// const { Console } = require('console');
 
 
 class Udp extends EventEmitter {
@@ -226,7 +227,7 @@ class Device extends EventEmitter {
     }
 
     toString() {
-        return `${this.type}, ${this.name}, ${this.host.mac}, ${this.host.address}`;
+        return `${this.type}, ${this.name}, ${this.host.mac}, ${this.host.address}${this.host.oname	? ", " + this.host.oname : ""}`;
     }
 
     close() {
@@ -312,16 +313,19 @@ class Device extends EventEmitter {
         const cmd = packet[0];
         const timeout = this.timeout || 1000;
         const self = this;
+        self.sent = new A.HrTime();
         let count = 4;
-        if (!this.bound) {
-            await this._ready.then(() => true, () => false);
-            if (!this.bound) {
+        while (!this.bound && count--) {
+            await A.wait(2);
+            if (this._ready) await this._ready.then(() => true, () => false);
+            if (!this.bound && !count) {
                 // debugger;
                 const msg = `socket not created/bound/closed ${this}, ${this.udp}!`;
                 A.W(msg);
                 throw new Error(msg);
             }
         }
+        count = 4;
         while (self.tout) {
             if (!count--) {
                 const msg = `${this} still waiting for previous command ${this.tout}!`;
@@ -340,19 +344,21 @@ class Device extends EventEmitter {
                 }
                 self.tout = null;
                 self.udp.removeAllListeners('message');
-                A.N(rej, what);
+                rej(what);
             }
 
             function resume(what) {
+                self.udp.removeAllListeners('message');
+                res(what);
+            }
+
+            self.udp.once('message', async response => {
                 if (self.tout) {
                     clearTimeout(self.tout);
                 }
                 self.tout = null;
-                self.udp.removeAllListeners('message');
-                A.N(res, what);
-            }
-
-            self.udp.once('message', response => {
+                await A.nextTick();
+                // A.D(`Send took ${self.sent.text}s for ${self} `);
                 self.lastResponse = Date.now();
                 const enc_payload = Buffer.alloc(response.length - 0x38, 0);
                 response.copy(enc_payload, 0, 0x38);
@@ -542,13 +548,15 @@ class Device extends EventEmitter {
                 err = "SendPacketSingleErr " + A.O(e);
                 return null;
             });
-        for (let n = 0; n < 3; n++) {
+        let n = 3;
+        while (n--) {
             // eslint-disable-next-line no-await-in-loop
             // eslint-disable-next-line no-loop-func
             let res = null;
             try {
                 res = await this._send(packet, command);
             } catch (e) {
+                A.Df("send Error on device %s: %O", this.toString(), e);
                 if (e && e.err) {
                     const err = e.err;
                     if (Device.errors[err] || Object.entries(Device.errors).filter(i => i[1] == err).length) {
@@ -562,7 +570,7 @@ class Device extends EventEmitter {
             if (res) err = res.err;
             // if (n == 2)
             //     await this.udp.renew(3);
-            await A.wait(20 + 20 * n);
+            await A.wait(20 + 100 * (3-n));
         }
         A.D(`sendPacket error: command ${'0x'+command.toString(16)}/${'0x'+cmd.toString(16)} error after 3 trials!: ${err} for ${that}`);
         // if (this.errorcount>10) await this.auth().catch(x => A.W(`Re-Auth failed with ${x} for ${this}`));
@@ -938,7 +946,7 @@ class RM extends Device {
 
     async learn(msg) {
         const self = this;
-        if (msg) msg(`Start learning with ${this.host.name}: Please press button on remote in next 30 seconds!`)
+        if (msg) msg(`Start learning with ${this.host.name}: Please press button on remote in next 30 seconds!`);
         this.learning = true;
         //        A.If('Should learn on %s', this.host.name);
         const res = {};
@@ -953,7 +961,7 @@ class RM extends Device {
                 res.data = data;
                 break;
             }
-            if (msg) msg(`Please press button on remote in next ${i-1} seconds!`)
+            if (msg) msg(`Please press button on remote in next ${i-1} seconds!`);
         }
         if (msg) msg(res.data ? `Learning funished and packet received!` : `Timeout: No data received when learning!`);
         self.learning = false;
@@ -1006,7 +1014,7 @@ class RMP extends RM {
 
     async learnRf(msg) {
         // const self = this;
-        if (msg) msg(`Start RF-sweep with ${this.host.name}: Please press button on RF remote until frequency found!`)
+        if (msg) msg(`Start RF-sweep with ${this.host.name}: Please press button on RF remote until frequency found!`);
         //        A.Df('Start learning with %s on %s', rf, self.host.name);
         this.learning = true;
         const l = {};
@@ -1018,7 +1026,7 @@ class RMP extends RM {
             f = await this.checkRFData(false);
             //            const r = await self.checkData();
             if (f) break;
-            if (msg) msg(`Continue to press button on RF remote for maximal ${i} seconds!`)
+            if (msg) msg(`Continue to press button on RF remote for maximal ${i} seconds!`);
         }
         if (!f) {
             if (msg) msg(`Could not find frequency, will stop learning!`);
@@ -1123,7 +1131,7 @@ class T1 extends Device {
 
         //        if (!data)
         //            data = Buffer.alloc(4, 0);
-        //        else 
+        //        else
         if (Array.isArray(data))
             data = Buffer.from(data);
         //        A.If('sendT1packet: from id:%O key:%O = %O', this.id,this.key, data);

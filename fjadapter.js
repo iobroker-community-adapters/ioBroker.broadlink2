@@ -145,14 +145,14 @@ const objects = {},
 
 
 let adapter, aoptions, aname, amain, timer,
-	_onUnload, _objChange, _stateChange, _onStop, _messages,
+	_onUnload, _objChange, _stateChange, _onStop,
 	stopping = false,
 	inDebug = false,
 	curDebug = 1,
 	// allStates = null,
 	// stateChange = null,
 	systemconf = null;
-let messages = (mes) => Promise.resolve(MyAdapter.W(`Message ${this.O(mes)} received and no handler defined!`));
+let _messages = (mes) => Promise.resolve(MyAdapter.W(`Message ${this.O(mes)} received and no handler defined!`));
 
 function startAdapter(options) {
 	if (!options)
@@ -350,6 +350,7 @@ class MyAdapter {
 
 	}
 
+	// eslint-disable-next-line complexity
 	static async initAdapter() {
 		try {
 			this.Df("Adapter %s starting.", this.ains);
