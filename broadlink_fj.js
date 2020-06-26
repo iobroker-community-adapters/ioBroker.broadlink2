@@ -570,7 +570,7 @@ class Device extends EventEmitter {
             if (res) err = res.err;
             // if (n == 2)
             //     await this.udp.renew(3);
-            await A.wait(20 + 100 * (3-n));
+            await A.wait(20 + 150 * (3-n));
         }
         A.D(`sendPacket error: command ${'0x'+command.toString(16)}/${'0x'+cmd.toString(16)} error after 3 trials!: ${err} for ${that}`);
         // if (this.errorcount>10) await this.auth().catch(x => A.W(`Re-Auth failed with ${x} for ${this}`));

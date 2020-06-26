@@ -190,7 +190,7 @@ A.stateChange = async function (id, state) {
 			return true;
 		}
 		let device = scanList[id0];
-		if (!device) return A.W(`stateChange error no device found: ${id} ${A.O(state)}`);
+		if (!device) return A.W(`stateChange error no device found: ${id0} ${A.O(state)}`);
 		switch (device.typ) {
 			case 'SP':
 				await device.setVal(A.parseLogic(state.val));
