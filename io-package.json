@@ -39,11 +39,11 @@
         "license": "MIT",
         "platform": "Javascript/Node.js",
         "localLink": "#tab-broadlink2",
-        "noConfig": true,
+        "noConfig": false,
         "adminTab": {
             "singleton": true,
             "name": "Broadlink3",
-            "fa-icon": "memory"
+            "fa-icon": "remote"
         },
         "materialize": true,
         "mode": "daemon",
