@@ -560,7 +560,7 @@ class Device extends EventEmitter {
                 if (e && e.err) {
                     const err = e.err;
                     if (Device.errors[err] || Object.entries(Device.errors).filter(i => i[1] == err).length) {
-                        A.I(`Unrecoverable Send packet error ${err} on ${that}`);
+                        A.I(`Unrecoverable Send packet error ${A.O(e)} on ${that}`);
                         return null;
                     }
                 }
