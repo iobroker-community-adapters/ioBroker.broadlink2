@@ -211,8 +211,13 @@ class Device extends EventEmitter {
         if (!res) return "No result delivered! No err check possible!";
         else {
             const pl = res.payload;
-            if (pl) {
-                const e = pl[index] + pl[index + 1] << 8;
+            if (pl && pl.length> index+1) {
+                let e = pl[index] + pl[index + 1] << 8;
+                if (e == 0xfffc) {
+                    A.I(`This.device had  0xfffC: The device storage is full!`);
+                    if (this.host.id == 0x5f36)
+                        e = null;
+                }
                 if (e == 0xfff9) {
                     A.I(`This.device had  0xfff9: please re-auth!`);
                     this.reAuth = Date.now() - msMinutes();
@@ -381,6 +386,7 @@ class Device extends EventEmitter {
                 const obj = {
                     cmd: Number(payload[self._cmdByte]),
                     command: command,
+                    response: response.slice(0x22),
                     cmdHex: Broadlink.toHex(command),
                     payload: payload,
                 };
@@ -570,7 +576,7 @@ class Device extends EventEmitter {
             if (res) err = res.err;
             // if (n == 2)
             //     await this.udp.renew(3);
-            await A.wait(20 + 150 * (3-n));
+            await A.wait(20 + 150 * (3 - n));
         }
         A.D(`sendPacket error: command ${'0x'+command.toString(16)}/${'0x'+cmd.toString(16)} error after 3 trials!: ${err} for ${that}`);
         // if (this.errorcount>10) await this.auth().catch(x => A.W(`Re-Auth failed with ${x} for ${this}`));
@@ -1712,21 +1718,16 @@ class Broadlink extends EventEmitter {
             //            A.If('new device found: host=%O',host);
             var dev = self.genDevice(host.devtype, host, mac);
             self._devices[mac] = dev;
-            dev.once("deviceReady", function () {
-                return A.c2p(dns.reverse)(dev.host.address).catch(() => dev.host.name)
-                    //                    .then(x => A.Ir(x, 'got back %O from %O', x, dev.host))
-                    .then(x => {
-                        if (Array.isArray(x))
-                            x = x.slice(-1)[0].split('.')[0];
-                        // A.I(`Got the following for ${dev.host.address}: ${A.O(x)}`);
-                        return x;
-                    })
-                    .then(x => Array.isArray(x) ? x[0].toString().trim().split('.')[0] : x.toString().trim(), () => dev.host.name)
-                    .then(x => {
-                        dev.host.name = dev.host.type.slice(0, 2).toUpperCase() + ':' + x;
-                        dev.name = dev.host.name;
-                        self._devices[dev.name] = dev;
-                    }).then(() => self.emit("deviceReady", dev));
+            dev.once("deviceReady", async function () {
+                let x = await A.c2p(dns.reverse)(dev.host.address).catch(() => dev.host.name);
+                if (Array.isArray(x))
+                    x = x.slice(-1)[0].split('.')[0];
+                // A.I(`Got the following for ${dev.host.address}: ${A.O(x)}`);
+                x = Array.isArray(x) ? x[0].toString().trim().split('.')[0] : x.toString().trim();
+                dev.host.name = dev.host.type.slice(0, 2).toUpperCase() + ':' + x;
+                dev.name = dev.host.name;
+                self._devices[dev.name] = dev;
+                self.emit("deviceReady", dev);
             });
             A.retry(3, dev.auth.bind(dev), 300).catch(err => A.W(`Failed to authenticate device ${dev} with err ${err}`));
         }
