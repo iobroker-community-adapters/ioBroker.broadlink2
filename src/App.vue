@@ -1,8 +1,21 @@
 <template>
   <v-app>
-    <v-app-bar app color="primary" dark dense elevate-on-scroll scroll-target="#MyAppContent">
+    <v-app-bar
+      app
+      color="primary"
+      dark
+      dense
+      elevate-on-scroll
+      scroll-target="#MyAppContent"
+    >
       <div class="d-flex align-center">
-        <v-img :alt="iobrokerAdapter" class="shrink mr-2" contain :src="adapterIcon" width="35" />
+        <v-img
+          :alt="iobrokerAdapter"
+          class="shrink mr-2"
+          contain
+          :src="adapterIcon"
+          width="35"
+        />
         <fjB
           :href="iobrokerReadme"
           target="_blank"

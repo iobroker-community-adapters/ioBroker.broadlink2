@@ -158,14 +158,13 @@ let adapter,
   _objChange,
   _stateChange,
   _onStop,
-  _messages,
   stopping = false,
   inDebug = false,
   curDebug = 1,
   // allStates = null,
   // stateChange = null,
   systemconf = null;
-let messages = (mes) =>
+let _messages = (mes) =>
   Promise.resolve(
     MyAdapter.W(`Message ${this.O(mes)} received and no handler defined!`)
   );
@@ -373,6 +372,7 @@ class MyAdapter {
     );
   }
 
+  // eslint-disable-next-line complexity
   static async initAdapter() {
     try {
       this.Df("Adapter %s starting.", this.ains);

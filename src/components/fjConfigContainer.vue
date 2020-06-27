@@ -43,15 +43,15 @@ export default {
         this.$set(this, "items", []);
         // if (newV)
         //   for (const i in newV) {
-            // console.log(
-            //   "item for ",
-            //   this.configPage.label,
-            //   newV[i].type,
-            //   newV[i].label
-            // );
-          //   this.items.splice(i, 1, newV[i]);
-          // }
-        this.$set(this,"items", newV);
+        // console.log(
+        //   "item for ",
+        //   this.configPage.label,
+        //   newV[i].type,
+        //   newV[i].label
+        // );
+        //   this.items.splice(i, 1, newV[i]);
+        // }
+        this.$set(this, "items", newV);
         return this.wait(2).then(() => this.$forceUpdate());
       });
     },
