@@ -947,9 +947,9 @@ async function main() {
 			A.C.additional = [];
 	} else A.C.additional = [];
 	A.C.additional.map(i => additional.push(i));
-	A.I(`Scanning additional IP's: ${additional.join(", ")}`);
-	A.If('Devices to add: %s', add, add.map(x => x.join('=')).join(','));
-	A.If('Devices to rename: %s', rename.map(x => x.join('=')).join(','));
+	A.If("Scanning additional IP's: %s", additional.join(", "));
+	A.If('Devices to add: %s', add.map(x => x.join('=')).join(', '));
+	A.If('Devices to rename: %s', rename.map(x => x.join('=')).join(', '));
 	for (let i of A.ownKeys(A.objects))
 		if (i.startsWith(A.ain))
 			adapterObjects.push(A.objects[i]);

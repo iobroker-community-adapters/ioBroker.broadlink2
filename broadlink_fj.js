@@ -1621,8 +1621,8 @@ class Broadlink extends EventEmitter {
                 let cl = k[1].toUpperCase();
                 let dt = Number(k[0]);
                 for (const c of Object.keys(this._devlist))
-                    if (c[dt])
-                        delete c[dt];
+                    if (this._devlist[c][dt])
+                        delete this._devlist[c][dt];
                 if (this._devlist[cl])
                     this._devlist[cl][dt] = cl.toLowerCase();
             }
