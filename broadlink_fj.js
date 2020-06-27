@@ -207,9 +207,11 @@ class Device extends EventEmitter {
 
     checkError(res, index) {
         let err = "";
+        return err;
         // if (!res) err = "No result delivered! No err check possible!";
-        if (!res) return "No result delivered! No err check possible!";
+/*         if (!res) return "No result delivered! No err check possible!";
         else {
+            A.If("Check res: %O", res);
             const pl = res.payload;
             if (pl && pl.length> index+1) {
                 let e = pl[index] + pl[index + 1] << 8;
@@ -229,7 +231,7 @@ class Device extends EventEmitter {
             res.err = err;
         if (err) A.D(`Error '${err}' in device.checkError for ${this}`);
         return err;
-    }
+ */    }
 
     toString() {
         return `${this.type}, ${this.name}, ${this.host.mac}, ${this.host.address}${this.host.oname	? ", " + this.host.oname : ""}`;
@@ -386,6 +388,7 @@ class Device extends EventEmitter {
                 const obj = {
                     cmd: Number(payload[self._cmdByte]),
                     command: command,
+                    err,
                     response: response.slice(0x22),
                     cmdHex: Broadlink.toHex(command),
                     payload: payload,
