@@ -218,11 +218,11 @@ class Device extends EventEmitter {
             if (e) {
                 err = (Device.errors[e]) ? Device.errors[e] : `Unknown error ${e} in response!`;
                 A.Df("Dev %s returned err `%s` Check respinse from 0x22: %s", this.toString(), err, res.response.slice(0x22).toString('hex'));
-                if (e == 0xfffc) {
-                    // A.I(`This.device had  0xfffC: The device storage error!`);
-                    if (this.host.id == 0x5f36)
-                        err = e = null;
-                }
+                // if (e == 0xfffc) {
+                //     // A.I(`This.device had  0xfffC: The device storage error!`);
+                //     if (this.host.id == 0x5f36)
+                //         err = e = null;
+                // }
                 if (e == 0xfff9) {
                     // A.I(`This.device had  0xfff9: please re-auth!`);
                     this.reAuth = Date.now() - msMinutes();
