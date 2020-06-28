@@ -207,31 +207,33 @@ class Device extends EventEmitter {
 
     checkError(res, index) {
         let err = "";
-        return err;
         // if (!res) err = "No result delivered! No err check possible!";
-/*         if (!res) return "No result delivered! No err check possible!";
-        else {
-            A.If("Check res: %O", res);
-            const pl = res.payload;
-            if (pl && pl.length> index+1) {
-                let e = pl[index] + pl[index + 1] << 8;
+        if (!res || !res.response) {
+            return null;
+        }
+        // return "No result delivered! No err check possible!";
+        const pl = res.response;
+        if (pl && pl.length > index + 1) {
+            let e = pl[index] + pl[index + 1] << 8;
+            if (e) {
+                err = (Device.errors[e]) ? Device.errors[e] : `Unknown error ${e} in response!`;
+                A.Df("Dev %s returned err `%s` Check respinse from 0x22: %s", this.toString(), err, res.response.slice(0x22).toString('hex'));
                 if (e == 0xfffc) {
-                    A.I(`This.device had  0xfffC: The device storage is full!`);
+                    // A.I(`This.device had  0xfffC: The device storage error!`);
                     if (this.host.id == 0x5f36)
-                        e = null;
+                        err = e = null;
                 }
                 if (e == 0xfff9) {
-                    A.I(`This.device had  0xfff9: please re-auth!`);
+                    // A.I(`This.device had  0xfff9: please re-auth!`);
                     this.reAuth = Date.now() - msMinutes();
                 }
-                if (e) err = (Device.errors[e]) ? Device.errors[e] : `Unknown error ${e} in response!`;
             }
         }
         if (!!err && res)
             res.err = err;
         if (err) A.D(`Error '${err}' in device.checkError for ${this}`);
         return err;
- */    }
+    }
 
     toString() {
         return `${this.type}, ${this.name}, ${this.host.mac}, ${this.host.address}${this.host.oname	? ", " + this.host.oname : ""}`;
@@ -380,16 +382,16 @@ class Device extends EventEmitter {
 
                 const command = response[0x26];
                 let err = response[0x22] | (response[0x23] << 8);
-                if (err == 0xfff9) this.reAuth = Date.now() - msMinutes();
+                // if (err == 0xfff9) this.reAuth = Date.now() - msMinutes();
 
-                if (Device.errors[err]) {
-                    err = Device.errors[err];
-                }
+                // if (Device.errors[err]) {
+                //     err = Device.errors[err];
+                // }
                 const obj = {
                     cmd: Number(payload[self._cmdByte]),
                     command: command,
                     err,
-                    response: response.slice(0x22),
+                    response,
                     cmdHex: Broadlink.toHex(command),
                     payload: payload,
                 };
