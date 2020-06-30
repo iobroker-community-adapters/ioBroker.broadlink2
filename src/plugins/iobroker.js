@@ -125,6 +125,9 @@ const iobroker = {
       //   this.$store.commit("iobrokerConfigOrig", value);
       // },
     },
+    iobrokerIsTab() {
+      return this.$store.state.ioBrokerIsTab;
+    },
     iobrokerHost: {
       get() {
         return this.$store.state.iobrokerHost;
@@ -289,7 +292,9 @@ const iobroker = {
       });
     },
     async iobrokerAdapterCommon(newv) {
-      const readme = await this.setAdapterReadme({ common: newv });
+      const readme = await this.setAdapterReadme({
+        common: newv,
+      });
     },
   },
   async created() {
@@ -329,7 +334,11 @@ const iobroker = {
   },
 
   methods: {
-    ...mapActions(["loadConfigFile", "setAdapterReadme"]),
+    ...mapActions([
+      "loadConfigFile",
+      "setAdapterReadme",
+      "loadBroadlinkConfig",
+    ]),
     translateConfig(conf) {
       const that = this;
 

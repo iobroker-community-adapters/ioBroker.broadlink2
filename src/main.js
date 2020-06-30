@@ -47,10 +47,6 @@ Vue.directive("t", {
 });
 */
 
-console.log("env", process.env);
-console.log("search", window.location.search);
-console.log("pathname", window.location.pathname);
-
 
 
 import VueClipboard from "vue-clipboard2";

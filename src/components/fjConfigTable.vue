@@ -35,7 +35,7 @@
             :key="column.value"
             style="padding: 0px 1px 0px 1px;"
           >
-            <span v-if="column.value == '-'" class="d-flex justify-end">
+            <span v-if="column.value == '-'" class="d-flex justify-center">
               <fjB
                 v-if="disableSort"
                 :disabled="table.indexOf(item) < 1"
@@ -151,11 +151,14 @@ export default {
       return [
         ...this.columns,
         {
-          text: this.$t("Edit"),
+          text: "\u270D",
           value: "-",
           align: "center",
+          filterable: false,
+          // justify: "center",
+          // class: "text-center",
           sortable: false,
-          width: this.disableSort ? "8%" : "4%",
+          width: this.disableSort ? "5%" : "2%",
         },
       ];
     },

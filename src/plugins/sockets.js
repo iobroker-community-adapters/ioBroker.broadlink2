@@ -19,10 +19,8 @@ const options = {
 //const server = "ws://localhost:8181/";
 //const server = "ws://buster10.fritz.box:8081/";
 //const server = "/";
-const socket = SocketIO(
-  server,
-  options
-); /* 
+const socket = SocketIO(server, options);
+/* 
     // 1. add global method or property
   Vue.myGlobalMethod = function () {
     // some logic ...
@@ -125,11 +123,7 @@ Vue.prototype.$socketEmit = async function (event, ...data) {
   }
   return new Promise((res, rej) => {
     let tout = setTimeout(
-      () =>
-        rej(
-          (tout = null),
-          new Error(`socketEmit - timeout for ${event}: ${data}`)
-        ),
+      () => rej(new Error(`socketEmit - timeout for ${event}: ${data}`)),
       timeout
     );
     // debugger;
@@ -151,11 +145,7 @@ Vue.prototype.$socketSendTo = async function (event, ...data) {
   }
   return new Promise((res, rej) => {
     let tout = setTimeout(
-      () =>
-        rej(
-          (tout = null),
-          new Error(`socketSendTo - timeout for ${event}: ${data}`)
-        ),
+      () => rej(new Error(`socketSendTo - timeout for ${event}: ${data}`)),
       timeout
     );
     //          console.log("socketSendTo:", event, ...data);

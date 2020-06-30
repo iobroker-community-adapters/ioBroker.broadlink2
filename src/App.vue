@@ -32,7 +32,11 @@
         />
       </div>
       <v-tabs centered v-model="page">
-        <v-tab v-for="item in configTranslated" v-bind:key="item.label">
+        <v-tab
+          v-for="item in configTranslated"
+          v-bind:key="item.label"
+          :disabled="item.disabled && !devMode"
+        >
           <v-icon v-if="item.icon" left small>{{ item.icon }}</v-icon>
           <span>{{ item.label }}</span>
         </v-tab>
@@ -101,6 +105,7 @@
 
 // import helper from "./plugins/helper";
 import ioBroker from "./plugins/iobroker";
+import broadlink from "./plugins/broadlink";
 
 // let what = null;
 // console.log(process.env);
@@ -116,7 +121,7 @@ function fix(number, digits, min, max) {
 
 export default {
   name: "App",
-  mixins: [ioBroker],
+  mixins: [ioBroker, broadlink],
 
   data: () => {
     return {
