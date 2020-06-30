@@ -38,7 +38,6 @@
         },
         "license": "MIT",
         "platform": "Javascript/Node.js",
-        "noConfig": false,
         "materialize": true,
         "mode": "daemon",
         "icon": "broadlink2.png",

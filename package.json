@@ -90,7 +90,7 @@
     "test": "node node_modules/mocha/bin/mocha --exit",
     "serve": "vue-cli-service serve",
     "build": "vue-cli-service build",
-    "postbuild": "cpy --cwd=admin --rename=index_m.html index.html . && cpy --cwd=admin --rename=tab.html index.html .",
+    "postbuild": "cpy --cwd=admin --rename=index_m.html index.html .",
     "lint": "vue-cli-service lint",
     "eslint": "eslint",
     "i18n:report": "vue-cli-service i18n:report --src \"./src/**/*.?(js|vue)\" --locales \"./src/locales/**/*.json\"",
