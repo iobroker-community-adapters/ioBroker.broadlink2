@@ -40,11 +40,6 @@
         "platform": "Javascript/Node.js",
         "localLink": "#tab-broadlink2",
         "noConfig": false,
-        "adminTab": {
-            "singleton": true,
-            "name": "Broadlink3",
-            "fa-icon": "remote"
-        },
         "materialize": true,
         "mode": "daemon",
         "icon": "broadlink2.png",

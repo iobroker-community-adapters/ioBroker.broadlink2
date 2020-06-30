@@ -105,7 +105,14 @@
                     "cols": 6,
                     "sm": 6,
                     "convertold": "stringToArrayWith"
-                },
+                }
+            ]
+        },
+        {
+            "label": "States+Scenes",
+            "icon": "mdi-table-column-plus-before",
+            "disabled": true,
+            "items": [
                 {
                     "label": "Scene setup",
                     "type": "table",
@@ -186,7 +193,7 @@
             ]
         },
         {
-            "label": "Learn codes",
+            "label": "Learn & Codes",
             "icon": "mdi-remote",
             "items": [
                 {
