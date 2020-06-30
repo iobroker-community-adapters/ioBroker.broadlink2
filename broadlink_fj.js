@@ -1081,6 +1081,19 @@ class RM4 extends RM {
         if (res !== undefined) ret.temperature = res;
         return ret;
     }
+    async getHumidity() {
+        const ret = this._val;
+        const res = await this._readSensor(0x24, 6, 100.0);
+        if (res !== undefined) ret.humidity = res;
+        // delete ret.val;
+        return ret;
+    }
+    async getAll() {
+        const ret = await this.getVal();
+        const h = await this.getHumidity();
+        ret.humidity = h.humidity;
+        return ret;
+    }
 
 }
 
