@@ -178,8 +178,8 @@ export default {
       if (Array.isArray(val)) val = val[0];
       //      debugger;
       return (
-        !!val.match(/^[\u00C0-\u017Fa-zA-Z0-9_\-\@\$]+$/) ||
-        this.$t("Only letters, numbers and `_ - @ $` are allowed!")
+        !!val.match(/^[\u00C0-\u017Fa-zA-Z0-9_\-\@\$\/]+$/) ||
+        this.$t("Only letters, numbers and `_ - @ $ /` are allowed!")
       );
     },
 

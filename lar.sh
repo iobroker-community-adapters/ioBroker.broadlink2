@@ -1,10 +1,10 @@
 #!/bin/sh
 
 grf="Gruntfile.js"
-a="broadlink2"
 cpath=`pwd`
 filename=$(basename -- "$cpath")
 extension="${filename##*.}"
+a="$extension"
 echo "cpath = $cpath, extension = $extension"
 dpath="/c/iobroker/Test2/node_modules/iobroker.$a"
 if [ -d "$dpath" ]; then
