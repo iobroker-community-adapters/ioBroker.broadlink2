@@ -132,10 +132,14 @@ export default {
   },
 
   //  created() {},
-  beforeMount() {
+  async beforeMount() {
     this.page = 0;
     this.iobrokerLang = this.iobrokerLang || "en";
+    await this.wait(10);
+    await this.loadDevList();
+    await this.wait(10);
     this.makeConfigPage(0);
+    await this.wait(10);
   },
   // async mounted() {},
   //  filters: {},

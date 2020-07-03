@@ -105,6 +105,70 @@
                     "cols": 6,
                     "sm": 6,
                     "convertold": "stringToArrayWith"
+                },
+                {
+                    "label": "Device list",
+                    "type": "table",
+                    "value": "devList",
+                    "dyisable-sort": true,
+                    "cols": 12,
+                    "items": [
+                        {
+                            "text": "Name",
+                            "type": "string",
+                            "value": "name",
+                            "align": "start",
+                            "rules": [
+                                "uniqueTableRule",
+                                {
+                                    "regexp": "/^[\\w\\$@/:-]+$/i",
+                                    "message": "Only letters, numbers and `$ @ / : _ -` are allowed"
+                                }
+                            ],
+                            "sortable": true,
+                            "default": "newName",
+                            "width": "25%"
+                        },
+                        {
+                            "text": "IP address",
+                            "type": "string",
+                            "value": "ip",
+                            "align": "center",
+                            "divider": true,
+                            "width": "15%",
+                            "rules": [
+                                {
+                                    "regexp": "/^[0-9]+\\.[0-9]+\\.[0-9]+\\.[0-9]+$/",
+                                    "message": "Need to be an IPv4 address (like 1.2.3.4)"
+                                }
+                            ]
+        
+                        },
+                        {
+                            "text": "Mac address",
+                            "type": "string",
+                            "value": "mac",
+                            "align": "center",
+                            "divider": true,
+                            "width": "15%",
+                            "rules": [
+                                {
+                                    "regexp": "/^(([\\dA-F]{2}:){5}[\\dA-F]{2})$/i",
+                                    "message": "Need to be a mac address (like 01:23:45:56:78:9a)"
+                                }
+                            ]
+        
+                        },
+                        {
+                            "text": "Info",
+                            "type": "string",
+                            "value": "info",
+                            "align": "start",
+                            "width": "35%",
+                            "disabled": true,
+                            "class": "text-caption"
+                        }
+                    ]
                 }
             ]
         },

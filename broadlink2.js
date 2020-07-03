@@ -1103,22 +1103,21 @@ async function main() {
   let didFind = [],
     notFound = [];
 
-  if (!A.C.new) A.C.new = "";
+  if (!A.C.new) A.C.new = [];
+  else if (typeof A.C.new == "string") A.C.new = A.C.new.split(",")
 
-  if (A.C.new.endsWith("!")) {
-    A.D(`Debug mode on!`);
-    A.C.new = A.C.new.slice(0, -1);
-    A.debug = true;
-  }
+  A.debug = A.C.debug;
 
-  let add = A.C.new.split(",").map((x) => x.split("=").map((s) => s.trim()));
+  let add = A.C.new.map((x) => x.split("=").map((s) => s.trim()));
   if (add.length === 1 && add[0].length === 1) add = [];
 
   if (typeof A.C.interface === "string" && A.C.interface.length >= 7)
     aif = A.C.interface.trim();
 
-  if (!A.C.rename) A.C.rename = "";
-  rename = A.C.rename.split(",").map((x) => x.split("=").map((s) => s.trim()));
+  if (!A.C.rename) A.C.rename = [];
+  else if (typeof A.C.rename == "string") A.C.rename = A.C.rename.split(",")
+
+  rename = A.C.rename.map((x) => x.split("=").map((s) => s.trim()));
   if (rename.length === 1 && rename[0].length === 1) rename = [];
   rename = rename.map((x) => [
     x[0],

@@ -234,7 +234,7 @@ class Device extends EventEmitter {
   get doReAuth() {
     if (this.learning || !this.udp || this.inReAuth) return false;
     return (
-      (this.type.startsWith("RM") || this.type.startsWith("LB")) &&
+      (this.type.startsWith("RM4") || this.type.startsWith("LB")) &&
       Date.now() - this.reAuth > msMinutes()
     );
   }
@@ -1927,7 +1927,10 @@ class Broadlink extends EventEmitter {
         let x = await A.c2p(dns.reverse)(dev.host.address).catch(
           () => dev.host.name
         );
-        if (Array.isArray(x)) x = x.slice(-1)[0].split(".")[0];
+        if (Array.isArray(x)) {
+          dev.host.names = x.map((i) => i.split(".")[0]);
+          x = x.slice(-1)[0].split(".")[0];
+        } else dev.host.names = [x];
         // A.I(`Got the following for ${dev.host.address}: ${A.O(x)}`);
         x = Array.isArray(x)
           ? x[0].toString().trim().split(".")[0]

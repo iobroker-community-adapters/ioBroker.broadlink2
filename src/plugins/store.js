@@ -36,15 +36,15 @@ export default new Vuex.Store({
     socketConnected: false,
     iobrokerReadme: "",
     adapterIcon: "",
-    // broadlinkObjects: {},
+    broadlinkObjects: {},
     // broadlinkConfig: {},
     // broadlinkConfigCompare: "",
     devMode,
   },
   mutations: {
-    // broadlinkObjects(state, value) {
-    //   state.broadlinkObjects = value;
-    // },
+    broadlinkObjects(state, value) {
+      state.broadlinkObjects = value;
+    },
     // broadlinkConfig(state, value) {
     //   state.broadlinkConfig = value;
     //   state.broadlinkConfigCompare = JSON.stringify(value);
@@ -118,17 +118,17 @@ export default new Vuex.Store({
       }
     },
 
+    async loadBroadlinkObjects({ commit, state, dispatch }, params) {
+      const id = "broadlink2.meta";
+      const obj =
+        (await Vue.prototype
+          .$socketEmit("getForeignObjects", "broadlink2*")
+          .catch((e) => console.log("error:", e), null)) || {};
+      // console.log(obj);
+      commit("broadlinkObjects", obj);
+      return obj;
+    },
     /*
-         async loadBroadlinkObjects({ commit, state, dispatch }, params) {
-          const id = "broadlink2.meta";
-          const obj =
-            (await Vue.prototype
-              .$socketEmit("getForeignObjects", "broadlink2*")
-              .catch((e) => console.log("error:", e), null)) || {};
-          // console.log(obj);
-          commit("broadlinkObjects", obj);
-          return obj;
-        },
 
         async loadBroadlinkConfig({ commit, state, dispatch }, params) {
           const id = "broadlink2.meta";

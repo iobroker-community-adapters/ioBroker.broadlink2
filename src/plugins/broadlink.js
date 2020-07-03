@@ -14,8 +14,14 @@ const broadlink = {
     // broadlinkConfig() {
     //   return this.$store.state.broadlinkConfig;
     // },
-    // broadlinkObjects() {
-    //   return this.$store.state.broadlinkObjects;
+    broadlinkObjects() {
+      return this.$store.state.broadlinkObjects;
+    },
+    // set(value) {
+    //   this.$store.commit(
+    //     "iobrokerConfig",
+    //     JSON.parse(this.myStringify(value))
+    //   );
     // },
     // broadlinkConfigChanged() {
     //   return (
@@ -26,37 +32,20 @@ const broadlink = {
   },
 
   watch: {
-    // broadlinkObjects: {
-    //   handler: function () {
-    //     this.updateBroadlinkDevices();
-    //   },
-    //   deep: true,
-    // },
-    /*
-        async iobrokerLang(newv) {
-          const readme = await this.setAdapterReadme({
-            lang: newv,
-          });
-        },
-        async iobrokerAdapterCommon(newv) {
-          const readme = await this.setAdapterReadme({
-            common: newv,
-          });
-        },
-     */
+    broadlinkObjects: {
+      handler: function () {
+        this.updateBroadlinkDevices();
+      },
+      deep: true,
+    },
   },
   // async created() { },
 
-  beforeMount() {
-    //    console.log("beforeMount:", this.$socket);
-    // this.loadBroadlinkData();
-  },
-
-  async mounted() {},
+  // async mounted() {},
 
   methods: {
-    // ...mapActions(["loadBroadlinkObjects", "loadBroadlinkConfig"]),
-/* 
+    ...mapActions(["loadBroadlinkObjects"]),
+    /* 
     async loadBroadlinkData() {
       await this.loadBroadlinkConfig();
       this.updateBroadlinkDevices();
@@ -103,21 +92,25 @@ const broadlink = {
       }
     },
  */
-    updateBroadlinkDevices() {
+    async updateBroadlinkDevices() {
       function collect(obj) {
         const { _id, common, native } = obj;
-        const no = obj ? { $id: _id, $native: native } : {};
+        const no = obj
+          ? {
+              $id: _id,
+              $native: native,
+            }
+          : {};
         if (common && common.name) no.$name = common.name;
         return no;
       }
       const bo = Object.assign({}, this.$store.state.broadlinkObjects);
-      const a = [];
+      const d = {};
+      await this.wait(20);
       for (const e of Object.entries(bo)) {
         const [name, obj] = e;
+        if (name.startsWith(this.iobrokerAdapterInstance) < 0) continue;
         let ni = name.split(".");
-        const ai = parseInt(ni[1]);
-        if (!a[ai]) a[ai] = {};
-        const d = a[ai];
         ni = ni.slice(2);
         const bn = ni[0];
         const bo = collect(obj);
@@ -125,7 +118,10 @@ const broadlink = {
         else {
           if (!d[bn]) d[bn] = bo;
           let o = bo;
-          for (let i = ni.length - 1; i >= 1; i--) o = { [ni[i]]: o };
+          for (let i = ni.length - 1; i >= 1; i--)
+            o = {
+              [ni[i]]: o,
+            };
           let oo = d[bn];
           for (let j = 1; j < ni.length; j++) {
             const n = ni[j];
@@ -139,8 +135,51 @@ const broadlink = {
           }
         }
       }
-      this.$set(this, "broadlinkDevices", a);
-      return a;
+      this.$set(this, "broadlinkDevices", d);
+      await this.wait(20);
+      return d;
+    },
+    async loadDevList() {
+      //    console.log("beforeMount:", this.$socket);
+      // this.loadBroadlinkData();
+      await this.loadBroadlinkObjects();
+      await this.updateBroadlinkDevices();
+      const config = this.$store.state.iobrokerConfig;
+      if (!Array.isArray(config.devList) || !config.devList.length)
+        this.$set(config, "devList", []);
+      const dl = config.devList;
+      for (const i of dl)
+        if (i.mac.match(/[A-Z]/)) this.$set(i, "mac", i.mac.toLowerCase());
+      for (const devo of Object.entries(this.broadlinkDevices)) {
+        const [name, dev] = devo;
+        if (!dev.$native || !dev.$native.host) continue;
+        const {
+          address,
+          mac,
+          devname,
+          devhex,
+          oname,
+          names,
+          type,
+        } = dev.$native.host;
+        const found =
+          dl.find((i) => i.mac == mac) || dl.find((i) => i.ip == address);
+        const info = `${type.toUpperCase()}:${devname}, id=${devhex}, netnames=${
+          (names && names.join("; ")) || oname
+        }`;
+        if (found) {
+          found.mac = found.mac || mac;
+          found.ip = found.ip || address;
+          found.info = found.info || info;
+        } else
+          dl.push({
+            name,
+            ip: address,
+            mac: mac.toLowerCase(),
+            info,
+          });
+      }
+      await this.wait(20);
     },
   },
 };
