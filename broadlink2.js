@@ -320,7 +320,8 @@ async function sendScene(scene, st) {
 	}
 }
 
-A.messages = (msg) => {
+// eslint-disable-next-line require-await
+A.messages = async (msg) => {
 	if (A.T(msg.message) !== 'string')
 		return A.W(`Wrong message received: ${A.O(msg)}`);
 	const st = {
@@ -355,7 +356,7 @@ A.messages = (msg) => {
 			id = ids[0];
 			if (!id.startsWith('RM:') || !scanList[id] || !code.startsWith(codeName))
 				return Promise.reject(A.D(`Invalid message "${msg.message}" for "send" to ${id}${sendName}`));
-			return Promise.resolve(A.D(`Executed on ${id} the message "${msg.message}"`), sendCode(scanList[id], code));
+			return A.D(`Executed on ${id} the message "${msg.message}"`), sendCode(scanList[id], code);
 		case 'get':
 			return A.getState(id);
 		case 'switch':
