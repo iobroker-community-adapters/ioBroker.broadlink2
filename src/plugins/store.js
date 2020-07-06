@@ -103,6 +103,11 @@ export default new Vuex.Store({
       state.iobrokerReadme = value;
     },
   },
+  getters: {
+    adapterInstance: (state) => {
+      return state.iobrokerAdapter + "." + state.iobrokerInstance;
+    },
+  },
   actions: {
     SOCKET_connect({ commit }) {
       console.log("store socket_connected");
@@ -120,8 +125,9 @@ export default new Vuex.Store({
       commit("socketConnected", true);
     },
 
-    SOCKET_log({ commit }, message) {
-      console.log("store adapter log:", message);
+    SOCKET_log({ commit, getters }, message) {
+      if (message.from != getters.adapterInstance) return;
+      // console.log("store adapter log:", message);
       commit("adapterLog", message);
     },
 
