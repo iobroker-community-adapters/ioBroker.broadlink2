@@ -111,7 +111,6 @@ const socketIo = new VueSocketIO({
   vuex: {
     store,
     actionPrefix: "SOCKET_",
-    mutationPrefix: "SOCKET_",
   },
 });
 
@@ -140,9 +139,10 @@ Vue.prototype.$socketEmit = async function (event, ...data) {
 Vue.prototype.$socketSendTo = async function (event, ...data) {
   let timeout = 5000;
   if (typeof event == "object") {
-    timeout = Number(event.timeout || 1000);
+    timeout = Number(event.timeout || 5000);
     event = event.event || "pong";
   }
+  console.log("SendTo:", event, ...data);
   return new Promise((res, rej) => {
     let tout = setTimeout(
       () => rej(new Error(`socketSendTo - timeout for ${event}: ${data}`)),

@@ -1,5 +1,5 @@
 import Vue from "vue";
-import Vuex from "vuex";
+import Vuex, { Store } from "vuex";
 
 Vue.use(Vuex);
 
@@ -36,14 +36,20 @@ export default new Vuex.Store({
     socketConnected: false,
     iobrokerReadme: "",
     adapterIcon: "",
-    broadlinkObjects: {},
+    adapterLog: [],
+    interfaces: ["0.0.0.0"],
+    socketConnected: false,
+    adapterObjects: {},
     // broadlinkConfig: {},
     // broadlinkConfigCompare: "",
     devMode,
   },
   mutations: {
-    broadlinkObjects(state, value) {
-      state.broadlinkObjects = value;
+    adapterObjects(state, value) {
+      state.adapterObjects = value;
+    },
+    adapterLog(state, value) {
+      state.adapterLog.push(value);
     },
     // broadlinkConfig(state, value) {
     //   state.broadlinkConfig = value;
@@ -98,6 +104,27 @@ export default new Vuex.Store({
     },
   },
   actions: {
+    SOCKET_connect({ commit }) {
+      console.log("store socket_connected");
+      commit("socketConnected", true);
+      commit("iobrokerHostConnection", this._vm.$socket.io.opts);
+    },
+    SOCKET_disconnect({ commit }) {
+      console.log("store socket_disconnected");
+      commit("socketConnected", false);
+      this.$socket.open();
+    },
+
+    SOCKET_reconnect({ commit }) {
+      console.log("store socket_reconnected");
+      commit("socketConnected", true);
+    },
+
+    SOCKET_log({ commit }, message) {
+      console.log("store adapter log:", message);
+      commit("adapterLog", message);
+    },
+
     async loadConfigFile({ commit, state, dispatch }) {
       // console.log("action loadConfigFile", this);
       let config = null;
@@ -118,14 +145,14 @@ export default new Vuex.Store({
       }
     },
 
-    async loadBroadlinkObjects({ commit, state, dispatch }, params) {
-      const id = "broadlink2.meta";
+    async loadAdapterObjects({ commit, state, dispatch }, params) {
+      const alist = `${state.iobrokerAdapter}.${state.iobrokerInstance}.*`;
       const obj =
         (await Vue.prototype
-          .$socketEmit("getForeignObjects", "broadlink2*")
+          .$socketEmit("getForeignObjects", alist)
           .catch((e) => console.log("error:", e), null)) || {};
       // console.log(obj);
-      commit("broadlinkObjects", obj);
+      commit("adapterObjects", obj);
       return obj;
     },
     /*
@@ -161,7 +188,7 @@ export default new Vuex.Store({
           }
 
           commit("broadlinkConfig", obj.native);
-          await dispatch("loadBroadlinkObjects");
+          await dispatch("loadadapterObjects");
           return obj.native;
         },
 

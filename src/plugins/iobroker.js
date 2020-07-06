@@ -101,20 +101,20 @@ const iobroker = {
     };
   },
  */
-  sockets: {
-    connect() {
-      this.socketConnected = true;
-      this.iobrokerHostConnection = this.$socket.io.opts;
-      if (!this.ioBrokerSystemConfig) this.loadSystemConfig();
-      // this.$alert("socket connected...");
-    },
+  // sockets: {
+  //   connect() {
+  //     console.log("Socket connected");
+  //     this.iobrokerHostConnection = this.$socket.io.opts;
+  //     if (!this.ioBrokerSystemConfig) this.loadSystemConfig();
+  //     // this.$alert("socket connected...");
+  //   },
 
-    disconnected() {
-      this.socketConnected = true;
-      // this.$alert("Socket disconnected. try to reconnect...");
-      this.$socket.open();
-    },
-  },
+  //   disconnect() {
+  //     console.log("Socket disconnected");
+  //     // this.$alert("Socket disconnected. try to reconnect...");
+  //     this.$socket.open();
+  //   },
+  // },
 
   computed: {
     iobrokerConfigOrig: {

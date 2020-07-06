@@ -13,6 +13,11 @@
     />
     <div v-else v-html="cToolItem.text" class="caption" />
   </v-flex>
+  <fjB
+    v-else-if="cToolItem.type == 'button'"
+    v-bind="attrs()"
+    @click="cToolItem.click"
+  />
   <v-text-field
     v-else-if="cToolItem.type == 'number'"
     dense
@@ -25,21 +30,22 @@
     dense
     hide-details="auto"
     v-bind="attrs()"
-    v-model="cValue"
+    v-model="cItem[cToolItem.value]"
   />
   <v-checkbox
     v-else-if="cToolItem.type == 'checkbox' && cToolItem.label"
     dense
     hide-details="auto"
-    v-model="cValue"
+    v-model="cItem[cToolItem.value]"
     v-bind="attrs()"
+    @change="cToolItem.click ? cToolItem.click($event) : null"
   />
   <v-select
     v-else-if="cToolItem.type == 'select'"
     :items="cToolItem.select"
     dense
     hide-details="auto"
-    v-model="cValue"
+    v-model="cItem[cToolItem.value]"
     v-bind="attrs()"
   />
   <v-textarea
@@ -48,14 +54,16 @@
     auto-grow
     row-height="15"
     hide-details="auto"
-    :rows="cValue.split(`\n`).length"
+    :rows="cItem[cToolItem.value].split(`\n`).length"
     dense
-    v-model="cValue"
+    v-model="cItem[cToolItem.value]"
     v-bind="attrs()"
   />
   <v-combobox
-    v-else-if="cToolItem.type == 'chips' && Array.isArray(cValue)"
-    v-model="cValue"
+    v-else-if="
+      cToolItem.type == 'chips' && Array.isArray(cItem[cToolItem.value])
+    "
+    v-model="cItem[cToolItem.value]"
     v-bind="attrs()"
     :items="cToolItem.select || []"
     chips
@@ -68,23 +76,25 @@
   <fjConfigTable
     v-else-if="cToolItem.type == 'table'"
     :columns="cToolItem.items"
-    :table="cValue"
+    :table="cItem[cToolItem.value]"
     v-bind="attrs()"
   />
   <v-simple-checkbox
     v-else-if="cToolItem.type == 'checkbox' && !cToolItem.label"
-    v-model="cValue"
+    v-model="cItem[cToolItem.value]"
     v-bind="attrs()"
+    @change="cToolItem.click ? cToolItem.click($event) : null"
   />
   <v-switch
     v-else-if="cToolItem.type == 'switch'"
     dense
     hide-details="auto"
-    v-model="cValue"
+    v-model="cItem[cToolItem.value]"
     v-bind="attrs()"
+    @change="cToolItem.click ? cToolItem.click($event) : null"
   />
   <div v-else v-bind="attrs()">
-    {{ cToolItem }} {{ cToolItem.value ? cValue : "" }}
+    {{ cToolItem }} {{ cToolItem.value ? cItem[cToolItem.value] : "" }}
   </div>
 </template>
 
@@ -122,7 +132,7 @@ export default {
   computed: {
     number: {
       get() {
-        let val = this.cValue;
+        let val = this.cItem[this.cToolItem.value];
         if (val === undefined) val = 0;
         if (typeof val === "string" || typeof val === "boolean")
           val == Number(val);
@@ -134,20 +144,14 @@ export default {
         if (!isNaN(num)) this.$set(this.cItem, this.cToolItem.value, num);
       },
     },
-
-    cValue: {
-      get() {
-        return this.cItem[this.cToolItem.value];
-      },
-      set(val) {
-        this.cItem[this.cToolItem.value] = val;
-      },
-    },
   },
   //  methods: {},
   methods: {
     removeChip(item) {
-      this.cValue.splice(this.cValue.indexOf(item), 1);
+      this.cItem[cToolItem.value].splice(
+        this.cItem[this.cToolItem.value].indexOf(item),
+        1
+      );
       //      this.chips = [...this.chips]
     },
 
@@ -200,6 +204,7 @@ export default {
         "value",
         "attrs",
         "convertold",
+        "click",
         "select",
         "eval",
         "_translated",
@@ -220,6 +225,13 @@ export default {
       )
         this.cToolItem.convertold = this.makeFunction(
           this.cToolItem.convertold,
+          this,
+          "item",
+          "conf"
+        );
+      if (this.cToolItem.click && typeof this.cToolItem.click !== "function")
+        this.cToolItem.click = this.makeFunction(
+          this.cToolItem.click,
           this,
           "item",
           "conf"

@@ -9,7 +9,9 @@
 // jshint node:true, esversion:6, strict:true, undef:true, unused:true
 "use strict";
 const Broadlink = require("./broadlink_fj.js"),
-  A = require("./fjadapter.js");
+  A = require("./fjadapter.js"),
+  os = require("os");
+// const { interfaces } = require("mocha");
 //	utils = require('./lib/utils'),
 //	adapter = utils.Adapter('broadlink2'),
 
@@ -389,9 +391,32 @@ async function sendScene(scene, st) {
   }
 }
 
-A.messages = (msg) => {
+function osinterfaces(type) {
+  const interfaces = os.networkInterfaces();
+  const res = [];
+  for (let k in interfaces) {
+    if (interfaces.hasOwnProperty(k)) {
+      for (let k2 in interfaces[k]) {
+        if (interfaces[k].hasOwnProperty(k2)) {
+          const address = interfaces[k][k2];
+          // A.If("interface.address: %O", address);
+          if (
+            (!type ||
+              address.family.toLocaleLowerCase() === type.toLowerCase()) &&
+            !address.internal
+          )
+            res.push(address);
+        }
+      }
+    }
+  }
+  return res;
+}
+
+A.messages = async (msg) => {
   if (A.T(msg.message) !== "string")
     return A.W(`Wrong message received: ${A.O(msg)}`);
+  A.If("Message received: %O", msg);
   const st = {
     val: true,
     ack: false,
@@ -403,6 +428,14 @@ A.messages = (msg) => {
   let ids, idx, code;
 
   switch (msg.command) {
+    case "interfaces":
+      code = osinterfaces(msg.message);
+      A.If("Interfaces = %O", code);
+      return code;
+    case "device_scan":
+      A.I(`start rescan of devices from message!`);
+      deviceScan(msg.message);
+      return true;
     case "switch_off":
       st.val = false;
     /* falls through */
@@ -433,7 +466,7 @@ A.messages = (msg) => {
         return Promise.reject(
           A.D(`Invalid message "${msg.message}" for "send" to ${id}${sendName}`)
         );
-      return Promise.resolve(
+      return (
         A.D(`Executed on ${id} the message "${msg.message}"`),
         sendCode(scanList[id], code)
       );
@@ -1104,7 +1137,7 @@ async function main() {
     notFound = [];
 
   if (!A.C.new) A.C.new = [];
-  else if (typeof A.C.new == "string") A.C.new = A.C.new.split(",")
+  else if (typeof A.C.new == "string") A.C.new = A.C.new.split(",");
 
   A.debug = A.C.debug;
 
@@ -1115,7 +1148,7 @@ async function main() {
     aif = A.C.interface.trim();
 
   if (!A.C.rename) A.C.rename = [];
-  else if (typeof A.C.rename == "string") A.C.rename = A.C.rename.split(",")
+  else if (typeof A.C.rename == "string") A.C.rename = A.C.rename.split(",");
 
   rename = A.C.rename.map((x) => x.split("=").map((s) => s.trim()));
   if (rename.length === 1 && rename[0].length === 1) rename = [];

@@ -44,18 +44,15 @@
                 },
                 {
                     "label": "Use specific interface",
-                    "type": "string",
-                    "hint": "IP address of the interface to use",
+                    "type": "select",
+                    "select": [],
+                    "eval": "item.select = this.$store.state.interfaces",
+                    "hint": "IP interface to use, default 0.0.0.0 for all",
                     "value": "interface",
+                    "multiple": false,
                     "sm3": true,
                     "prepend-icon": "mdi-spider-web",
                     "persistent-hint": true,
-                    "rules": [
-                        {
-                            "regexp": "/^[0-9]+\\.[0-9]+\\.[0-9]+\\.[0-9]+$/",
-                            "message": "Need to be an IPv4 address (like 1.2.3.4)"
-                        }
-                    ],
                     "cols": 3,
                     "sm": 6
                 },
@@ -63,48 +60,21 @@
                     "type": "switch",
                     "label": "Debug mode",
                     "value": "debug",
-                    "cols": 2,
+                    "click": "return this.$app.sendTo(null,'debug',this.cItem.debug), this.$alert(`I clicked here!`)",
+                    "cols": 3,
                     "sm": 6
                 },
                 {
-                    "ruler": "hr",
-                    "cols": 12
-                },
-                {
-                    "label": "Rename devices",
-                    "type": "chips",
-                    "hint": "Rename devices like `oldname=newname`",
-                    "value": "rename",
-                    "sm3": true,
-                    "prepend-icon": "mdi-rename-box",
-                    "persistent-hint": true,
-                    "rules": [
-                        {
-                            "regexp": "=",
-                            "message": "Need to be something like 0x12ab=RMP"
-                        }
-                    ],
-                    "cols": 6,
-                    "sm": 6,
-                    "convertold": "stringToArrayWith"
-                },
-                {
-                    "label": "Additional device IP's",
-                    "type": "chips",
-                    "hint": "Add device IP's to scan",
-                    "value": "additional",
-                    "sm3": true,
-                    "prepend-icon": "mdi-search-web",
-                    "persistent-hint": true,
-                    "rules": [
-                        {
-                            "regexp": "/^[0-9]+\\.[0-9]+\\.[0-9]+\\.[0-9]+$/",
-                            "message": "Need to be an IPv4 address (like 1.2.3.4)"
-                        }
-                    ],
-                    "cols": 6,
-                    "sm": 6,
-                    "convertold": "stringToArrayWith"
+                    "type": "button",
+                    "label": "Button Test",
+                    "tooltip": "Click on this button to make everything happen!",
+                    "value": "debug",
+                    "click": "return this.$app.sendTo(null,'device_scan','.'), this.$alert(`I clicked here!`)",
+                    "img": "mdi-gesture-tap-button",
+                    "left": true,
+                    "small": true,
+                    "cols": 3,
+                    "sm": 6
                 },
                 {
                     "label": "Device list",
@@ -127,7 +97,8 @@
                             ],
                             "sortable": true,
                             "default": "newName",
-                            "width": "25%"
+                            "class": "text-body-2",
+                            "width": "20%"
                         },
                         {
                             "text": "IP address",
@@ -135,7 +106,8 @@
                             "value": "ip",
                             "align": "center",
                             "divider": true,
-                            "width": "15%",
+                            "width": "12%",
+                            "class": "text-body-2",
                             "rules": [
                                 {
                                     "regexp": "/^[0-9]+\\.[0-9]+\\.[0-9]+\\.[0-9]+$/",
@@ -150,7 +122,8 @@
                             "value": "mac",
                             "align": "center",
                             "divider": true,
-                            "width": "15%",
+                            "width": "12%",
+                            "class": "text-body-2",
                             "rules": [
                                 {
                                     "regexp": "/^(([\\dA-F]{2}:){5}[\\dA-F]{2})$/i",
@@ -164,7 +137,7 @@
                             "type": "string",
                             "value": "info",
                             "align": "start",
-                            "width": "35%",
+                            "width": "40%",
                             "disabled": true,
                             "class": "text-caption"
                         }

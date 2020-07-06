@@ -1,5 +1,6 @@
 import Vue from "vue";
 import { mapActions } from "vuex";
+import { runInThisContext } from "vm";
 
 const broadlink = {
   data() {
@@ -14,8 +15,11 @@ const broadlink = {
     // broadlinkConfig() {
     //   return this.$store.state.broadlinkConfig;
     // },
-    broadlinkObjects() {
-      return this.$store.state.broadlinkObjects;
+    adapterObjects() {
+      return this.$store.state.adapterObjects;
+    },
+    interfaces() {
+      return this.$store.state.interfaces;
     },
     // set(value) {
     //   this.$store.commit(
@@ -32,7 +36,7 @@ const broadlink = {
   },
 
   watch: {
-    broadlinkObjects: {
+    adapterObjects: {
       handler: function () {
         this.updateBroadlinkDevices();
       },
@@ -44,7 +48,7 @@ const broadlink = {
   // async mounted() {},
 
   methods: {
-    ...mapActions(["loadBroadlinkObjects"]),
+    ...mapActions(["loadAdapterObjects"]),
     /* 
     async loadBroadlinkData() {
       await this.loadBroadlinkConfig();
@@ -104,7 +108,7 @@ const broadlink = {
         if (common && common.name) no.$name = common.name;
         return no;
       }
-      const bo = Object.assign({}, this.$store.state.broadlinkObjects);
+      const bo = Object.assign({}, this.adapterObjects);
       const d = {};
       await this.wait(20);
       for (const e of Object.entries(bo)) {
@@ -142,8 +146,14 @@ const broadlink = {
     async loadDevList() {
       //    console.log("beforeMount:", this.$socket);
       // this.loadBroadlinkData();
-      await this.loadBroadlinkObjects();
+      // await this.wait(10);
+      await this.loadAdapterObjects();
+      // await this.wait(10);
       await this.updateBroadlinkDevices();
+      await this.wait(10);
+      const ifs = await this.sendTo(null, "interfaces", "IPv4");
+      const aif = ["0.0.0.0", ...ifs.map((i) => i.address)];
+      this.$set(this.$store.state, "interfaces", aif);
       const config = this.$store.state.iobrokerConfig;
       if (!Array.isArray(config.devList) || !config.devList.length)
         this.$set(config, "devList", []);

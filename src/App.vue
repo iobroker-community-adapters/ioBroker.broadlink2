@@ -104,6 +104,7 @@
 //import axios from "axios";
 
 // import helper from "./plugins/helper";
+import Vue from "vue";
 import ioBroker from "./plugins/iobroker";
 import broadlink from "./plugins/broadlink";
 
@@ -131,7 +132,10 @@ export default {
     };
   },
 
-  //  created() {},
+  created() {
+    Vue.prototype.$app = this;
+  },
+
   async beforeMount() {
     this.page = 0;
     this.iobrokerLang = this.iobrokerLang || "en";

@@ -70,7 +70,6 @@
 
     },
     "native": {
-        "ip": ".fritz.box",
         "scenes": [
             {
                 "name": "Fernsehen",
@@ -93,10 +92,17 @@
                 "off": "+"
             }
         ],
+        "devList": [
+            {
+              "name": "TestDummy",
+              "ip": "193.168.178.114",
+              "mac": "43:ea:34:bd:92:4a"
+            }
+          ],
+        "debug": false,
         "poll": "30",
-        "new": "0xabcd=RM4",
-        "rename": "LB:hostName-aa-bb-cc=LB:SmartBulb",
-        "additional": "192.168.1.199"
+        "interface": "0.0.0.0",
+        "new": ["0xabcd=RM4"]
     },
     "objects": [],
     "config": {

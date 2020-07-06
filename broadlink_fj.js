@@ -400,7 +400,7 @@ class Device extends EventEmitter {
       }
 
       function resume(what) {
-        self.udp.removeAllListeners("message");
+        // self.udp.removeAllListeners("message");
         res(what);
       }
 
@@ -409,7 +409,7 @@ class Device extends EventEmitter {
           clearTimeout(self.tout);
         }
         self.tout = null;
-        await A.nextTick();
+        // await A.nextTick();
         // A.D(`Send took ${self.sent.text}s for ${self} `);
         self.lastResponse = Date.now();
         const enc_payload = Buffer.alloc(response.length - 0x38, 0);
