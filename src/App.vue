@@ -61,7 +61,7 @@
           $t('Download Config JSON or shift-click to copy to clipboard')
         "
         img="mdi-briefcase-download"
-          class="text-none"
+        class="text-none"
       />
       <fjFileLoadButton
         @onchange="iobrokerConfig = arguments[0]"
@@ -71,7 +71,7 @@
         :tooltip="$t('Upload Config JSON or drop config file here')"
         img="mdi-briefcase-upload"
         :message="$t('Loaded config!')"
-          class="text-none"
+        class="text-none"
       />
       <fjB
         text
@@ -81,7 +81,7 @@
         :label="$t('Save')"
         img="mdi-content-save"
         :tooltip="$t('Save current config')"
-          class="text-none"
+        class="text-none"
       />
       <fjAlerts :offsetX="0" :offsetY="20" />
       <fjB
@@ -93,7 +93,7 @@
         :tooltip="$t('Save settings and close config')"
         :label="$t('Save&Close')"
         img="mdi-content-save-move"
-          class="text-none"
+        class="text-none"
       />
       <fjB
         text
@@ -103,13 +103,51 @@
         :label="$t('Cancel')"
         img="mdi-close"
         @click.stop="closeAdapterConfig"
-          class="text-none"
+        class="text-none"
       />
     </v-app-bar>
 
     <v-main id="MyAppContent" class="flex-wrap">
       <fjConfigContainer :cItem="iobrokerConfig" :configPage="configPage" />
       <fjConfirm />
+      <!--       
+        <v-data-table
+        dense
+        :headers="[
+          {
+            text: 'Severity',
+            value: 'severity',
+          },
+          {
+            text: 'Message',
+            value: 'message',
+          },
+        ]"
+        :items="adapterLog"
+        class="elevation-1"
+      >
+      </v-data-table>
+ -->
+      <v-simple-table v-if="!page" dense>
+        <template v-slot:default>
+          <thead>
+            <tr>
+              <th class="text-left">Severity@Time</th>
+              <th class="text-left">Message</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr v-for="item in adapterLog" :key="item.ts">
+              <td :class="'caption ' + sevColor(item)">
+                {{ item.severity }}@{{ timeStamp(item.ts) }}
+              </td>
+              <td :class="'caption ' + sevColor(item)">
+                {{ item.message }}
+              </td>
+            </tr>
+          </tbody>
+        </template>
+      </v-simple-table>
     </v-main>
   </v-app>
 </template>
@@ -158,6 +196,7 @@ export default {
     await this.wait(10);
     this.makeConfigPage(0);
     await this.wait(10);
+    //    console.log(await this.loadInterfaces());
   },
   // async mounted() {},
   //  filters: {},
@@ -171,6 +210,38 @@ export default {
     //   if (add) this.tmptext += "\n" + newT;
     //   else this.tmptext = "" + newT;
     // },
+
+    sevColor(item) {
+      const sev = item.severity;
+      let color = "primary";
+      switch (sev) {
+        case "warning":
+        case "error":
+          color = sev;
+          break;
+        case "debug":
+          color = "grey";
+          break;
+        case "info":
+          if (item.message.indexOf(" debug: ") >= 0) color = "grey";
+        default:
+          break;
+      }
+      return color + " lighten-4";
+    },
+
+    timeStamp(ts) {
+      function digits(v, p) {
+        p = p || 2;
+        v = v.toString();
+        while (v.length < p) v = "0" + v;
+        return v;
+      }
+      const d = new Date(ts);
+      return `${digits(d.getHours())}:${digits(d.getMinutes())}:${digits(
+        d.getSeconds()
+      )}.${digits(d.getMilliseconds(), 3)}`;
+    },
 
     makeConfigPage(page) {
       const cp = Object.assign(

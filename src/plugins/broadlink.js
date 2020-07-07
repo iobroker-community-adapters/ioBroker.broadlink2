@@ -48,7 +48,7 @@ const broadlink = {
   // async mounted() {},
 
   methods: {
-    ...mapActions(["loadAdapterObjects"]),
+    ...mapActions(["loadAdapterObjects", "loadInterfaces"]),
     /* 
     async loadBroadlinkData() {
       await this.loadBroadlinkConfig();
@@ -151,9 +151,7 @@ const broadlink = {
       // await this.wait(10);
       await this.updateBroadlinkDevices();
       await this.wait(10);
-      const ifs = await this.sendTo(null, "interfaces", "IPv4");
-      const aif = ["0.0.0.0", ...ifs.map((i) => i.address)];
-      this.$set(this.$store.state, "interfaces", aif);
+      await this.loadInterfaces();
       const config = this.$store.state.iobrokerConfig;
       if (!Array.isArray(config.devList) || !config.devList.length)
         this.$set(config, "devList", []);

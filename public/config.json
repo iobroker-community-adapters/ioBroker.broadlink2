@@ -60,14 +60,14 @@
                     "type": "switch",
                     "label": "Debug mode",
                     "value": "debug",
-                    "click": "return this.$app.sendTo(null,'debug',this.cItem.debug), this.$alert(`I clicked here!`)",
+                    "click": "return this.$app.sendTo(null,'debug',this.cItem.debug)",
                     "cols": 3,
                     "sm": 6
                 },
                 {
                     "type": "button",
-                    "label": "Button Test",
-                    "tooltip": "Click on this button to make everything happen!",
+                    "label": "Start Device Scan",
+                    "tooltip": "Start a complete device scan",
                     "value": "debug",
                     "click": "return this.$app.sendTo(null,'device_scan','.'), this.$alert(`I clicked here!`)",
                     "img": "mdi-gesture-tap-button",

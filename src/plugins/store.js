@@ -52,14 +52,18 @@ export default new Vuex.Store({
       state.adapterObjects = value;
     },
     adapterLog(state, value) {
-      if (state.adapterLog.length >= 50) state.adapterLog.shift();
-      state.adapterLog.push(value);
+      if (state.adapterLog.length >= 50) state.adapterLog.pop();
+      state.adapterLog.unshift(value);
     },
 
     adapterStates(state, payload) {
       const [id, obj] = payload;
       if (!obj) delete state.adapterStates[id];
       else state.adapterStates[id] = obj;
+    },
+
+    interfaces(state, value) {
+      state.interfaces = value;
     },
 
     adapterStatus(state) {
@@ -204,6 +208,20 @@ export default new Vuex.Store({
         dispatch("setAdapterReadme");
         // this.adapterIcon = config.icon;
       }
+    },
+
+    async loadInterfaces({ commit, state, dispatch }) {
+      const obj = await Vue.prototype
+        .$socketSendTo("sendToHost", null, "getInterfaces", null)
+        .catch((e) => console.log("error:", e), null);
+      const ifs = ["0.0.0.0"];
+      if (obj)
+        for (const l of obj) {
+          const [name, list] = l;
+          for (const i of list)
+            if (!i.internal && i.familiy == "IPv4") ifs.push(i.address);
+        }
+      commit("interfaces", ifs);
     },
 
     async loadAdapterObjects({ commit, state, dispatch }, params) {

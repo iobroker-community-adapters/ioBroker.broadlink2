@@ -123,6 +123,14 @@ const iobroker = {
       return this.$store.state.adapterStatus;
     },
 
+    interfaces() {
+      return this.$store.state.interfaces;
+    },
+
+    adapterLog() {
+      return this.$store.state.adapterLog;
+    },
+
     iobrokerConfigOrig: {
       get() {
         return this.$store.state.iobrokerConfigOrig;
@@ -344,6 +352,7 @@ const iobroker = {
       "loadConfigFile",
       "setAdapterReadme",
       "loadBroadlinkConfig",
+      "loadInterfaces",
     ]),
     translateConfig(conf) {
       const that = this;
@@ -431,13 +440,13 @@ const iobroker = {
       );
     },
 
-    async getInterfaces(onlyNames) {
-      const result = await this.sendToHost(null, "getInterfaces", null);
-      if (result && result.result) {
-        if (onlyNames) return Object.keys(result.result);
-        else return Object.entries(result.result);
-      } else return [];
-    },
+    // async getInterfaces(onlyNames) {
+    //   const result = await this.sendToHost(null, "getInterfaces", null);
+    //   if (result && result.result) {
+    //     if (onlyNames) return Object.keys(result.result);
+    //     else return Object.entries(result.result);
+    //   } else return [];
+    // },
 
     async getHost(ahost) {
       ahost = ahost || this.iobrokerAdapterCommon.host;

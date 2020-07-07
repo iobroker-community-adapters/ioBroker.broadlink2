@@ -391,27 +391,27 @@ async function sendScene(scene, st) {
   }
 }
 
-function osinterfaces(type) {
-  const interfaces = os.networkInterfaces();
-  const res = [];
-  for (let k in interfaces) {
-    if (interfaces.hasOwnProperty(k)) {
-      for (let k2 in interfaces[k]) {
-        if (interfaces[k].hasOwnProperty(k2)) {
-          const address = interfaces[k][k2];
-          // A.If("interface.address: %O", address);
-          if (
-            (!type ||
-              address.family.toLocaleLowerCase() === type.toLowerCase()) &&
-            !address.internal
-          )
-            res.push(address);
-        }
-      }
-    }
-  }
-  return res;
-}
+// function osinterfaces(type) {
+//   const interfaces = os.networkInterfaces();
+//   const res = [];
+//   for (let k in interfaces) {
+//     if (interfaces.hasOwnProperty(k)) {
+//       for (let k2 in interfaces[k]) {
+//         if (interfaces[k].hasOwnProperty(k2)) {
+//           const address = interfaces[k][k2];
+//           // A.If("interface.address: %O", address);
+//           if (
+//             (!type ||
+//               address.family.toLocaleLowerCase() === type.toLowerCase()) &&
+//             !address.internal
+//           )
+//             res.push(address);
+//         }
+//       }
+//     }
+//   }
+//   return res;
+// }
 
 A.messages = async (msg) => {
   if (A.T(msg.message) !== "string")
@@ -428,10 +428,10 @@ A.messages = async (msg) => {
   let ids, idx, code;
 
   switch (msg.command) {
-    case "interfaces":
-      code = osinterfaces(msg.message);
-      A.If("Interfaces = %O", code);
-      return code;
+    // case "interfaces":
+    //   code = osinterfaces(msg.message);
+    //   A.If("Interfaces = %O", code);
+    //   return code;
     case "device_scan":
       A.I(`start rescan of devices from message!`);
       deviceScan(msg.message);
