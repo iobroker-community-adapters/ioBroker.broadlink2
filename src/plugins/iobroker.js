@@ -1,5 +1,6 @@
 import Vue from "vue";
-import { mapActions } from "vuex";
+import { mapActions, mapGetters } from "vuex";
+import store from "./store";
 // import packagej from "../../package.json";
 // import iopackage from "../../io-package.json";
 //import { runInThisContext } from "vm";
@@ -117,6 +118,11 @@ const iobroker = {
   // },
 
   computed: {
+    // ...mapGetters(["adapterStatus"]),
+    adapterStatus() {
+      return this.$store.state.adapterStatus;
+    },
+
     iobrokerConfigOrig: {
       get() {
         return this.$store.state.iobrokerConfigOrig;

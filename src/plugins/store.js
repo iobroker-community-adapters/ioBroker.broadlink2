@@ -1,5 +1,6 @@
 import Vue from "vue";
 import Vuex, { Store } from "vuex";
+import { states } from "../../fjadapter";
 
 Vue.use(Vuex);
 
@@ -37,9 +38,11 @@ export default new Vuex.Store({
     iobrokerReadme: "",
     adapterIcon: "",
     adapterLog: [],
+    adapterStates: {},
     interfaces: ["0.0.0.0"],
     socketConnected: false,
     adapterObjects: {},
+    adapterStatus: 0,
     // broadlinkConfig: {},
     // broadlinkConfigCompare: "",
     devMode,
@@ -49,7 +52,28 @@ export default new Vuex.Store({
       state.adapterObjects = value;
     },
     adapterLog(state, value) {
+      if (state.adapterLog.length >= 50) state.adapterLog.shift();
       state.adapterLog.push(value);
+    },
+
+    adapterStates(state, payload) {
+      const [id, obj] = payload;
+      if (!obj) delete state.adapterStates[id];
+      else state.adapterStates[id] = obj;
+    },
+
+    adapterStatus(state) {
+      const sai =
+        "system.adapter." +
+        state.iobrokerAdapter +
+        "." +
+        state.iobrokerInstance;
+      let alive = state.adapterStates[sai + ".alive"];
+      alive = alive && alive.val;
+      let connected = state.adapterStates[sai + ".connected"];
+      connected = connected && connected.val;
+      state.adapterStatus = alive ? (connected ? 2 : 1) : 0;
+      return state.adapterStatus;
     },
     // broadlinkConfig(state, value) {
     //   state.broadlinkConfig = value;
@@ -114,6 +138,7 @@ export default new Vuex.Store({
       commit("socketConnected", true);
       commit("iobrokerHostConnection", this._vm.$socket.io.opts);
     },
+
     SOCKET_disconnect({ commit }) {
       console.log("store socket_disconnected");
       commit("socketConnected", false);
@@ -129,6 +154,36 @@ export default new Vuex.Store({
       if (message.from != getters.adapterInstance) return;
       // console.log("store adapter log:", message);
       commit("adapterLog", message);
+    },
+
+    SOCKET_stateChange({ commit, state, getters }, message) {
+      const [id, obj] = message;
+      if (
+        !id.startsWith(getters.adapterInstance) &&
+        !id.startsWith("system.adapter." + getters.adapterInstance)
+      )
+        return;
+      // state.adapterStates[id] = obj;
+      console.log("store stateChange of", id, " with ", obj);
+      // console.log("store adapter log:", message);
+      commit("adapterStates", message);
+      if (id.startsWith("system.adapter." + getters.adapterInstance))
+        commit("adapterStatus");
+    },
+
+    SOCKET_onUpdate({ commit, state, getters }, message) {
+      const [id, obj] = message;
+      if (!id.startsWith(getters.adapterInstance)) return;
+      console.log("store aonUpdate", id, obj);
+      // commit("adapterLog", message);
+    },
+
+    SOCKET_objectChange({ commit, state, getters }, message) {
+      const [id, obj] = message;
+      if (!id.startsWith(getters.adapterInstance)) return;
+      console.log("store objectChange", id, obj);
+      // console.log("store adapter log:", message);
+      // commit("adapterLog", message);
     },
 
     async loadConfigFile({ commit, state, dispatch }) {

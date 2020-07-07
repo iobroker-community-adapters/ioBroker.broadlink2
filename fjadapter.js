@@ -10,8 +10,6 @@
  */
 "use strict";
 
-const { ADDRGETNETWORKPARAMS } = require("dns");
-
 //@ts-disable TS80006
 //@js-disable TS80006
 

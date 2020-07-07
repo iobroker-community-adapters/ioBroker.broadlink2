@@ -30,12 +30,21 @@
           "
           class="text-none"
         />
+        <fjB
+          :color="['red', 'orange', 'green'][adapterStatus]"
+          :img="
+            ['mdi-arrow-right-bold-circle', 'mdi-pause-circle', 'mdi-restart'][
+              adapterStatus
+            ]
+          "
+        />
       </div>
       <v-tabs centered v-model="page">
         <v-tab
           v-for="item in configTranslated"
           v-bind:key="item.label"
           :disabled="item.disabled && !devMode"
+          class="text-none"
         >
           <v-icon v-if="item.icon" left small>{{ item.icon }}</v-icon>
           <span>{{ item.label }}</span>
@@ -52,6 +61,7 @@
           $t('Download Config JSON or shift-click to copy to clipboard')
         "
         img="mdi-briefcase-download"
+          class="text-none"
       />
       <fjFileLoadButton
         @onchange="iobrokerConfig = arguments[0]"
@@ -61,6 +71,7 @@
         :tooltip="$t('Upload Config JSON or drop config file here')"
         img="mdi-briefcase-upload"
         :message="$t('Loaded config!')"
+          class="text-none"
       />
       <fjB
         text
@@ -70,6 +81,7 @@
         :label="$t('Save')"
         img="mdi-content-save"
         :tooltip="$t('Save current config')"
+          class="text-none"
       />
       <fjAlerts :offsetX="0" :offsetY="20" />
       <fjB
@@ -81,6 +93,7 @@
         :tooltip="$t('Save settings and close config')"
         :label="$t('Save&Close')"
         img="mdi-content-save-move"
+          class="text-none"
       />
       <fjB
         text
@@ -90,6 +103,7 @@
         :label="$t('Cancel')"
         img="mdi-close"
         @click.stop="closeAdapterConfig"
+          class="text-none"
       />
     </v-app-bar>
 
