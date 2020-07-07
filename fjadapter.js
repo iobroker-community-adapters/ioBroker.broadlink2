@@ -10,8 +10,6 @@
  */
 "use strict";
 
-const { ADDRGETNETWORKPARAMS } = require("dns");
-
 //@ts-disable TS80006
 //@js-disable TS80006
 
@@ -261,7 +259,7 @@ function startAdapter(options) {
     //  * @param {ioBroker.Message} obj
     //  */
     message(obj) {
-      if (typeof obj === "object" && obj.message)
+      if (typeof obj === "object" && obj.command)
         MyAdapter.processMessage(
           MyAdapter.D(`received Message ${MyAdapter.O(obj)}`, obj)
         );
@@ -342,21 +340,24 @@ class MyAdapter {
   }
 
   static async processMessage(obj) {
+    let res = null;
     if (obj.command === "debug")
-      inDebug = isNaN(parseInt(obj.message))
+      res = inDebug = isNaN(parseInt(obj.message))
         ? this.parseLogic(obj.message)
         : parseInt(obj.message);
-    const res = _messages
-      ? await _messages(obj).catch((e) =>
-          this.Wf("Message execution error: %O", e)
-        )
-      : null;
+    else
+      res = _messages
+        ? await _messages(obj).catch((e) =>
+            this.Wf("Message execution error: %O", e)
+          )
+        : null;
+    // console.log(res, obj);
     // this.D(`Message from '${obj.from}', command '${obj.command}', message '${this.S(obj.message)}' executed with result:"${this.S(res)}"`);
     // err => this.W(`invalid Message ${this.O(obj)} caused error ${this.O(err)}`, err))
     // return (obj.command === "debug" ? this.resolve(`debug set to '${inDebug = isNaN(parseInt(obj.message)) ?  this.parseLogic(obj.message) : parseInt(obj.message)}'`) : messages(obj))
     if (obj.callback)
       await adapter.sendTo(obj.from, obj.command, res, obj.callback);
-    return true;
+    return res;
   }
 
   static getObjects(name) {
@@ -768,7 +769,7 @@ class MyAdapter {
 
   static parseLogic(obj) {
     return this.includes(
-      ["0", "off", "aus", "false", "inactive"],
+      ["0", "off", "aus", "false", "inactive", ""],
       obj.toString().trim().toLowerCase()
     )
       ? false
