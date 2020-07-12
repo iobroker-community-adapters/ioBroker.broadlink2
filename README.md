@@ -115,6 +115,14 @@ The adapter understands also 'sendTo' commands.
 
 ## Changelog
 
+### 2.1.5
+
+* beta to try to make 0x5f36 working
+
+### 2.1.4
+
+* bug corrections for RM4 temperatures & Humidity
+
 ### 2.1.2
 
 * bug corrections for States and Scenes
