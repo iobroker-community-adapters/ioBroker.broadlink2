@@ -991,7 +991,7 @@ async function main() {
 		scanList[x] = device;
 	});
 
-	A.unload = () => brlink.close.bind(brlink)(A.I('Close all connections...'));
+	A.onUnload = () => brlink.close.bind(brlink)(A.I('Close all connections...'));
 	for (const obj of hosts) {
 		const omac = obj.host.mac;
 		if (macObjects[omac]) {
