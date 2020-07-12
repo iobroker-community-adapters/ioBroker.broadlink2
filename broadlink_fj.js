@@ -352,7 +352,7 @@ class Device extends EventEmitter {
 
   async _send(packet) {
     const cmd = packet[this._cmdByte];
-//    const cmd = packet[0];
+    //    const cmd = packet[0];
     const timeout = this.timeout || 1000;
     const self = this;
     self.sent = new A.HrTime();
@@ -1707,30 +1707,7 @@ class Broadlink extends EventEmitter {
       },
     };
 
-    let interfaces = os.networkInterfaces(),
-      address;
-    for (let k in interfaces) {
-      if (interfaces.hasOwnProperty(k)) {
-        for (let k2 in interfaces[k]) {
-          if (interfaces[k].hasOwnProperty(k2)) {
-            address = interfaces[k][k2];
-            if (address.family === "IPv4" && !address.internal) {
-              const ipif = Object.assign({}, new IP(address.cidr));
-              // delete ipif.family;
-              // delete ipif.internal;
-              A.If("interface to be used: %O:", ipif);
-              this._ipif.push(ipif);
-            }
-          }
-        }
-      }
-    }
-    //        this.address = addresses[0].split('.');
-    //      this.lastaddr = addresses[addresses.length-1];
-    this._afound = this._ipif.map((i) => i.address);
-    this._addresses = this._ipif.map((i) => i.bcaddr);
-    this._addresses.push("255.255.255.255");
-    this._addresses.push("224.0.0.251");
+    this.getInterfaces();
     if (!add) return;
     for (let k of add) {
       if (Array.isArray(k) && k.length === 2) {
@@ -1753,6 +1730,35 @@ class Broadlink extends EventEmitter {
 
   get list() {
     return this._devices;
+  }
+
+  getInterfaces() {
+    let interfaces = os.networkInterfaces(),
+      address;
+    this._ipif = [];
+    for (let k in interfaces) {
+      if (interfaces.hasOwnProperty(k)) {
+        for (let k2 in interfaces[k]) {
+          if (interfaces[k].hasOwnProperty(k2)) {
+            address = interfaces[k][k2];
+            if (address.family === "IPv4" && !address.internal) {
+              const ipif = Object.assign({}, new IP(address.cidr));
+              // delete ipif.family;
+              // delete ipif.internal;
+              A.If("interface to be used: %O:", ipif);
+              this._ipif.push(ipif);
+            }
+          }
+        }
+      }
+    }
+    //        this.address = addresses[0].split('.');
+    //      this.lastaddr = addresses[addresses.length-1];
+    this._afound = this._ipif.map((i) => i.address);
+    this._addresses = this._ipif.map((i) => i.bcaddr);
+    this._addresses.push("255.255.255.255");
+    this._addresses.push("224.0.0.251");
+    return this._ipif;
   }
 
   async start15001() {
@@ -1856,6 +1862,7 @@ class Broadlink extends EventEmitter {
     if (self._cs) await self._cs.close();
 
     let address = "0.0.0.0";
+    this.getInterfaces();
     //  address = typeof what == "object" && what.address ? what.address : address;
     if (this._interface) address = this._interface;
 
