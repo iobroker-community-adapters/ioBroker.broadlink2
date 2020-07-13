@@ -134,7 +134,7 @@ class Device extends EventEmitter {
     this.bl = bl;
     this.host = host;
     // this.type = "Unknown";
-    this.typ = "UK";
+    // this.typ = "UK";
     delete this.host.family;
     delete this.host.size;
     host.mac = mac;
@@ -205,6 +205,10 @@ class Device extends EventEmitter {
   get type() {
     const name = this.constructor.name;
     return name == "Device" ? "Unknown" : this.udp ? name : "closed";
+  }
+
+  get typ() {
+    return this.type.slice(0, 2);
   }
 
   static get errors() {
@@ -670,10 +674,10 @@ class Device extends EventEmitter {
 }
 
 class MP1 extends Device {
-  constructor(host, mac, devtype, bl) {
-    super(host, mac, devtype, bl);
-    this.type = "MP";
-  }
+  // constructor(host, mac, devtype, bl) {
+  //   super(host, mac, devtype, bl);
+  //   // this.type = "MP";
+  // }
   async getVal() {
     //"""Returns the power state of the smart plug."""
     const ret = this._val;

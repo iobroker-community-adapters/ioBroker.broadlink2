@@ -297,7 +297,7 @@ async function sendScene(scene, st) {
 			id = j[0],
 			code = j[1],
 			dev = scanList[id],
-			typ = dev ? dev.type.slice(0, 2) : '';
+			typ = dev ? dev.typ : '';
 		if (dev && typ === 'RM' && code.startsWith(codeName)) {
 			await sendCode(scanList[id], code);
 			continue;
@@ -960,7 +960,6 @@ async function main() {
 	brlink = new Broadlink(add, aif);
 	brlink.on("deviceReady", device => {
 		// const typ = device.type.slice(0, 2);
-		device.typ = device.type.slice(0, 2);
 		const mac = device.host.mac;
 		if (macList[mac])
 			return A.D(`Device ${device.host.name} already found!`);
