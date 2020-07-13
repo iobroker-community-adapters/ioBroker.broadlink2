@@ -253,12 +253,13 @@ class Device extends EventEmitter {
       if (e) {
         err = Device.errors[e] ? Device.errors[e] : `Unknown error ${e.toString(16)} in response!`;
         A.Df(
-          "Dev %s returned err `%s` Check response from %s: %s, res=%s",
+          "Dev %s returned err `%s` Check response from %s: %s, res=%s, host=%s",
           this.toString(),
           err,
           "0x"+ index.toString(16),
           res.response.slice(index).toString("hex"),
-          A.O(res)
+          A.O(res),
+          A.O(this.host)
         );
         if (e == 0xfffb) {
             // A.I(`This.device had  0xfffb: The device storage error!`);
@@ -1622,12 +1623,12 @@ class Broadlink extends EventEmitter {
     this._devlist = {
       SP1: {
         0x0000: "SP1",
-        name: "sp1",
+        // name: "sp1",
         class: SP1,
       },
       SP2: {
         class: SP2,
-        name: "sp2",
+        // name: "sp2",
         range: {
           min: 0x7530,
           max: 0x7918,
@@ -1647,17 +1648,17 @@ class Broadlink extends EventEmitter {
       },
       SP3P: {
         class: SP3P,
-        name: "sp3p",
+        // name: "sp3p",
         0x947a: "SP3SPower",
       },
       T1: {
         class: T1,
-        name: "t1",
+        // name: "t1",
         0x4ead: "T1 Floureon",
       },
       RM: {
         class: RM,
-        name: "rm",
+        // name: "rm",
         0x2712: "RM2",
         0x2737: "RM Mini",
         0x273d: "RM Pro Phicomm",
@@ -1669,7 +1670,7 @@ class Broadlink extends EventEmitter {
       },
       RMP: {
         class: RMP,
-        name: "rmp",
+        // name: "rmp",
         0x272a: "RM2 Pro Plus",
         0x2787: "RM2 Pro Plus2",
         0x278b: "RM2 Pro Plus BL",
@@ -1678,7 +1679,7 @@ class Broadlink extends EventEmitter {
       },
       RM4: {
         class: RM4,
-        name: "rm4",
+        // name: "rm4",
         0x51da: "RM4 Mini",
         0x5f36: "RM Mini 3",
         0x610e: "RM4 Mini",
@@ -1688,29 +1689,29 @@ class Broadlink extends EventEmitter {
       },
       RM4P: {
         class: RM4P,
-        name: "rm4p",
+        // name: "rm4p",
         0x61a2: "RM4 Pro",
         0x6026: "RM4 Pro",
       },
       A1: {
         class: A1,
-        name: "a1",
+        // name: "a1",
         0x2714: "A1",
       },
       MP1: {
         class: MP1,
-        name: "mp1",
+        // name: "mp1",
         0x4eb5: "MP1",
       },
       LB1: {
         class: LB1,
-        name: "lb1",
+        // name: "lb1",
         0x60c7: "SmartBulb LB1",
         0x60c8: "SmartBulb LB1",
       },
       S1C: {
         class: S1,
-        name: "s1",
+        // name: "s1",
         0x2722: "S1",
       },
     };
@@ -1796,7 +1797,7 @@ class Broadlink extends EventEmitter {
       const typ = this._devlist[cl];
       if (typ[devtype] || (typ.range && devtype >= typ.range.min && devtype <= typ.range.max)) {
         dev = new typ.class(host, mac, devtype, this);
-        host.type = typ.name;
+        host.type = dev.type;
         host.devname = typ.range ? typ.range.name : typ[devtype];
         return dev;
       }
