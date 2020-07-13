@@ -261,10 +261,9 @@ class Device extends EventEmitter {
           A.O(res),
           A.O(this.host)
         );
-        if (e == 0xfffb) {
-            // A.I(`This.device had  0xfffb: The device storage error!`);
-            if (this.host.id == 0x5f36)
-                err = null;
+        if (this.host.id == 0x5f36 && e == 0xfffb) {
+              // A.I(`This.device had  0xfffb: The device storage error!`);
+                err = "";
         }
         if (e == 0xfff9) {
           // A.I(`This.device had  0xfff9: please re-auth!`);
