@@ -243,20 +243,24 @@ class Device extends EventEmitter {
     // return "No result delivered! No err check possible!";
     const pl = res.response;
     if (pl && pl.length > index + 1) {
-      const e = parseInt(pl[index] + pl[index + 1] << 8);
+      const e = pl[index] + (pl[index + 1] << 8);
+      // const f = pl[0x22] +pl[0x23] << 8;
+      // A.I(`${this.host.name}: e=${e.toString(16)}, f=${f.toString(16)}, res=${A.O(res)}`);
       if (e) {
-        err = Device.errors[e] ? Device.errors[e] : `Unknown error 0x${e.toString(16)} in response!`;
+        err = Device.errors[e] ? Device.errors[e] : `Unknown error ${e.toString(16)} in response!`;
         A.Df(
-          "Dev %s returned err `%s` Check respinse from 0x22: %s",
+          "Dev %s returned err `%s` Check response from %s: %s, res=%s",
           this.toString(),
           err,
-          res.response.slice(0x22).toString("hex")
+          "0x"+ index.toString(16),
+          res.response.slice(index).toString("hex"),
+          A.O(res)
         );
-        // if (e == 0xfffc) {
-        //     // A.I(`This.device had  0xfffC: The device storage error!`);
-        //     if (this.host.id == 0x5f36)
-        //         err = e = null;
-        // }
+        if (e == 0xfffb) {
+            // A.I(`This.device had  0xfffb: The device storage error!`);
+            if (this.host.id == 0x5f36)
+                err = null;
+        }
         if (e == 0xfff9) {
           // A.I(`This.device had  0xfff9: please re-auth!`);
           this.reAuth = Date.now() - msMinutes();
