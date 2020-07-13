@@ -264,7 +264,7 @@ class Device extends EventEmitter {
         if (this.host.id == 0x5f36 && e == 0xfffb) {
               // A.I(`This.device had  0xfffb: The device storage error!`);
                 err = "";
-        }
+        } else A.D(`host=${A.O(this.host)}, e=${e.toString(16)}`);
         if (e == 0xfff9) {
           // A.I(`This.device had  0xfff9: please re-auth!`);
           this.reAuth = Date.now() - msMinutes();
