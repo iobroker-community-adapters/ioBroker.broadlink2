@@ -248,7 +248,7 @@ class Device extends EventEmitter {
     const pl = res.response;
     if (pl && pl.length > index + 1) {
       const e = pl[index] + (pl[index + 1] << 8);
-      // const f = pl[0x22] +pl[0x23] << 8;
+      // const e = 0xfffb;
       // A.I(`${this.host.name}: e=${e.toString(16)}, f=${f.toString(16)}, res=${A.O(res)}`);
       if (e) {
         err = Device.errors[e] ? Device.errors[e] : `Unknown error ${e.toString(16)} in response!`;
@@ -261,7 +261,7 @@ class Device extends EventEmitter {
           A.O(res),
           A.O(this.host)
         );
-        if (this.host.id == 0x5f36 && e == 0xfffb) {
+        if (this.host.devtype == 0x5f36 && e == 0xfffb) {
               // A.I(`This.device had  0xfffb: The device storage error!`);
                 err = "";
         } else A.D(`host=${A.O(this.host)}, e=${e.toString(16)}`);
@@ -1019,6 +1019,9 @@ class RM extends Device {
     //             A.I(`checkData on '${this.constructor.name}' returned ${A.O(res)}`);
     if (res && res.payload && !res.err) {
       let data = res.payload.slice(this._request_header.length + 4);
+      A.If("checkData command %s:%s, %s, %d", "04", this, data.toString("hex"), data.length);
+      if (data && data.length == 10)
+        return null;
       return data;
     }
     return null;
@@ -1033,7 +1036,11 @@ class RM extends Device {
     this.learning = true;
     //        A.If('Should learn on %s', this.host.name);
     const res = {};
-    await self.checkData();
+    // let first = true;
+    // while (first && await self.checkData()) {
+    //   await A.wait(50);
+    //   first = false;
+    // }
     await self.enterLearning();
     for (let i = 30; i > 0; i--) {
       await A.wait(1000);
@@ -1049,7 +1056,7 @@ class RM extends Device {
     if (msg)
       msg(
         res.data ?
-        `Learning funished and packet received!` :
+        `Learning finished and packet received!` :
         `Timeout: No data received when learning!`
       );
     self.learning = false;
@@ -1068,6 +1075,7 @@ class RM extends Device {
   }
 
   async enterLearning() {
+    A.If("enterLearning command %s:%s", "03", this);
     var packet = Buffer.concat([this._request_header, Buffer.from([0x03])]);
     const ret = await this.checkOff(this.sendPacket, 0x6a, packet); //.then(x => A.I(`enterLearning for ${this.host.name} returned ${A.O(x)}`, x));
     return this.checkError(ret, 0x22);
@@ -1082,8 +1090,9 @@ class RMP extends RM {
   }
 
   async enterRFSweep(start) {
-    const packet = Buffer.concat([this._request_header, Buffer.from([start ? 0x19 : 0x1e])]);
-
+    const command = start ? 0x19 : 0x1e;
+    const packet = Buffer.concat([this._request_header, Buffer.from([command])]);
+    A.If("enterRFSwwep command %s:%s", command.toString(16), this);
     // var packet = Buffer.alloc(16, 0);
     // packet[0] = start ? 0x19 : 0x1e;
     const ret = await this.checkOff(this.sendPacket, 0x6a, packet); //.then(x => A.I(`enterRFSweep for ${this.host.name} returned ${A.O(x)}`, x));
@@ -1091,8 +1100,10 @@ class RMP extends RM {
   }
 
   async checkRFData(check2) {
+    const command = check2 ? 0x1b : 0x1a;
     // check2=true = fund_rf_packet, false= check_frequency
-    const packet = Buffer.concat([this._request_header, Buffer.from([check2 ? 0x1b : 0x1a])]);
+    A.If("CheckRFData command %s:%s", command.toString(16), this);
+    const packet = Buffer.concat([this._request_header, Buffer.from([command])]);
     // var packet = Buffer.alloc(16, 0);
     // packet[0] = check2 ? 0x1b : 0x1a;
     const res = await this.checkOff(this.sendPacket, 0x6a, packet);
