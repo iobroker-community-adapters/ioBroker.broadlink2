@@ -1,102 +1,33 @@
-import Vue from "vue";
-import { mapActions } from "vuex";
-import { runInThisContext } from "vm";
+// import Vue from "vue";
+import { mapActions, mapGetters } from "vuex";
 
 const broadlink = {
-  data() {
-    return {
-      broadlinkDevices: {},
-    };
-  },
+  // data() {
+  //   return {
+  //     broadlinkDevices: {},
+  //   };
+  // },
 
   // sockets: { },
 
   computed: {
-    // broadlinkConfig() {
-    //   return this.$store.state.broadlinkConfig;
-    // },
     adapterObjects() {
       return this.$store.state.adapterObjects;
     },
+
+    adapterStates() {
+      return this.$store.state.adapterStates;
+    },
+
+    adapterStateUpdate() {
+      return this.$store.state.adapterStateUpdate;
+    },
+
     interfaces() {
       return this.$store.state.interfaces;
     },
-    // set(value) {
-    //   this.$store.commit(
-    //     "iobrokerConfig",
-    //     JSON.parse(this.myStringify(value))
-    //   );
-    // },
-    // broadlinkConfigChanged() {
-    //   return (
-    //     this.$store.state.broadlinkConfigCompare !=
-    //     JSON.stringify(this.$store.state.broadlinkConfig)
-    //   );
-    // },
-  },
 
-  watch: {
-    adapterObjects: {
-      handler: function () {
-        this.updateBroadlinkDevices();
-      },
-      deep: true,
-    },
-  },
-  // async created() { },
-
-  // async mounted() {},
-
-  methods: {
-    ...mapActions(["loadAdapterObjects", "loadInterfaces"]),
-    /* 
-    async loadBroadlinkData() {
-      await this.loadBroadlinkConfig();
-      this.updateBroadlinkDevices();
-      // console.log(this.broadlinkDevices);
-      const states = this.broadlinkConfig.states;
-      let ste = Object.entries(states);
-      if (!ste.length) {
-        for (const i in this.broadlinkDevices) {
-          const a = this.broadlinkDevices[i];
-          if (!a.States) continue;
-          for (const estats of Object.entries(a.States)) {
-            const [name, value] = estats;
-            if (value.$name && value.$native && value.$native.state) {
-              const name = states[value.$name]
-                ? "$" + i + value.$name
-                : value.$name;
-
-              this.$set(states, name, value.$native.state);
-            }
-          }
-        }
-      }
-      const scenes = this.broadlinkConfig.scenes;
-      ste = Object.entries(scenes);
-      if (!ste.length) {
-        for (const i in this.broadlinkDevices) {
-          const a = this.broadlinkDevices[i];
-          if (!a.Scenes) continue;
-          for (const estats of Object.entries(a.Scenes)) {
-            const [name, value] = estats;
-            if (value.$name && value.$native && value.$native.scene) {
-              const nam =
-                value.$name.startsWith("Scenes.") >= 0
-                  ? value.$name.slice(7)
-                  : value.$name;
-              const name = states[nam] ? "$" + i + nam : nam;
-              let scene = value.$native.scene;
-              if (typeof scene === "string")
-                scene = scene.split(",").map((i) => i.trim());
-              this.$set(scenes, name, scene);
-            }
-          }
-        }
-      }
-    },
- */
-    async updateBroadlinkDevices() {
+    broadlinkDevices() {
       function collect(obj) {
         const { _id, common, native } = obj;
         const no = obj
@@ -108,12 +39,13 @@ const broadlink = {
         if (common && common.name) no.$name = common.name;
         return no;
       }
-      const bo = Object.assign({}, this.adapterObjects);
+
+      const bo = Object.assign({}, this.$store.state.adapterObjects);
       const d = {};
-      await this.wait(20);
+      const ai = this.iobrokerAdapterInstance;
       for (const e of Object.entries(bo)) {
         const [name, obj] = e;
-        if (name.startsWith(this.iobrokerAdapterInstance) < 0) continue;
+        if (name.startsWith(ai) < 0) continue;
         let ni = name.split(".");
         ni = ni.slice(2);
         const bn = ni[0];
@@ -139,19 +71,55 @@ const broadlink = {
           }
         }
       }
-      this.$set(this, "broadlinkDevices", d);
-      await this.wait(20);
       return d;
     },
+  },
+
+  watch: {
+    // adapterObjects: {
+    //   handler: function () {
+    //     this.updateBroadlinkDevices();
+    //   },
+    //   deep: true,
+    // },
+    adapterStateUpdate(newV, oldV) {
+      const [id, state] = newV;
+      if (id.endsWith("._notReachable")) {
+        const name = id.split(".")[2];
+        const config = this.$store.state.iobrokerConfig;
+        const devlist = (config && config.devList) || [];
+        const item = devlist.find((i) => i.name == name);
+        if (item) {
+          this.$set(item, "active", !state.val);
+          // console.log(`Set Reachable of ${id} to ${!state.val}`);
+        }
+      }
+    },
+
+    broadlinkDevices: {
+      handler: function () {
+        this.loadDevList();
+      },
+      deep: true,
+    },
+  },
+  // async created() { },
+
+  // async mounted() {},
+
+  methods: {
+    // ...mapActions(["loadAdapterObjects", "loadInterfaces"]),
+
+    isDeviceHere(name) {
+      const id = this.iobrokerAdapterInstance + "." + name + "._notReachable";
+      const state = this.adapterStates[id];
+      // console.log(id, state);
+      return state && !state.val;
+    },
+
     async loadDevList() {
       //    console.log("beforeMount:", this.$socket);
-      // this.loadBroadlinkData();
-      // await this.wait(10);
-      await this.loadAdapterObjects();
-      // await this.wait(10);
-      await this.updateBroadlinkDevices();
-      await this.wait(10);
-      await this.loadInterfaces();
+      await this.wait(100);
       const config = this.$store.state.iobrokerConfig;
       if (!Array.isArray(config.devList) || !config.devList.length)
         this.$set(config, "devList", []);
@@ -175,16 +143,19 @@ const broadlink = {
         const info = `${type.toUpperCase()}:${devname}, id=${devhex}, netnames=${
           (names && names.join("; ")) || oname
         }`;
+        const active = this.isDeviceHere(name);
         if (found) {
           found.mac = found.mac || mac;
           found.ip = found.ip || address;
           found.info = found.info || info;
+          found.active = active;
         } else
           dl.push({
             name,
             ip: address,
             mac: mac.toLowerCase(),
             info,
+            active,
           });
       }
       await this.wait(20);

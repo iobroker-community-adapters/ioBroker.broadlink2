@@ -10,7 +10,7 @@ let aname = window.location.pathname.split("/");
 aname = aname[aname.length - 2] || process.env.VUE_APP_ADAPTERNAME;
 // if (aname === "" && process.env.VUE_APP_ADAPTERNAME)
 // aname = process.env.VUE_APP_ADAPTERNAME;
-console.log("env", process.env);
+// console.log("env", process.env);
 // console.log("search", window.location.search);
 // console.log("pathname", window.location.pathname);
 // console.log("istab", !window.location.search);
@@ -38,7 +38,9 @@ export default new Vuex.Store({
     iobrokerReadme: "",
     adapterIcon: "",
     adapterLog: [],
+    adapterStateUpdate: [],
     adapterStates: {},
+    adapterLastState: {},
     interfaces: ["0.0.0.0"],
     socketConnected: false,
     adapterObjects: {},
@@ -52,18 +54,23 @@ export default new Vuex.Store({
       state.adapterObjects = value;
     },
     adapterLog(state, value) {
-      if (state.adapterLog.length >= 50) state.adapterLog.pop();
+      if (state.adapterLog.length >= 100) state.adapterLog.pop();
       state.adapterLog.unshift(value);
     },
 
     adapterStates(state, payload) {
       const [id, obj] = payload;
+      state.adapterLastState = payload;
       if (!obj) delete state.adapterStates[id];
       else state.adapterStates[id] = obj;
     },
 
     interfaces(state, value) {
       state.interfaces = value;
+    },
+
+    adapterStateUpdate(state, value) {
+      state.adapterStateUpdate = value;
     },
 
     adapterStatus(state) {
@@ -135,18 +142,32 @@ export default new Vuex.Store({
     adapterInstance: (state) => {
       return state.iobrokerAdapter + "." + state.iobrokerInstance;
     },
+    adapterLastState: (state) => {
+      return state.adapterLastState;
+    },
   },
   actions: {
-    SOCKET_connect({ commit }) {
+    wait(_, time) {
+      time = time || 10;
+      return new Promise((res) => setTimeout(() => res(), time));
+    },
+
+    async SOCKET_connect({ commit, dispatch }) {
       console.log("store socket_connected");
       commit("socketConnected", true);
+      await dispatch("wait");
       commit("iobrokerHostConnection", this._vm.$socket.io.opts);
+      await dispatch("wait");
+      // await dispatch("wait");
+      await dispatch("loadAdapterObjects");
+      await dispatch("wait");
+      dispatch("loadInterfaces");
     },
 
     SOCKET_disconnect({ commit }) {
       console.log("store socket_disconnected");
       commit("socketConnected", false);
-      this.$socket.open();
+      // this.$socket.open();
     },
 
     SOCKET_reconnect({ commit }) {
@@ -163,13 +184,17 @@ export default new Vuex.Store({
     SOCKET_stateChange({ commit, state, getters }, message) {
       const [id, obj] = message;
       if (
-        !id.startsWith(getters.adapterInstance) &&
-        !id.startsWith("system.adapter." + getters.adapterInstance)
+        // !id.startsWith(getters.adapterInstance) &&
+        // !id.startsWith("system.adapter." + getters.adapterInstance)
+        id.indexOf(getters.adapterInstance + ".") < 0
       )
         return;
       // state.adapterStates[id] = obj;
-      console.log("store stateChange of", id, " with ", obj);
-      // console.log("store adapter log:", message);
+      if (!id.startsWith("system.")) {
+        // console.log("store stateChange of", id, " with ", obj.val);
+        // console.log("store adapter log:", message);
+        commit("adapterStateUpdate", message);
+      }
       commit("adapterStates", message);
       if (id.startsWith("system.adapter." + getters.adapterInstance))
         commit("adapterStatus");
@@ -177,8 +202,8 @@ export default new Vuex.Store({
 
     SOCKET_onUpdate({ commit, state, getters }, message) {
       const [id, obj] = message;
-      if (!id.startsWith(getters.adapterInstance)) return;
-      console.log("store aonUpdate", id, obj);
+      if (id.indexOf(getters.adapterInstance + ".") < 0) return;
+      console.log("store onUpdate", id, obj);
       // commit("adapterLog", message);
     },
 
@@ -212,7 +237,7 @@ export default new Vuex.Store({
 
     async loadInterfaces({ commit, state, dispatch }) {
       const obj = await Vue.prototype
-        .$socketSendTo("sendToHost", null, "getInterfaces", null)
+        .$socketSendTo("sendToHost", null, "getInterfaces", "IPv4")
         .catch((e) => console.log("error:", e), null);
       const ifs = ["0.0.0.0"];
       if (obj)
@@ -225,80 +250,39 @@ export default new Vuex.Store({
     },
 
     async loadAdapterObjects({ commit, state, dispatch }, params) {
-      const alist = `${state.iobrokerAdapter}.${state.iobrokerInstance}.*`;
-      const obj =
+      const alist = `${state.iobrokerAdapter}.${state.iobrokerInstance}.`;
+      const options = {
+        startKey: alist,
+        endkey: alist + "\u9999",
+      };
+      let obj =
         (await Vue.prototype
-          .$socketEmit("getForeignObjects", alist)
-          .catch((e) => console.log("error:", e), null)) || {};
+          .$socketEmit("subscribeStates", alist + "*")
+          .catch((e) => console.log("SubscribeStates error:", e), null)) || {};
+      obj =
+        (await Vue.prototype
+          .$socketEmit("subscribeObjects", alist + "*")
+          .catch((e) => console.log("SubscribeObjects error:", e), null)) || {};
+      obj =
+        (await Vue.prototype
+          .$socketEmit("getForeignObjects", alist + "*")
+          .catch((e) => console.log("getForeignObjects error:", e), null)) ||
+        {};
       // console.log(obj);
       commit("adapterObjects", obj);
+      await dispatch("wait");
+      const states =
+        (await Vue.prototype
+          .$socketEmit("getStates")
+          .catch((e) => console.log("getStates error:", e), null)) || {};
+      for (const s of Object.entries(states)) {
+        const [id, obj] = s;
+        if (id.startsWith(alist) && obj) commit("adapterStates", s);
+      }
+      // console.log("Returned States", state.adapterStates);
       return obj;
     },
-    /*
 
-        async loadBroadlinkConfig({ commit, state, dispatch }, params) {
-          const id = "broadlink2.meta";
-          const obj =
-            (await Vue.prototype.$socketEmit("getObject", id).catch(() => null)) ||
-            {};
-          // console.log(obj);
-          if (!obj.type) {
-            Object.assign(obj, {
-              _id: "broadlink2.meta",
-              type: "meta",
-              meta: {
-                adapter: "broadlink2",
-                type: "states-commands-scenes",
-              },
-              common: {},
-            });
-          }
-          if (!obj.native) {
-            obj.native = {
-              learned: {},
-              scenes: {},
-              states: {},
-              options: {},
-            };
-            await Vue.prototype.$socketEmit("setObject", id, obj).then(
-              () => console.log("broadlinkConfig created"),
-              (e) => console.log("error on setObject broadlinkConfig ", e)
-            );
-          }
-
-          commit("broadlinkConfig", obj.native);
-          await dispatch("loadadapterObjects");
-          return obj.native;
-        },
-
-        async saveBroadlinkConfig({ commit, state, dispatch }, params) {
-          const config = params || state.broadlinkConfig;
-          const id = "broadlink2.meta";
-          const obj =
-            (await Vue.prototype.$socketEmit("getObject", id).catch(() => null)) ||
-            {};
-          console.log(obj);
-          if (!obj.type) {
-            Object.assign(obj, {
-              _id: "broadlink2.meta",
-              type: "meta",
-              meta: {
-                adapter: "broadlink2",
-                type: "states-commands-scenes",
-              },
-              common: {},
-            });
-          }
-          obj.native = config;
-          await Vue.prototype.$socketEmit("setObject", id, obj).then(
-            () => console.log("broadlinkConfig created"),
-            (e) => console.log("error on setObject broadlinkConfig ", e)
-          );
-
-          commit("broadlinkConfig", obj.native);
-          return obj.native;
-        },
-     */
     setAdapterReadme({ commit, state }, params) {
       let { lang, common } = params || {};
       //      console.log("setAdapterReadme", lang, common);

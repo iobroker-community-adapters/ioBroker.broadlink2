@@ -118,9 +118,12 @@ const iobroker = {
   // },
 
   computed: {
-    // ...mapGetters(["adapterStatus"]),
     adapterStatus() {
       return this.$store.state.adapterStatus;
+    },
+
+    adapterLastState() {
+      return this.$store.state.adapterLastState;
     },
 
     interfaces() {
@@ -472,6 +475,16 @@ const iobroker = {
         host: this.iobrokerAdapterCommon.host,
       };
       return conf;
+    },
+
+    async enableDisableInstance(what, id) {
+      id = id || this.iobrokerAdapterInstance;
+      if (!id.startsWith("system.adapter.")) id = "system.adapter." + id;
+      await this.$socketEmit("extendObject", id, {
+        common: { enabled: !!what },
+      }).catch((e) =>
+        this.$alert(`error:Set ${id} to enabled=${!!what} error: ${e}`)
+      );
     },
 
     async saveAdapterConfig(common) {

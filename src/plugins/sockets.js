@@ -106,7 +106,7 @@ const socket = SocketIO(server, options);
  */
 
 const socketIo = new VueSocketIO({
-  debug: devMode,
+  // debug: devMode,
   connection: socket, //options object is Optional
   vuex: {
     store,

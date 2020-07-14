@@ -77,7 +77,7 @@ export default {
   name: "fjConfigTable",
 
   props: {
-    table: { type: Array, required: true },
+    table: { type: Array, required: false, default: () => [] },
     columns: { type: Array, required: true },
     label: { type: String, required: false, default: "" },
     icon: { type: String, required: false, default: "mdi-table" },

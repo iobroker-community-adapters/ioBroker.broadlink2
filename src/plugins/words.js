@@ -61,11 +61,11 @@ const systemDictionary = {
   },
   Save: {
     en: "Save",
-    de: "speichern",
+    de: "Speichern",
     ru: "Сохранить",
     pt: "Salve ",
     nl: "Opslaan",
-    fr: "sauver",
+    fr: "Sauver",
     it: "Salva",
     es: "Salvar",
     pl: "Zapisać",

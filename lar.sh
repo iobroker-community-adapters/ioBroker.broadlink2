@@ -45,7 +45,7 @@ done
 echo "all done!"
 ls -CFA $dpath
 cd /c/iobroker/Test2
-/c/iobroker/Test2/iob.bat upload $a
+/c/iobroker/Test2/iobroker.bat upload $a
 #iobroker upload $a
 #echo sudo chown -hR iobroker  $dpath
 #sudo chown -hR iobroker  $dpath

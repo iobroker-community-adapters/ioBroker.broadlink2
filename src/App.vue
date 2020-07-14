@@ -33,10 +33,12 @@
         <fjB
           :color="['red', 'orange', 'green'][adapterStatus]"
           :img="
-            ['mdi-arrow-right-bold-circle', 'mdi-pause-circle', 'mdi-restart'][
+            ['mdi-arrow-right-box', 'mdi-pause-circle', 'mdi-pause-octagon'][
               adapterStatus
             ]
           "
+          @click="enableDisableInstance(!adapterStatus)"
+          :tooltip="adapterStatus ? 'stop adapter' : 'start adapter'"
         />
       </div>
       <v-tabs centered v-model="page">
@@ -128,20 +130,43 @@
       >
       </v-data-table>
  -->
-      <v-simple-table v-if="!page" dense>
+      <v-simple-table v-if="!page" dense class="elevation-2 xa-1">
         <template v-slot:default>
           <thead>
             <tr>
-              <th class="text-left">Severity@Time</th>
-              <th class="text-left">Message</th>
+              <th class="text-left">Adapter log Time@Severity</th>
+              <th class="text-left">
+                {{ $t("Messages:") + " " + adapterLog.length + " " }}
+                <fjB
+                  label="Clear"
+                  img="mdi-delete-forever"
+                  right
+                  x-small
+                  @click="adapterLog.splice(1)"
+                  tooltip="delete all but last message"
+                />
+                <v-text-field
+                  dense
+                  flat
+                  hide-details
+                  hint="Enter filter Text:"
+                  v-model="markRed"
+                  label="Filter:"
+                  class="caption"
+                  clearable
+                />
+              </th>
             </tr>
           </thead>
           <tbody>
-            <tr v-for="item in adapterLog" :key="item.ts">
-              <td :class="'caption ' + sevColor(item)">
-                {{ item.severity }}@{{ timeStamp(item.ts) }}
+            <tr
+              v-for="(item, index) in adapterLogFiltered"
+              :key="index.toString() + item.ts.toString()"
+            >
+              <td :class="'height24 caption ' + sevColor(item)">
+                {{ timeStamp(item.ts) + "/" + item.severity }}
               </td>
-              <td :class="'caption ' + sevColor(item)">
+              <td :class="'height24 caption ' + sevColor(item)">
                 {{ item.message }}
               </td>
             </tr>
@@ -180,6 +205,7 @@ export default {
     return {
       page: -1,
       configPage: { items: [] },
+      markRed: "",
       //      tmptext: "",
     };
   },
@@ -278,10 +304,21 @@ export default {
     },
   },
 
-  // computed: {},
+  computed: {
+    adapterLogFiltered() {
+      const log = this.adapterLog;
+      const filter = this.markRed ? this.markRed.toLowerCase() : null;
+      return filter
+        ? log.filter((i) => i.message.toLowerCase().indexOf(filter) >= 0)
+        : log;
+    },
+  },
 };
 </script>
 <style scoped.vue>
+.height24 {
+  height: 22px !important;
+}
 html {
   overflow-y: auto !important;
 }

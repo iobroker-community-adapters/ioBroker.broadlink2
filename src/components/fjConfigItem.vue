@@ -30,13 +30,13 @@
     dense
     hide-details="auto"
     v-bind="attrs()"
-    v-model="cItem[cToolItem.value]"
+    v-model="cValue"
   />
   <v-checkbox
     v-else-if="cToolItem.type == 'checkbox' && cToolItem.label"
     dense
     hide-details="auto"
-    v-model="cItem[cToolItem.value]"
+    v-model="cValue"
     v-bind="attrs()"
     @change="cToolItem.click ? cToolItem.click($event) : null"
   />
@@ -45,7 +45,7 @@
     :items="cToolItem.select"
     dense
     hide-details="auto"
-    v-model="cItem[cToolItem.value]"
+    v-model="cValue"
     v-bind="attrs()"
   />
   <v-textarea
@@ -54,16 +54,14 @@
     auto-grow
     row-height="15"
     hide-details="auto"
-    :rows="cItem[cToolItem.value].split(`\n`).length"
+    :rows="cValue.split(`\n`).length"
     dense
-    v-model="cItem[cToolItem.value]"
+    v-model="cValue"
     v-bind="attrs()"
   />
   <v-combobox
-    v-else-if="
-      cToolItem.type == 'chips' && Array.isArray(cItem[cToolItem.value])
-    "
-    v-model="cItem[cToolItem.value]"
+    v-else-if="cToolItem.type == 'chips' && Array.isArray(cValue)"
+    v-model="cValue"
     v-bind="attrs()"
     :items="cToolItem.select || []"
     chips
@@ -76,12 +74,12 @@
   <fjConfigTable
     v-else-if="cToolItem.type == 'table'"
     :columns="cToolItem.items"
-    :table="cItem[cToolItem.value]"
+    :table="cValue"
     v-bind="attrs()"
   />
   <v-simple-checkbox
     v-else-if="cToolItem.type == 'checkbox' && !cToolItem.label"
-    v-model="cItem[cToolItem.value]"
+    v-model="cValue"
     v-bind="attrs()"
     @change="cToolItem.click ? cToolItem.click($event) : null"
   />
@@ -89,12 +87,12 @@
     v-else-if="cToolItem.type == 'switch'"
     dense
     hide-details="auto"
-    v-model="cItem[cToolItem.value]"
+    v-model="cValue"
     v-bind="attrs()"
     @change="cToolItem.click ? cToolItem.click($event) : null"
   />
   <div v-else v-bind="attrs()">
-    {{ cToolItem }} {{ cToolItem.value ? cItem[cToolItem.value] : "" }}
+    {{ cToolItem }} {{ cToolItem.value ? cValue : "" }}
   </div>
 </template>
 
@@ -144,14 +142,31 @@ export default {
         if (!isNaN(num)) this.$set(this.cItem, this.cToolItem.value, num);
       },
     },
+
+    cValue: {
+      get() {
+        const ct = this.cTable;
+        const cv = this.cToolItem;
+        const value = cv.value;
+        const ci = this.cItem;
+        // const ls = this.$store.state.adapterLastState;
+        if (!value.startsWith("(")) return ci[value];
+        const o = eval(value);
+        return o;
+      },
+      set(val) {
+        const value = this.cToolItem.value;
+        const ci = this.cItem;
+        if (!value.startsWith("(")) return this.$set(ci, value, val);
+        const o = eval(value + "=val");
+        return o;
+      },
+    },
   },
   //  methods: {},
   methods: {
     removeChip(item) {
-      this.cItem[cToolItem.value].splice(
-        this.cItem[this.cToolItem.value].indexOf(item),
-        1
-      );
+      this.cValue.splice(this.cItem[this.cToolItem.value].indexOf(item), 1);
       //      this.chips = [...this.chips]
     },
 
