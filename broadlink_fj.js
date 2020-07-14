@@ -1020,7 +1020,7 @@ class RM extends Device {
     if (res && res.payload && !res.err) {
       let data = res.payload.slice(this._request_header.length + 4);
       A.If("checkData command %s:%s, %s, %d", "04", this, data.toString("hex"), data.length);
-      if (data && data.length == 10)
+      if (data && data.length <= 12)
         return null;
       return data;
     }
@@ -1041,6 +1041,7 @@ class RM extends Device {
     //   await A.wait(50);
     //   first = false;
     // }
+    await this.checkData().catch(() => null);
     await self.enterLearning();
     for (let i = 30; i > 0; i--) {
       await A.wait(1000);
@@ -1124,7 +1125,7 @@ class RMP extends RM {
     this.learning = true;
     const l = {};
     let f = false;
-    await this.checkData().catch(() => null);
+     await this.checkData().catch(() => null);
     await this.enterRFSweep(true);
     for (let i = 30; i > 0; i--) {
       await A.wait(1000);
