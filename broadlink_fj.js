@@ -1020,8 +1020,12 @@ class RM extends Device {
     if (res && res.payload && !res.err) {
       let data = res.payload.slice(this._request_header.length + 4);
       A.If("checkData command %s:%s, %s, %d", "04", this, data.toString("hex"), data.length);
-      if (data && data.length <= 12)
-        return null;
+      if (data && data.length <= 14) {
+        let s = 0;
+          for(let i=0; i< data.length; i++)
+            s += data[i];
+        if (!s) return null;
+      }
       return data;
     }
     return null;
