@@ -834,7 +834,7 @@ class MyAdapter {
         return res;
       } catch (err) {
         nretry--;
-        if (!nretry) return err;
+        if (!nretry) return Promise.reject(err);
         await this.wait(wait || 0);
       }
     return null;

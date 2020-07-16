@@ -251,19 +251,21 @@ class Device extends EventEmitter {
       // const e = 0xfffb;
       // A.I(`${this.host.name}: e=${e.toString(16)}, f=${f.toString(16)}, res=${A.O(res)}`);
       if (e) {
-        err = Device.errors[e] ? Device.errors[e] : `Unknown error ${e.toString(16)} in response!`;
+        err = Device.errors[e]
+          ? Device.errors[e]
+          : `Unknown error ${e.toString(16)} in response!`;
         A.Df(
           "Dev %s returned err `%s` Check response from %s: %s, res=%s, host=%s",
           this.toString(),
           err,
-          "0x"+ index.toString(16),
+          "0x" + index.toString(16),
           res.response.slice(index).toString("hex"),
           A.O(res),
           A.O(this.host)
         );
         if (this.host.devtype == 0x5f36 && e == 0xfffb) {
-              // A.I(`This.device had  0xfffb: The device storage error!`);
-                err = "";
+          // A.I(`This.device had  0xfffb: The device storage error!`);
+          err = "";
         } else A.D(`host=${A.O(this.host)}, e=${e.toString(16)}`);
         if (e == 0xfff9) {
           // A.I(`This.device had  0xfff9: please re-auth!`);
@@ -279,6 +281,8 @@ class Device extends EventEmitter {
   toString() {
     return `${this.type}, ${this.name}, ${this.host.mac}, ${this.host.address}${
       this.host.oname ? ", " + this.host.oname : ""
+    }${this.host.fware ? ", fw=" + this.host.fware.toString(16) : ""}${
+      this.host.cloud ? "cloud=true" : ""
     }`;
   }
 
@@ -416,7 +420,11 @@ class Device extends EventEmitter {
         const enc_payload = Buffer.alloc(response.length - 0x38, 0);
         response.copy(enc_payload, 0, 0x38);
 
-        const decipher = crypto.createDecipheriv("aes-128-cbc", self.key, self.iv);
+        const decipher = crypto.createDecipheriv(
+          "aes-128-cbc",
+          self.key,
+          self.iv
+        );
         decipher.setAutoPadding(false);
         let payload = decipher.update(enc_payload);
         var p2 = decipher.final();
@@ -441,11 +449,15 @@ class Device extends EventEmitter {
         };
         //                A.If('message received, err=%s: %O',Broadlink.toHex(err), obj);
         if (command === 7) {
-          A.If("message command=7 received, err=%s: %O", Broadlink.toHex(err), obj);
+          A.If(
+            "message command=7 received, err=%s: %O",
+            Broadlink.toHex(err),
+            obj
+          );
           return resume(obj);
         }
         //                A.If('received message from %s:%O',self.name,obj);
-        // if (!err) 
+        // if (!err)
         return resume(obj);
         // obj.err = err;
         //                A.Wf(`Got error %O from device %s`, obj,self.host.name)
@@ -454,11 +466,11 @@ class Device extends EventEmitter {
 
       self.tout = setTimeout(
         () =>
-        reject({
-          here: false,
-          err: `timed out on send`,
-          name: self.host.name,
-        }),
+          reject({
+            here: false,
+            err: `timed out on send`,
+            name: self.host.name,
+          }),
         timeout
       );
 
@@ -469,13 +481,13 @@ class Device extends EventEmitter {
           (r) => r
         )
         .then((r) =>
-          r ?
-          r :
-          reject({
-            here: false,
-            err: `send udp packet error`,
-            name: self.host.name,
-          })
+          r
+            ? r
+            : reject({
+                here: false,
+                err: `send udp packet error`,
+                name: self.host.name,
+              })
         );
     });
   }
@@ -562,7 +574,11 @@ class Device extends EventEmitter {
         const res = await A.retry(3, that.auth.bind(that), 100).catch((err) =>
           A.W(`Failed to authenticate device ${that} with err ${err}`)
         );
-        A.D(`Reauth result of ${that} is: ${res} ${(Date.now() - that.reAuth) / 1000.0} seconds`);
+        A.D(
+          `Reauth result of ${that} is: ${res} ${
+            (Date.now() - that.reAuth) / 1000.0
+          } seconds`
+        );
       });
       that.inReAuth = false;
     }
@@ -671,6 +687,41 @@ class Device extends EventEmitter {
     return null;
     // return A.retry(3, this._send.bind(this), packet);
   }
+  /* 
+  def set_name(self, name):
+  packet = bytearray(4)
+  packet += name.encode('utf-8')
+  packet += bytearray(0x50 - len(packet))
+  packet[0x43] = self.cloud
+  response = self.send_packet(0x6a, packet)
+  check_error(response[0x22:0x24])
+  self.name = name
+
+def set_lock(self, state):
+  packet = bytearray(4)
+  packet += self.name.encode('utf-8')
+  packet += bytearray(0x50 - len(packet))
+  packet[0x43] = state
+  response = self.send_packet(0x6a, packet)
+  check_error(response[0x22:0x24])
+  self.cloud = bool(state)
+ */
+  async get_firmware() {
+    //        const self = this;
+    var packet = Buffer.alloc(16, 0);
+    packet[0] = 0x68;
+    const res = await this.checkOff(this.sendPacket, 0x6a, packet);
+    this.checkError(res, 0x22);
+    //            A.I(`getVal on '${this.constructor.name}' returned ${A.O(res)}`);
+    if (res && res.payload && !res.err) {
+      let payload = res.payload;
+      const fw = payload[0x4] + (payload[0x5] << 8);
+      this.host.fware = fw;
+      // A.Df("Device has firmware %s: %O", fw.toString(16), this.host);
+      return fw;
+    }
+    return NaN;
+  }
 }
 
 class MP1 extends Device {
@@ -713,15 +764,23 @@ class MP1 extends Device {
     const vret = this._val;
     let st = state;
     if (!sw || isNaN(Number(sw)) || sw < 1 || sw > 4)
-      return A.resolve(A.W(`call of setVal on ${this.host.name} with wrong argument 2: ${sw}`));
+      return A.resolve(
+        A.W(`call of setVal on ${this.host.name} with wrong argument 2: ${sw}`)
+      );
     //        let nl = false;
     A.I(`setVal on '${this.host.name}' to ${A.O(state)}`);
     //        if (A.T(state) === 'object' && state.nightlight !== undefined)
     //            nl = !!state.nightlight;
-    if (A.T(state) === "object" && state.state !== undefined) st = !!state.state;
-    else if (typeof state === "boolean" || typeof state === "number") st = !!state;
+    if (A.T(state) === "object" && state.state !== undefined)
+      st = !!state.state;
+    else if (typeof state === "boolean" || typeof state === "number")
+      st = !!state;
     else
-      return A.reject(`setVal on '${this.host.name}' to ${A.O(state)}: error wrong argument type!`);
+      return A.reject(
+        `setVal on '${this.host.name}' to ${A.O(
+          state
+        )}: error wrong argument type!`
+      );
     let sid_mask = 1 << (sw - 1);
     let packet = Buffer.alloc(16, 0);
     packet[0x00] = 0x0d;
@@ -799,10 +858,16 @@ class SP2 extends Device {
     A.I(`setVal on '${this.host.name}' to ${A.O(state)}`);
     //        if (A.T(state) === 'object' && state.nightlight !== undefined)
     //            nl = !!state.nightlight;
-    if (A.T(state) === "object" && state.state !== undefined) st = !!state.state;
-    else if (typeof state === "boolean" || typeof state === "number") st = !!state;
+    if (A.T(state) === "object" && state.state !== undefined)
+      st = !!state.state;
+    else if (typeof state === "boolean" || typeof state === "number")
+      st = !!state;
     else
-      return A.reject(`setVal on '${this.host.name}' to ${A.O(state)}: error wrong argument type!`);
+      return A.reject(
+        `setVal on '${this.host.name}' to ${A.O(
+          state
+        )}: error wrong argument type!`
+      );
     let packet = Buffer.alloc(16, 0);
     packet[0] = 2;
     //        packet[4] = (st ? 1 : 0) + (nl ? 2 : 0);
@@ -828,11 +893,18 @@ class SP3P extends Device {
     let st = state;
     let nl = false;
     A.I(`setVal on '${this.host.name}' to ${A.O(state)}`);
-    if (A.T(state) === "object" && state.nightlight !== undefined) nl = !!state.nightlight;
-    if (A.T(state) === "object" && state.state !== undefined) st = !!state.state;
-    else if (typeof state === "boolean" || typeof state === "number") st = !!state;
+    if (A.T(state) === "object" && state.nightlight !== undefined)
+      nl = !!state.nightlight;
+    if (A.T(state) === "object" && state.state !== undefined)
+      st = !!state.state;
+    else if (typeof state === "boolean" || typeof state === "number")
+      st = !!state;
     else
-      return A.reject(`setVal on '${this.host.name}' to ${A.O(state)}: error wrong argument type!`);
+      return A.reject(
+        `setVal on '${this.host.name}' to ${A.O(
+          state
+        )}: error wrong argument type!`
+      );
     let packet = Buffer.alloc(16, 0);
     packet[0] = 2;
     packet[4] = (st ? 1 : 0) + (nl ? 2 : 0);
@@ -898,7 +970,9 @@ class SP3P extends Device {
     if (ret && ret.payload && ret.payload[0] === 8)
       return (
         parseFloat(
-          ret.payload[7].toString(16) + ret.payload[6].toString(16) + ret.payload[5].toString(16)
+          ret.payload[7].toString(16) +
+            ret.payload[6].toString(16) +
+            ret.payload[5].toString(16)
         ) / 100.0
       );
     return this._val && this._val.energy;
@@ -954,7 +1028,8 @@ class S1 extends Device {
       //            val.order = Number(buf[1]);
       //            val.type = Number(buf[3]);
       let name = buf.slice(4, 26);
-      let serial = buf[26] + buf[27] * 256 + buf[28] * 65536 + buf[29] * 16777216;
+      let serial =
+        buf[26] + buf[27] * 256 + buf[28] * 65536 + buf[29] * 16777216;
       while (!name[name.length - 1]) name = name.slice(0, [name.length - 1]);
       name = name.toString("utf8") + " " + serial.toString(16);
       name = name.replace(/\s+/g, "_");
@@ -1019,11 +1094,16 @@ class RM extends Device {
     //             A.I(`checkData on '${this.constructor.name}' returned ${A.O(res)}`);
     if (res && res.payload && !res.err) {
       let data = res.payload.slice(this._request_header.length + 4);
-      A.If("checkData command %s:%s, %s, %d", "04", this, data.toString("hex"), data.length);
+      A.If(
+        "checkData command %s:%s, %s, %d",
+        "04",
+        this,
+        data.toString("hex"),
+        data.length
+      );
       if (data && data.length <= 14) {
         let s = 0;
-          for(let i=0; i< data.length; i++)
-            s += data[i];
+        for (let i = 0; i < data.length; i++) s += data[i];
         if (!s) return null;
       }
       return data;
@@ -1060,9 +1140,9 @@ class RM extends Device {
     }
     if (msg)
       msg(
-        res.data ?
-        `Learning finished and packet received!` :
-        `Timeout: No data received when learning!`
+        res.data
+          ? `Learning finished and packet received!`
+          : `Timeout: No data received when learning!`
       );
     self.learning = false;
     return res;
@@ -1096,7 +1176,10 @@ class RMP extends RM {
 
   async enterRFSweep(start) {
     const command = start ? 0x19 : 0x1e;
-    const packet = Buffer.concat([this._request_header, Buffer.from([command])]);
+    const packet = Buffer.concat([
+      this._request_header,
+      Buffer.from([command]),
+    ]);
     A.If("enterRFSwwep command %s:%s", command.toString(16), this);
     // var packet = Buffer.alloc(16, 0);
     // packet[0] = start ? 0x19 : 0x1e;
@@ -1108,7 +1191,10 @@ class RMP extends RM {
     const command = check2 ? 0x1b : 0x1a;
     // check2=true = fund_rf_packet, false= check_frequency
     A.If("CheckRFData command %s:%s", command.toString(16), this);
-    const packet = Buffer.concat([this._request_header, Buffer.from([command])]);
+    const packet = Buffer.concat([
+      this._request_header,
+      Buffer.from([command]),
+    ]);
     // var packet = Buffer.alloc(16, 0);
     // packet[0] = check2 ? 0x1b : 0x1a;
     const res = await this.checkOff(this.sendPacket, 0x6a, packet);
@@ -1129,14 +1215,15 @@ class RMP extends RM {
     this.learning = true;
     const l = {};
     let f = false;
-     await this.checkData().catch(() => null);
+    await this.checkData().catch(() => null);
     await this.enterRFSweep(true);
     for (let i = 30; i > 0; i--) {
       await A.wait(1000);
       f = await this.checkRFData(false);
       //            const r = await self.checkData();
       if (f) break;
-      if (msg) msg(`Continue to press button on RF remote for maximal ${i} seconds!`);
+      if (msg)
+        msg(`Continue to press button on RF remote for maximal ${i} seconds!`);
     }
     if (!f) {
       if (msg) msg(`Could not find frequency, will stop learning!`);
@@ -1146,7 +1233,8 @@ class RMP extends RM {
     }
     if (msg) msg(`found Frequency 1 of 2, you can release button now!`);
     await A.wait(1000);
-    if (msg) msg(`To complete learning single press button you want to lear now!`);
+    if (msg)
+      msg(`To complete learning single press button you want to lear now!`);
     await this.checkRFData(true);
     for (let i = 10; i > 0; i--) {
       await A.wait(1000);
@@ -1155,10 +1243,19 @@ class RMP extends RM {
         l.data = data.toString("hex");
         break;
       }
-      if (msg) msg(`Please single press button you want to learn in next ${i - 1} seconds!`);
+      if (msg)
+        msg(
+          `Please single press button you want to learn in next ${
+            i - 1
+          } seconds!`
+        );
     }
     if (msg)
-      msg(l.data ? `Found learned button!` : `Could not learn button, will exit learning now!`);
+      msg(
+        l.data
+          ? `Found learned button!`
+          : `Could not learn button, will exit learning now!`
+      );
 
     this.learning = false;
     // console.log(l);
@@ -1306,7 +1403,14 @@ class T1 extends Device {
       mode,
       sensor
     );
-    return this.checkOff(this.sendT1packet, 0x6a, [0x01, 0x06, 0x00, 0x02, mode, sensor]);
+    return this.checkOff(this.sendT1packet, 0x6a, [
+      0x01,
+      0x06,
+      0x00,
+      0x02,
+      mode,
+      sensor,
+    ]);
   }
 
   /*   def set_temp(self, temp):
@@ -1334,7 +1438,14 @@ class T1 extends Device {
     remote = remote ? 1 : 0;
     power = power ? 1 : 0;
     A.Df("setPower for %s = power:%d remote:%d", this.name, power, remote);
-    return this.checkOff(this.sendT1packet, 0x6a, [0x01, 0x06, 0x00, 0x00, remote, power]);
+    return this.checkOff(this.sendT1packet, 0x6a, [
+      0x01,
+      0x06,
+      0x00,
+      0x00,
+      remote,
+      power,
+    ]);
   }
   /*
     # Advanced settings
@@ -1448,7 +1559,14 @@ class T1 extends Device {
       return r;
     }
     //        return this.sendT1packet(0xA0).then(x => {
-    const x = await this.checkOff(this.sendT1packet, 0x6a, [0x01, 0x03, 0x00, 0x00, 0x00, 0x16]);
+    const x = await this.checkOff(this.sendT1packet, 0x6a, [
+      0x01,
+      0x03,
+      0x00,
+      0x00,
+      0x00,
+      0x16,
+    ]);
     if (x) {
       //            A.If('full status payload: %O',x);
       x.copy(x, 0, 2);
@@ -1473,7 +1591,14 @@ class T1 extends Device {
       ret.poweron = Number(x[16]);
       ret.unknown = Number(x[17]);
       ret.externalTemp = Number(x[18]) / 2.0;
-      ret.time = Number(x[19]) + ":" + Number(x[20]) + ":" + Number(x[21]) + " @" + Number(x[22]);
+      ret.time =
+        Number(x[19]) +
+        ":" +
+        Number(x[20]) +
+        ":" +
+        Number(x[21]) +
+        " @" +
+        Number(x[22]);
       ret.poweron = Number(x[16]);
       ret.unknown = Number(x[17]);
       ret.weekday = getSched(x, 0, 6);
@@ -1499,9 +1624,12 @@ class LB1 extends Device {
     };
     LB1.colorModeArr = Object.keys(LB1.colorMode);
   }
-  async _sendCommand(command, type = true /* set = true, query = false */ ) {
+  async _sendCommand(command, type = true /* set = true, query = false */) {
     // packet = bytearray(16+(int(len(command)/16) + 1)*16)
-    const packet = Buffer.alloc(16 + (parseInt(command.length / 16) + 1) * 16, 0);
+    const packet = Buffer.alloc(
+      16 + (parseInt(command.length / 16) + 1) * 16,
+      0
+    );
     packet[0x02] = 0xa5;
     packet[0x03] = 0xa5;
     packet[0x04] = 0x5a;
@@ -1509,7 +1637,8 @@ class LB1 extends Device {
     packet[0x08] = type ? 0x02 : 0x01; // # 0x01 => query, # 0x02 => set
     packet[0x09] = 0x0b;
     packet[0x0a] = command.length;
-    for (let c = 0; c < command.length; c++) packet[0x0e + c] = command[c].charCodeAt(0);
+    for (let c = 0; c < command.length; c++)
+      packet[0x0e + c] = command[c].charCodeAt(0);
     let checksum = 0xbeaf;
     for (let i = 0; i < packet.length; i++) {
       checksum += packet[i];
@@ -1567,8 +1696,8 @@ class LB1 extends Device {
       case "pwr":
         value = !value ? 0 : 1;
         break;
-        // default:
-        //     value = value.toString();
+      // default:
+      //     value = value.toString();
     }
     const cmd = JSON.stringify({
       [item]: value,
@@ -1622,7 +1751,8 @@ class IP {
     if (spl.length != 2) return undefined;
     this.netmaskBits = parseInt(spl[1]);
     if (!this.address) this.address = spl[0];
-    if (this.addrToArr()) this.cidr = this.addrs.join(".") + "/" + this.netmaskBits;
+    if (this.addrToArr())
+      this.cidr = this.addrs.join(".") + "/" + this.netmaskBits;
     const bc = this.broadcast;
     if (bc) this.bcaddr = bc.join(".");
   }
@@ -1795,7 +1925,8 @@ class Broadlink extends EventEmitter {
         let host = self.parsePublic(message, rinfo);
         //            A.Df(`15001 Message from: %O`, host);
         //            self.emit("15001", host);
-        if (!self._devices[host.mac] || self._devices[host.mac].dummy) self.discover(host);
+        if (!self._devices[host.mac] || self._devices[host.mac].dummy)
+          self.discover(host);
       });
     }
     return true;
@@ -1810,7 +1941,10 @@ class Broadlink extends EventEmitter {
     let dev = null;
     for (let cl of A.ownKeys(this._devlist)) {
       const typ = this._devlist[cl];
-      if (typ[devtype] || (typ.range && devtype >= typ.range.min && devtype <= typ.range.max)) {
+      if (
+        typ[devtype] ||
+        (typ.range && devtype >= typ.range.min && devtype <= typ.range.max)
+      ) {
         dev = new typ.class(host, mac, devtype, this);
         host.type = dev.type;
         host.devname = typ.range ? typ.range.name : typ[devtype];
@@ -1844,7 +1978,9 @@ class Broadlink extends EventEmitter {
 
     host.maco = mac;
     // A.I(`Found host ${A.O(host)}`);
-    mac = Array.prototype.map.call(new Uint8Array(mac), (x) => x.toString(16)).reverse();
+    mac = Array.prototype.map
+      .call(new Uint8Array(mac), (x) => x.toString(16))
+      .reverse();
     mac = mac.map((x) => (x.length < 2 ? "0" + x : x)).join(":");
 
     //        mac = Array.prototype.map.call(new Uint8Array(mac), x => x.toString(16)).reverse().join(':');
@@ -1856,20 +1992,32 @@ class Broadlink extends EventEmitter {
       var dev = self.genDevice(host.devtype, host, mac);
       self._devices[mac] = dev;
       dev.once("deviceReady", async function () {
-        let x = await A.c2p(dns.reverse)(dev.host.address).catch(() => dev.host.name);
+        let x = await A.c2p(dns.reverse)(dev.host.address).catch(
+          () => dev.host.name
+        );
         if (Array.isArray(x)) {
           dev.host.names = x.map((i) => i.split(".")[0]);
           x = x.slice(-1)[0].split(".")[0];
         } else dev.host.names = [x];
         // A.I(`Got the following for ${dev.host.address}: ${A.O(x)}`);
-        x = Array.isArray(x) ? x[0].toString().trim().split(".")[0] : x.toString().trim();
+        x = Array.isArray(x)
+          ? x[0].toString().trim().split(".")[0]
+          : x.toString().trim();
         dev.host.name = dev.host.type.slice(0, 2).toUpperCase() + ":" + x;
         dev.name = dev.host.name;
         self._devices[dev.name] = dev;
         self.emit("deviceReady", dev);
       });
-      A.retry(3, dev.auth.bind(dev), 300).catch((err) =>
-        A.W(`Failed to authenticate device ${dev} with err ${err}`)
+      A.retry(3, dev.auth.bind(dev), 300).then(
+        (_) => dev.get_firmware(),
+        (err) => {
+          A.W(`Failed to authenticate device ${dev} with err ${err}`);
+          if (dev.host.cloud)
+            A.Wf(
+              "Warning: Device discovered which operates in cloud mode and could not be authenticated!\nDelete device from mobile app, reset device and bring it into WiFi network again but do not assign it any name, room or function, close app immediately!\nDevice: %O",
+              dev.host
+            );
+        }
       );
     }
     return host;
@@ -1891,13 +2039,14 @@ class Broadlink extends EventEmitter {
     if (this._interface) address = this._interface;
 
     // else if (self._afound.length == 1) address = self._afound[0];
-    self._cs = new Udp(0, this._afound.indexOf(address) >= 0 ? address : undefined);
+    self._cs = new Udp(
+      0,
+      this._afound.indexOf(address) >= 0 ? address : undefined
+    );
     self._cs.on("message", (m, r) => self.parsePublic(m, r));
     await Promise.resolve(self._cs._ready);
     self._cs.socket.setMulticastTTL(20);
-    let {
-      port
-    } = self._cs;
+    let { port } = self._cs;
     address = address.split(".").map((i) => parseInt(i));
     const now = new Date();
     //		var starttime = now.getTime();
@@ -1993,7 +2142,7 @@ class Broadlink extends EventEmitter {
 }
 
 if (Buffer.alloc === undefined) {
-  Buffer.alloc = function (size /* , fill */ ) {
+  Buffer.alloc = function (size /* , fill */) {
     var buf = new Buffer(size);
     for (var i = 0; i < size; i++) buf[i] = 0;
     return buf;
