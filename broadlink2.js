@@ -1207,7 +1207,7 @@ async function main() {
     if (scanList[x] && !scanList[x].dummy)
       return A.Wf(`Device found already: %s with %O`, x, device.host);
     A.If(
-      "Device %s dedected: address=%s, mac=%s, typ=%s, id=%s devtype=%s%s",
+      "Device %s detected: address=%s, mac=%s, typ=%s, id=%s devtype=%s%s",
       x,
       device.host.address,
       device.host.mac,

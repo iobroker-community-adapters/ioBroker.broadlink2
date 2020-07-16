@@ -14,11 +14,6 @@ const EventEmitter = require("events"),
   os = require("os"),
   crypto = require("crypto"),
   A = require("./fjadapter");
-// const {
-//     setForeignObject
-// } = require('./fjadapter');
-// const { isArray } = require('util');
-// const { Console } = require('console');
 
 class Udp extends EventEmitter {
   constructor(port, address) {
@@ -139,7 +134,7 @@ class Device extends EventEmitter {
     this.bl = bl;
     this.host = host;
     // this.type = "Unknown";
-    this.typ = "UK";
+    // this.typ = "UK";
     delete this.host.family;
     delete this.host.size;
     host.mac = mac;
@@ -212,6 +207,10 @@ class Device extends EventEmitter {
     return name == "Device" ? "Unknown" : this.udp ? name : "closed";
   }
 
+  get typ() {
+    return this.type.slice(0, 2);
+  }
+
   static get errors() {
     return {
       0xffff: "Authentication failed",
@@ -248,22 +247,26 @@ class Device extends EventEmitter {
     // return "No result delivered! No err check possible!";
     const pl = res.response;
     if (pl && pl.length > index + 1) {
-      let e = (pl[index] + pl[index + 1]) << 8;
+      const e = pl[index] + (pl[index + 1] << 8);
+      // const e = 0xfffb;
+      // A.I(`${this.host.name}: e=${e.toString(16)}, f=${f.toString(16)}, res=${A.O(res)}`);
       if (e) {
         err = Device.errors[e]
           ? Device.errors[e]
-          : `Unknown error ${e} in response!`;
+          : `Unknown error ${e.toString(16)} in response!`;
         A.Df(
-          "Dev %s returned err `%s` Check respinse from 0x22: %s",
+          "Dev %s returned err `%s` Check response from %s: %s, res=%s, host=%s",
           this.toString(),
           err,
-          res.response.slice(0x22).toString("hex")
+          "0x" + index.toString(16),
+          res.response.slice(index).toString("hex"),
+          A.O(res),
+          A.O(this.host)
         );
-        // if (e == 0xfffc) {
-        //     // A.I(`This.device had  0xfffC: The device storage error!`);
-        //     if (this.host.id == 0x5f36)
-        //         err = e = null;
-        // }
+        if (this.host.devtype == 0x5f36 && e == 0xfffb) {
+          // A.I(`This.device had  0xfffb: The device storage error!`);
+          err = "";
+        } else A.D(`host=${A.O(this.host)}, e=${e.toString(16)}`);
         if (e == 0xfff9) {
           // A.I(`This.device had  0xfff9: please re-auth!`);
           this.reAuth = Date.now() - msMinutes();
@@ -278,6 +281,8 @@ class Device extends EventEmitter {
   toString() {
     return `${this.type}, ${this.name}, ${this.host.mac}, ${this.host.address}${
       this.host.oname ? ", " + this.host.oname : ""
+    }${this.host.fware ? ", fw=" + this.host.fware.toString(16) : ""}${
+      this.host.cloud ? "cloud=true" : ""
     }`;
   }
 
@@ -358,8 +363,8 @@ class Device extends EventEmitter {
   }
 
   async _send(packet) {
-    // const cmd = packet[this._cmdByte];
-    const cmd = packet[0];
+    const cmd = packet[this._cmdByte];
+    //    const cmd = packet[0];
     const timeout = this.timeout || 1000;
     const self = this;
     self.sent = new A.HrTime();
@@ -435,9 +440,9 @@ class Device extends EventEmitter {
         //     err = Device.errors[err];
         // }
         const obj = {
-          cmd: Number(payload[self._cmdByte]),
+          cmd,
           command: command,
-          err,
+          // err,
           response,
           cmdHex: Broadlink.toHex(command),
           payload: payload,
@@ -452,10 +457,11 @@ class Device extends EventEmitter {
           return resume(obj);
         }
         //                A.If('received message from %s:%O',self.name,obj);
-        if (!err) return resume(obj);
-        obj.err = err;
+        // if (!err)
+        return resume(obj);
+        // obj.err = err;
         //                A.Wf(`Got error %O from device %s`, obj,self.host.name)
-        return reject(obj);
+        // return reject(obj);
       });
 
       self.tout = setTimeout(
@@ -654,16 +660,16 @@ class Device extends EventEmitter {
         res = await this._send(packet, command);
       } catch (e) {
         A.Df("send Error on device %s: %O", this.toString(), e);
-        if (e && e.err) {
-          const err = e.err;
-          if (
-            Device.errors[err] ||
-            Object.entries(Device.errors).filter((i) => i[1] == err).length
-          ) {
-            A.I(`Unrecoverable Send packet error ${A.O(e)} on ${that}`);
-            return null;
-          }
-        }
+        // if (e && e.err) {
+        //   const err = e.err;
+        //   if (
+        //     Device.errors[err] ||
+        //     Object.entries(Device.errors).filter((i) => i[1] == err).length
+        //   ) {
+        //     A.I(`Unrecoverable Send packet error ${A.O(e)} on ${that}`);
+        //     return null;
+        //   }
+        // }
         res = e;
       }
       if (res && !res.err) return res;
@@ -681,13 +687,48 @@ class Device extends EventEmitter {
     return null;
     // return A.retry(3, this._send.bind(this), packet);
   }
+  /* 
+  def set_name(self, name):
+  packet = bytearray(4)
+  packet += name.encode('utf-8')
+  packet += bytearray(0x50 - len(packet))
+  packet[0x43] = self.cloud
+  response = self.send_packet(0x6a, packet)
+  check_error(response[0x22:0x24])
+  self.name = name
+
+def set_lock(self, state):
+  packet = bytearray(4)
+  packet += self.name.encode('utf-8')
+  packet += bytearray(0x50 - len(packet))
+  packet[0x43] = state
+  response = self.send_packet(0x6a, packet)
+  check_error(response[0x22:0x24])
+  self.cloud = bool(state)
+ */
+  async get_firmware() {
+    //        const self = this;
+    var packet = Buffer.alloc(16, 0);
+    packet[0] = 0x68;
+    const res = await this.checkOff(this.sendPacket, 0x6a, packet);
+    this.checkError(res, 0x22);
+    //            A.I(`getVal on '${this.constructor.name}' returned ${A.O(res)}`);
+    if (res && res.payload && !res.err) {
+      let payload = res.payload;
+      const fw = payload[0x4] + (payload[0x5] << 8);
+      this.host.fware = fw;
+      // A.Df("Device has firmware %s: %O", fw.toString(16), this.host);
+      return fw;
+    }
+    return NaN;
+  }
 }
 
 class MP1 extends Device {
-  constructor(host, mac, devtype, bl) {
-    super(host, mac, devtype, bl);
-    this.type = "MP";
-  }
+  // constructor(host, mac, devtype, bl) {
+  //   super(host, mac, devtype, bl);
+  //   // this.type = "MP";
+  // }
   async getVal() {
     //"""Returns the power state of the smart plug."""
     const ret = this._val;
@@ -1053,6 +1094,18 @@ class RM extends Device {
     //             A.I(`checkData on '${this.constructor.name}' returned ${A.O(res)}`);
     if (res && res.payload && !res.err) {
       let data = res.payload.slice(this._request_header.length + 4);
+      A.If(
+        "checkData command %s:%s, %s, %d",
+        "04",
+        this,
+        data.toString("hex"),
+        data.length
+      );
+      if (data && data.length <= 14) {
+        let s = 0;
+        for (let i = 0; i < data.length; i++) s += data[i];
+        if (!s) return null;
+      }
       return data;
     }
     return null;
@@ -1067,7 +1120,12 @@ class RM extends Device {
     this.learning = true;
     //        A.If('Should learn on %s', this.host.name);
     const res = {};
-    await self.checkData();
+    // let first = true;
+    // while (first && await self.checkData()) {
+    //   await A.wait(50);
+    //   first = false;
+    // }
+    await this.checkData().catch(() => null);
     await self.enterLearning();
     for (let i = 30; i > 0; i--) {
       await A.wait(1000);
@@ -1083,7 +1141,7 @@ class RM extends Device {
     if (msg)
       msg(
         res.data
-          ? `Learning funished and packet received!`
+          ? `Learning finished and packet received!`
           : `Timeout: No data received when learning!`
       );
     self.learning = false;
@@ -1102,6 +1160,7 @@ class RM extends Device {
   }
 
   async enterLearning() {
+    A.If("enterLearning command %s:%s", "03", this);
     var packet = Buffer.concat([this._request_header, Buffer.from([0x03])]);
     const ret = await this.checkOff(this.sendPacket, 0x6a, packet); //.then(x => A.I(`enterLearning for ${this.host.name} returned ${A.O(x)}`, x));
     return this.checkError(ret, 0x22);
@@ -1116,11 +1175,12 @@ class RMP extends RM {
   }
 
   async enterRFSweep(start) {
+    const command = start ? 0x19 : 0x1e;
     const packet = Buffer.concat([
       this._request_header,
-      Buffer.from([start ? 0x19 : 0x1e]),
+      Buffer.from([command]),
     ]);
-
+    A.If("enterRFSwwep command %s:%s", command.toString(16), this);
     // var packet = Buffer.alloc(16, 0);
     // packet[0] = start ? 0x19 : 0x1e;
     const ret = await this.checkOff(this.sendPacket, 0x6a, packet); //.then(x => A.I(`enterRFSweep for ${this.host.name} returned ${A.O(x)}`, x));
@@ -1128,10 +1188,12 @@ class RMP extends RM {
   }
 
   async checkRFData(check2) {
+    const command = check2 ? 0x1b : 0x1a;
     // check2=true = fund_rf_packet, false= check_frequency
+    A.If("CheckRFData command %s:%s", command.toString(16), this);
     const packet = Buffer.concat([
       this._request_header,
-      Buffer.from([check2 ? 0x1b : 0x1a]),
+      Buffer.from([command]),
     ]);
     // var packet = Buffer.alloc(16, 0);
     // packet[0] = check2 ? 0x1b : 0x1a;
@@ -1706,12 +1768,12 @@ class Broadlink extends EventEmitter {
     this._devlist = {
       SP1: {
         0x0000: "SP1",
-        name: "sp1",
+        // name: "sp1",
         class: SP1,
       },
       SP2: {
         class: SP2,
-        name: "sp2",
+        // name: "sp2",
         range: {
           min: 0x7530,
           max: 0x7918,
@@ -1731,17 +1793,17 @@ class Broadlink extends EventEmitter {
       },
       SP3P: {
         class: SP3P,
-        name: "sp3p",
+        // name: "sp3p",
         0x947a: "SP3SPower",
       },
       T1: {
         class: T1,
-        name: "t1",
+        // name: "t1",
         0x4ead: "T1 Floureon",
       },
       RM: {
         class: RM,
-        name: "rm",
+        // name: "rm",
         0x2712: "RM2",
         0x2737: "RM Mini",
         0x273d: "RM Pro Phicomm",
@@ -1753,7 +1815,7 @@ class Broadlink extends EventEmitter {
       },
       RMP: {
         class: RMP,
-        name: "rmp",
+        // name: "rmp",
         0x272a: "RM2 Pro Plus",
         0x2787: "RM2 Pro Plus2",
         0x278b: "RM2 Pro Plus BL",
@@ -1762,7 +1824,7 @@ class Broadlink extends EventEmitter {
       },
       RM4: {
         class: RM4,
-        name: "rm4",
+        // name: "rm4",
         0x51da: "RM4 Mini",
         0x5f36: "RM Mini 3",
         0x610e: "RM4 Mini",
@@ -1772,57 +1834,34 @@ class Broadlink extends EventEmitter {
       },
       RM4P: {
         class: RM4P,
-        name: "rm4p",
+        // name: "rm4p",
         0x61a2: "RM4 Pro",
         0x6026: "RM4 Pro",
       },
       A1: {
         class: A1,
-        name: "a1",
+        // name: "a1",
         0x2714: "A1",
       },
       MP1: {
         class: MP1,
-        name: "mp1",
+        // name: "mp1",
         0x4eb5: "MP1",
       },
       LB1: {
         class: LB1,
-        name: "lb1",
+        // name: "lb1",
         0x60c7: "SmartBulb LB1",
         0x60c8: "SmartBulb LB1",
       },
       S1C: {
         class: S1,
-        name: "s1",
+        // name: "s1",
         0x2722: "S1",
       },
     };
 
-    let interfaces = os.networkInterfaces(),
-      address;
-    for (let k in interfaces) {
-      if (interfaces.hasOwnProperty(k)) {
-        for (let k2 in interfaces[k]) {
-          if (interfaces[k].hasOwnProperty(k2)) {
-            address = interfaces[k][k2];
-            if (address.family === "IPv4" && !address.internal) {
-              const ipif = Object.assign({}, new IP(address.cidr));
-              // delete ipif.family;
-              // delete ipif.internal;
-              A.If("interface to be used: %O:", ipif);
-              this._ipif.push(ipif);
-            }
-          }
-        }
-      }
-    }
-    //        this.address = addresses[0].split('.');
-    //      this.lastaddr = addresses[addresses.length-1];
-    this._afound = this._ipif.map((i) => i.address);
-    this._addresses = this._ipif.map((i) => i.bcaddr);
-    this._addresses.push("255.255.255.255");
-    this._addresses.push("224.0.0.251");
+    this.getInterfaces();
     if (!add) return;
     for (let k of add) {
       if (Array.isArray(k) && k.length === 2) {
@@ -1845,6 +1884,35 @@ class Broadlink extends EventEmitter {
 
   get list() {
     return this._devices;
+  }
+
+  getInterfaces() {
+    let interfaces = os.networkInterfaces(),
+      address;
+    this._ipif = [];
+    for (let k in interfaces) {
+      if (interfaces.hasOwnProperty(k)) {
+        for (let k2 in interfaces[k]) {
+          if (interfaces[k].hasOwnProperty(k2)) {
+            address = interfaces[k][k2];
+            if (address.family === "IPv4" && !address.internal) {
+              const ipif = Object.assign({}, new IP(address.cidr));
+              // delete ipif.family;
+              // delete ipif.internal;
+              A.If("interface to be used: %O:", ipif);
+              this._ipif.push(ipif);
+            }
+          }
+        }
+      }
+    }
+    //        this.address = addresses[0].split('.');
+    //      this.lastaddr = addresses[addresses.length-1];
+    this._afound = this._ipif.map((i) => i.address);
+    this._addresses = this._ipif.map((i) => i.bcaddr);
+    this._addresses.push("255.255.255.255");
+    this._addresses.push("224.0.0.251");
+    return this._ipif;
   }
 
   async start15001() {
@@ -1878,7 +1946,7 @@ class Broadlink extends EventEmitter {
         (typ.range && devtype >= typ.range.min && devtype <= typ.range.max)
       ) {
         dev = new typ.class(host, mac, devtype, this);
-        host.type = typ.name;
+        host.type = dev.type;
         host.devname = typ.range ? typ.range.name : typ[devtype];
         return dev;
       }
@@ -1940,8 +2008,16 @@ class Broadlink extends EventEmitter {
         self._devices[dev.name] = dev;
         self.emit("deviceReady", dev);
       });
-      A.retry(3, dev.auth.bind(dev), 300).catch((err) =>
-        A.W(`Failed to authenticate device ${dev} with err ${err}`)
+      A.retry(3, dev.auth.bind(dev), 300).then(
+        (_) => dev.get_firmware(),
+        (err) => {
+          A.W(`Failed to authenticate device ${dev} with err ${err}`);
+          if (dev.host.cloud)
+            A.Wf(
+              "Warning: Device discovered which operates in cloud mode and could not be authenticated!\nDelete device from mobile app, reset device and bring it into WiFi network again but do not assign it any name, room or function, close app immediately!\nDevice: %O",
+              dev.host
+            );
+        }
       );
     }
     return host;
@@ -1958,6 +2034,7 @@ class Broadlink extends EventEmitter {
     if (self._cs) await self._cs.close();
 
     let address = "0.0.0.0";
+    this.getInterfaces();
     //  address = typeof what == "object" && what.address ? what.address : address;
     if (this._interface) address = this._interface;
 
