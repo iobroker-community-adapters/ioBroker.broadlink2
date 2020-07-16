@@ -983,7 +983,7 @@ async function main() {
 		//	A.getObject(device.host.name).then(res => A.If('got object %s: %O', device.host.name, res)).catch(A.pE);
 		if (scanList[x] && !scanList[x].dummy)
 			return A.Wf(`Device found already: %s with %O`, x, device.host);
-		A.If('Device %s dedected: address=%s, mac=%s, typ=%s, id=%s devtype=%s%s', x, device.host.address, device.host.mac, device.host.type, device.host.devhex, device.host.devname,
+		A.If('Device %s detected: address=%s, mac=%s, typ=%s, id=%s devtype=%s%s', x, device.host.address, device.host.mac, device.host.type, device.host.devhex, device.host.devname,
 			device.host.name === device.name ? '' : ', originalName=' + device.host.name);
 		if (!device.update)
 			createStatesDevice(device);
