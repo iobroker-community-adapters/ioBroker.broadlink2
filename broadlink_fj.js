@@ -2009,6 +2009,7 @@ class Broadlink extends EventEmitter {
       .call(new Uint8Array(mac), (x) => x.toString(16))
       .reverse();
     host.mac = mac = mac.map((x) => (x.length < 2 ? "0" + x : x)).join(":");
+    // A.If("parsePublic %O, %O", Object.keys(self._devices), host);
     //        A.Df('parsePublic found %O with %O',host,msg);
     //            console.log(mac);
     if ((!self._devices[mac] || self._devices[mac].dummy) && host.devtype) {

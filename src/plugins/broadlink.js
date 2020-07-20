@@ -85,7 +85,7 @@ const broadlink = {
     adapterStateUpdate(newV, oldV) {
       const [id, state] = newV;
       if (id.endsWith("._NewDeviceScan")) {
-        this.$alert(`info:Device Scan ${state.val ? "Started" : "Stopped"}`)
+        this.$alert(`info:Device Scan ${state.val ? "Started" : "Stopped"}`);
       } else if (id.endsWith("._notReachable")) {
         const name = id.split(".")[2];
         const config = this.$store.state.iobrokerConfig;

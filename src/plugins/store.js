@@ -38,6 +38,7 @@ export default new Vuex.Store({
     socketConnected: false,
     iobrokerReadme: "",
     adapterIcon: "",
+    adapterDebugLevel: "debug",
     adapterLog: [],
     adapterStateUpdate: [],
     adapterStates: {},
@@ -60,6 +61,10 @@ export default new Vuex.Store({
     adapterLog(state, value) {
       if (state.adapterLog.length >= 100) state.adapterLog.pop();
       state.adapterLog.unshift(value);
+    },
+
+    adapterDebugLevel(state, value) {
+      state.adapterDebugLevel = value;
     },
 
     adapterStates(state, payload) {
@@ -183,16 +188,19 @@ export default new Vuex.Store({
       if (message.from != getters.adapterInstance) return;
       // console.log("store adapter log:", message);
       commit("adapterLog", message);
-    }, 
+    },
 
     SOCKET_stateChange({ commit, state, getters }, message) {
       const [id, obj] = message;
+      const instance = getters.adapterInstance + ".";
       if (
         // !id.startsWith(getters.adapterInstance) &&
         // !id.startsWith("system.adapter." + getters.adapterInstance)
-        id.indexOf(getters.adapterInstance + ".") < 0
+        id.indexOf(instance) < 0
       )
         return;
+      if (id == "system.adapter." + instance + "logLevel")
+        commit("adapterDebugLevel", message.val);
       // state.adapterStates[id] = obj;
       if (!id.startsWith("system.")) {
         // console.log("store stateChange of", id, " with ", obj.val);
@@ -213,7 +221,12 @@ export default new Vuex.Store({
 
     SOCKET_objectChange({ commit, state, getters }, message) {
       const [id, obj] = message;
-      if (!id.startsWith(getters.adapterInstance)) return;
+      // if (id.indexOf(getters.adapterInstance + ".") < 0) return;
+      if (
+        // !id.startsWith(getters.adapterInstance) &&
+        !id.startsWith("system.adapter." + getters.adapterInstance)
+      )
+        return;
       console.log("store objectChange", id, obj);
       // console.log("store adapter log:", message);
       // commit("adapterLog", message);

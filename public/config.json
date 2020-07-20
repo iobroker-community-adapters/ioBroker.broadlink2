@@ -60,7 +60,8 @@
                     "type": "switch",
                     "label": "Debug mode",
                     "value": "debug",
-                    "click": "return this.$app.sendTo(null,'debug',this.cItem.debug)",
+                    "click": "return (this.$app.debugLevel = this.cItem.debug)",
+                    "convertold": "(this.$set(conf,'debug', this.$app.debugLevel), conf.debug)",
                     "cols": 2,
                     "sm": 4
                 },

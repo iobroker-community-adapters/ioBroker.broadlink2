@@ -145,6 +145,14 @@ const iobroker = {
     iobrokerIsTab() {
       return this.$store.state.ioBrokerIsTab;
     },
+    adapterDebugLevel: {
+      get() {
+        return this.$store.state.adapterDebugLevel;
+      },
+      set(value) {
+        this.$store.commit("adapterDebugLevel", value);
+      },
+    },
     iobrokerHost: {
       get() {
         return this.$store.state.iobrokerHost;
@@ -168,6 +176,19 @@ const iobroker = {
       set(value) {
         this.$store.commit("iobrokerLang", value);
         this.$vuetify.lang.current = value.startsWith("zh") ? "zhHans" : value;
+      },
+    },
+    debugLevel: {
+      get() {
+        return this.adapterDebugLevel == "debug";
+      },
+      set(value) {
+        const no =
+          this.iobrokerAdapterCommon.loglevel == "debug"
+            ? "info"
+            : this.iobrokerAdapterCommon.loglevel;
+        this.adapterDebugLevel = value ? "debug" : no;
+        this.sendTo(null, "debug", value);
       },
     },
     iobrokerInstance: {
@@ -345,11 +366,17 @@ const iobroker = {
       this.iobrokerAdapterNative = res;
       if (res.common) this.iobrokerAdapterCommon = res.common;
       //      this.$alert("new config received");
+
       await this.wait(10);
       this.$forceUpdate();
     } else console.log(`No Adapterconfig received for ${id}!`);
 
+    const dl = await this.$socketEmit("getState", id + ".logLevel").catch(
+      (_) => null
+    );
+    if (dl) this.adapterDebugLevel = dl.val;
     await this.wait(5);
+
     this.setAdapterReadme(this.iobrokerLang, this.iobrokerAdapterCommon);
 
     /*     return this.loadSystemConfig()
@@ -489,9 +516,13 @@ const iobroker = {
     async enableDisableInstance(what, id) {
       id = id || this.iobrokerAdapterInstance;
       if (!id.startsWith("system.adapter.")) id = "system.adapter." + id;
-      await this.$socketEmit("extendObject", id, {
-        common: { enabled: !!what },
-      }).catch((e) =>
+      const obj = {
+        common: {
+          loglevel: this.adapterDebugLevel,
+        },
+      };
+      if (typeof what == "boolean") obj.common.enabled = !!what;
+      await this.$socketEmit("extendObject", id, obj).catch((e) =>
         this.$alert(`error:Set ${id} to enabled=${!!what} error: ${e}`)
       );
     },

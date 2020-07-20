@@ -260,7 +260,8 @@ function startAdapter(options) {
     //  */
     message(obj) {
       if (typeof obj === "object" && obj.command)
-        MyAdapter.processMessage(obj
+        MyAdapter.processMessage(
+          obj
           // MyAdapter.D(`received Message ${MyAdapter.O(obj)}`, obj)
         );
       // 	if (obj.command === "send") {

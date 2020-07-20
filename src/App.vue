@@ -38,10 +38,17 @@
             ]
           "
           @click="enableDisableInstance(!adapterStatus)"
-          :tooltip="adapterStatus ? 'stop adapter' : 'start adapter'"
+          :tooltip="adapterStatus ? $t('stop adapter') : $t('start adapter')"
+        />
+        <fjB
+          v-if="!!adapterStatus"
+          color="grey"
+          img="mdi-refresh"
+          @click="enableDisableInstance('restart')"
+          :tooltip="$t('restart adapter')"
         />
       </div>
-      <v-tabs centered v-model="page">
+      <v-tabs v-model="page">
         <v-tab
           v-for="item in configTranslated"
           v-bind:key="item.label"
