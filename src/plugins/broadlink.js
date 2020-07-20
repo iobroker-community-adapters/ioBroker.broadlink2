@@ -112,14 +112,16 @@ const broadlink = {
   methods: {
     // ...mapActions(["loadAdapterObjects", "loadInterfaces"]),
 
-
     async loadDevList() {
       const that = this;
       //    console.log("beforeMount:", this.$socket);
       async function isDeviceHere(name) {
         const id = that.iobrokerAdapterInstance + "." + name + "._notReachable";
         let state = that.adapterStates[id];
-        if (!state) state = that.getState(id);
+        if (!state) {
+          state = that.getState(id);
+          if (state) that.$set(that.adapterStates, id, state);
+        }
         // console.log(id, state);
         return state && !state.val;
       }
