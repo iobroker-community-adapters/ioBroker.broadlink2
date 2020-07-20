@@ -41,7 +41,7 @@
           :tooltip="adapterStatus ? $t('stop adapter') : $t('start adapter')"
         />
         <fjB
-          v-if="!!adapterStatus"
+          :disabled="!adapterStatus"
           color="grey"
           img="mdi-refresh"
           @click="enableDisableInstance('restart')"

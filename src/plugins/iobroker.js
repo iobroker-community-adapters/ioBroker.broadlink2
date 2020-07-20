@@ -516,11 +516,13 @@ const iobroker = {
     async enableDisableInstance(what, id) {
       id = id || this.iobrokerAdapterInstance;
       if (!id.startsWith("system.adapter.")) id = "system.adapter." + id;
-      const obj = {
-        common: {
-          loglevel: this.adapterDebugLevel,
-        },
-      };
+      const obj = this.adapterDebugLevel
+        ? {
+            common: {
+              loglevel: this.adapterDebugLevel,
+            },
+          }
+        : { common: {} };
       if (typeof what == "boolean") obj.common.enabled = !!what;
       await this.$socketEmit("extendObject", id, obj).catch((e) =>
         this.$alert(`error:Set ${id} to enabled=${!!what} error: ${e}`)

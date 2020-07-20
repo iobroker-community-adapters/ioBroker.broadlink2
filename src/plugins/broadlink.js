@@ -112,15 +112,17 @@ const broadlink = {
   methods: {
     // ...mapActions(["loadAdapterObjects", "loadInterfaces"]),
 
-    isDeviceHere(name) {
-      const id = this.iobrokerAdapterInstance + "." + name + "._notReachable";
-      const state = this.adapterStates[id];
-      // console.log(id, state);
-      return state && !state.val;
-    },
 
     async loadDevList() {
+      const that = this;
       //    console.log("beforeMount:", this.$socket);
+      async function isDeviceHere(name) {
+        const id = that.iobrokerAdapterInstance + "." + name + "._notReachable";
+        let state = that.adapterStates[id];
+        if (!state) state = that.getState(id);
+        // console.log(id, state);
+        return state && !state.val;
+      }
       await this.wait(100);
       const config = this.$store.state.iobrokerConfig;
       if (!Array.isArray(config.devList) || !config.devList.length)
@@ -147,7 +149,7 @@ const broadlink = {
         const info = `${type.toUpperCase()}:${devname}, id=${devhex}, netnames=${
           (names && names.join("; ")) || oname
         }${fware ? ", v" + fware.toString() : ""}${cloud ? ", cloud" : ""}`;
-        const active = this.isDeviceHere(name);
+        const active = await isDeviceHere(name);
         if (found) {
           found.mac = found.mac || mac;
           found.ip = found.ip || address;
