@@ -31,6 +31,7 @@ export default new Vuex.Store({
     ioBrokerIsTab: !window.location.search,
     iobrokerPackage: {}, // packagej,
     iobrokerIoPackage: {}, //iopackage,
+    iobrokerAdapterNative: {},
     iobrokerAdapterCommon: {}, // iopackage.common,
     ioBrokerCerts: [],
     configTranslated: [],
@@ -50,6 +51,9 @@ export default new Vuex.Store({
     devMode,
   },
   mutations: {
+    iobrokerAdapterNative(state, value) {
+      state.iobrokerAdapterNative = value;
+    },
     adapterObjects(state, value) {
       state.adapterObjects = value;
     },
@@ -179,7 +183,7 @@ export default new Vuex.Store({
       if (message.from != getters.adapterInstance) return;
       // console.log("store adapter log:", message);
       commit("adapterLog", message);
-    },
+    }, 
 
     SOCKET_stateChange({ commit, state, getters }, message) {
       const [id, obj] = message;
@@ -236,45 +240,58 @@ export default new Vuex.Store({
     },
 
     async loadInterfaces({ commit, state, dispatch }) {
+      const host =
+        (state.iobrokerAdapterCommon && state.iobrokerAdapterCommon.host) ||
+        null;
+      const ghost = await Vue.prototype
+        .$socketSendTo("getHostByIp", "192.168.178.111")
+        .catch((e) => console.log("error:", e), null);
+      // console.log("Ghost", ghost);
       const obj = await Vue.prototype
-        .$socketSendTo("sendToHost", null, "getInterfaces", "IPv4")
+        .$socketSendTo("sendToHost", host, "getInterfaces", "IPv4")
         .catch((e) => console.log("error:", e), null);
       const ifs = ["0.0.0.0"];
-      if (obj)
-        for (const l of obj) {
+      if (obj && obj.result)
+        for (const l of Object.entries(obj.result)) {
           const [name, list] = l;
+          // console.log(name, list);
           for (const i of list)
-            if (!i.internal && i.familiy == "IPv4") ifs.push(i.address);
+            if (!i.internal && i.family === "IPv4") ifs.push(i.address);
         }
+      // console.log("interfaces:", ifs);
       commit("interfaces", ifs);
     },
 
     async loadAdapterObjects({ commit, state, dispatch }, params) {
       const alist = `${state.iobrokerAdapter}.${state.iobrokerInstance}.`;
+      const emit = Vue.prototype.$socketEmit;
       const options = {
         startKey: alist,
         endkey: alist + "\u9999",
       };
       let obj =
-        (await Vue.prototype
-          .$socketEmit("subscribeStates", alist + "*")
-          .catch((e) => console.log("SubscribeStates error:", e), null)) || {};
+        (await emit("subscribeStates", alist + "*").catch(
+          (e) => console.log("SubscribeStates error:", e),
+          null
+        )) || {};
       obj =
-        (await Vue.prototype
-          .$socketEmit("subscribeObjects", alist + "*")
-          .catch((e) => console.log("SubscribeObjects error:", e), null)) || {};
+        (await emit("subscribeObjects", alist + "*").catch(
+          (e) => console.log("SubscribeObjects error:", e),
+          null
+        )) || {};
       obj =
-        (await Vue.prototype
-          .$socketEmit("getForeignObjects", alist + "*")
-          .catch((e) => console.log("getForeignObjects error:", e), null)) ||
-        {};
+        (await emit("getForeignObjects", alist + "*").catch(
+          (e) => console.log("getForeignObjects error:", e),
+          null
+        )) || {};
       // console.log(obj);
       commit("adapterObjects", obj);
       await dispatch("wait");
       const states =
-        (await Vue.prototype
-          .$socketEmit("getStates")
-          .catch((e) => console.log("getStates error:", e), null)) || {};
+        (await emit("getStates").catch(
+          (e) => console.log("getStates error:", e),
+          null
+        )) || {};
       for (const s of Object.entries(states)) {
         const [id, obj] = s;
         if (id.startsWith(alist) && obj) commit("adapterStates", s);

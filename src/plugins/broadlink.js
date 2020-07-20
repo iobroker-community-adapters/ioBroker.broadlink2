@@ -84,7 +84,9 @@ const broadlink = {
     // },
     adapterStateUpdate(newV, oldV) {
       const [id, state] = newV;
-      if (id.endsWith("._notReachable")) {
+      if (id.endsWith("._NewDeviceScan")) {
+        this.$alert(`info:Device Scan ${state.val ? "Started" : "Stopped"}`)
+      } else if (id.endsWith("._notReachable")) {
         const name = id.split(".")[2];
         const config = this.$store.state.iobrokerConfig;
         const devlist = (config && config.devList) || [];
@@ -137,12 +139,14 @@ const broadlink = {
           oname,
           names,
           type,
+          fware,
+          cloud,
         } = dev.$native.host;
         const found =
           dl.find((i) => i.mac == mac) || dl.find((i) => i.ip == address);
         const info = `${type.toUpperCase()}:${devname}, id=${devhex}, netnames=${
           (names && names.join("; ")) || oname
-        }`;
+        }${fware ? ", v" + fware.toString() : ""}${cloud ? ", cloud" : ""}`;
         const active = this.isDeviceHere(name);
         if (found) {
           found.mac = found.mac || mac;

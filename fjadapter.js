@@ -6,7 +6,7 @@
  *      (c) 2020- <frankjoke@hotmail.com>
  *      MIT License
  *
- *  V 1.0.0 June 2020
+ *  V 1.0.1 July 2020
  */
 "use strict";
 
@@ -260,8 +260,8 @@ function startAdapter(options) {
     //  */
     message(obj) {
       if (typeof obj === "object" && obj.command)
-        MyAdapter.processMessage(
-          MyAdapter.D(`received Message ${MyAdapter.O(obj)}`, obj)
+        MyAdapter.processMessage(obj
+          // MyAdapter.D(`received Message ${MyAdapter.O(obj)}`, obj)
         );
       // 	if (obj.command === "send") {
       // 		// e.g. send email or pushover or whatever
@@ -276,7 +276,7 @@ function startAdapter(options) {
   try {
     const utils = require("@iobroker/adapter-core");
     adapter = new utils.Adapter(options);
-    MyAdapter.If("got following adapter: %O", options);
+    // MyAdapter.If("got following adapter: %O", options);
   } catch (e) {
     // eslint-disable-next-line no-console
     console.error("cannot find ioBroker...");

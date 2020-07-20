@@ -38,7 +38,8 @@ const scanList = {},
 
 let brlink,
   adapterObjects = [],
-  states = {};
+  states = {},
+  devList = [];
 
 // eslint-disable-next-line no-unused-vars
 A.init(module, "broadlink2", main); // associate adapter and main with MyAdapter
@@ -309,15 +310,17 @@ async function deviceScan() {
       true
     );
     await brlink.discover();
-    for (const a of additional) {
-      A.D(`Try to discover ${a}`);
-      await brlink.discover(
-        {
-          address: a,
-        },
-        3000
-      );
-    }
+    for (const li of devList)
+      if (!brlink.addressOnInterface(li.ip)) {
+        const a = li.ip;
+        A.D(`Try to discover ${a}`);
+        await brlink.discover(
+          {
+            address: a,
+          },
+          2000
+        );
+      }
     await A.wait(1000); // 6s for the scan of ip' should be OKs
     await A.makeState(scanName, (brlink.scanning = false), true);
   } catch (err) {
@@ -1141,6 +1144,8 @@ async function main() {
 
   A.debug = A.C.debug;
 
+  if (Array.isArray(A.C.devList)) devList = A.C.devList;
+
   let add = A.C.new.map((x) => x.split("=").map((s) => s.trim()));
   if (add.length === 1 && add[0].length === 1) add = [];
 
@@ -1177,9 +1182,10 @@ async function main() {
   A.If("%s has %d old devices!", A.name, hosts.length);
 
   brlink = new Broadlink(add, aif);
-  brlink.on("deviceReady", (device) => {
+  brlink.on("deviceReady", async (device) => {
     // const typ = device.type.slice(0, 2);
-    device.typ = device.type.slice(0, 2);
+    // device.typ = device.type.slice(0, 2);
+    await A.wait(10);
     const mac = device.host.mac;
     if (macList[mac]) return A.D(`Device ${device.host.name} already found!`);
     macList[mac] = device;
@@ -1207,16 +1213,15 @@ async function main() {
     if (scanList[x] && !scanList[x].dummy)
       return A.Wf(`Device found already: %s with %O`, x, device.host);
     A.If(
-      "Device %s detected: address=%s, mac=%s, typ=%s, id=%s devtype=%s%s",
+      "Device %s detected: address=%s, mac=%s, typ=%s, id=%s devtype=%s%s%s",
       x,
       device.host.address,
       device.host.mac,
       device.host.type,
       device.host.devhex,
       device.host.devname,
-      device.host.name === device.name
-        ? ""
-        : ", originalName=" + device.host.name
+      device.host.name === device.name ? "" : ", oName=" + device.host.name,
+      device.host.fware ? ", fw=" + device.host.fware : ""
     );
     if (!device.update) createStatesDevice(device);
     scanList[x] = device;

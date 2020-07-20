@@ -281,7 +281,7 @@ class Device extends EventEmitter {
   toString() {
     return `${this.type}, ${this.name}, ${this.host.mac}, ${this.host.address}${
       this.host.oname ? ", " + this.host.oname : ""
-    }${this.host.fware ? ", fw=" + this.host.fware.toString(16) : ""}${
+    }${this.host.fware ? ", fw=" + this.host.fware : ""}${
       this.host.cloud ? "cloud=true" : ""
     }`;
   }
@@ -717,7 +717,7 @@ def set_lock(self, state):
       let payload = res.payload;
       const fw = payload[0x4] + (payload[0x5] << 8);
       this.host.fware = fw;
-      // A.Df("Device has firmware %s: %O", fw.toString(16), this.host);
+      // A.Df("Device has firmware %s: %O", fw.toString(), this.host);
       return fw;
     }
     return NaN;
@@ -1724,7 +1724,11 @@ class IP {
     return this;
   }
 
-  addrToArr(address) {
+  toString() {
+    return this.cidr;
+  }
+
+  _addrToArr(address) {
     address = address || this.address;
     const spl = address.split(".").map((i) => parseInt(i.trim()));
     if (spl.filter((i) => isNaN(i)).length) return undefined;
@@ -1733,8 +1737,15 @@ class IP {
     return spl;
   }
 
-  get broadcast() {
-    const arr = [...this.addrToArr()];
+  addrToArr(address) {
+    const spl = this._addrToArr(address);
+    if (spl) this.addrs = spl;
+    return spl;
+  }
+
+  broadcast(address) {
+    address = address || this.address;
+    const arr = [...this._addrToArr(address)];
     if (!arr || !this.netmaskBits) return undefined;
     const b = 31 - this.netmaskBits;
     for (let i = 0; i <= b; i++) {
@@ -1742,7 +1753,7 @@ class IP {
       const ii = i % 8;
       arr[ai] |= 1 << ii;
     }
-    return arr;
+    return arr.join(".");
   }
 
   cidrToAll(cidr) {
@@ -1753,8 +1764,7 @@ class IP {
     if (!this.address) this.address = spl[0];
     if (this.addrToArr())
       this.cidr = this.addrs.join(".") + "/" + this.netmaskBits;
-    const bc = this.broadcast;
-    if (bc) this.bcaddr = bc.join(".");
+    this.bcaddr = this.broadcast();
   }
 }
 class Broadlink extends EventEmitter {
@@ -1774,11 +1784,13 @@ class Broadlink extends EventEmitter {
       SP2: {
         class: SP2,
         // name: "sp2",
-        range: {
-          min: 0x7530,
-          max: 0x7918,
-          name: "OEM branded SPMini2",
-        },
+        range: [
+          {
+            min: 0x7530,
+            max: 0x7918,
+            name: "OEM branded SPMini2",
+          },
+        ],
         0x2711: "SP2",
         0x2719: "SP2?",
         0x7919: "SP2?",
@@ -1854,7 +1866,7 @@ class Broadlink extends EventEmitter {
         0x60c7: "SmartBulb LB1",
         0x60c8: "SmartBulb LB1",
       },
-      S1C: {
+      S1: {
         class: S1,
         // name: "s1",
         0x2722: "S1",
@@ -1862,6 +1874,10 @@ class Broadlink extends EventEmitter {
     };
 
     this.getInterfaces();
+    A.If(
+      "interface to be used: %O:",
+      this._ipif.map((i) => i.toString())
+    );
     if (!add) return;
     for (let k of add) {
       if (Array.isArray(k) && k.length === 2) {
@@ -1896,10 +1912,10 @@ class Broadlink extends EventEmitter {
           if (interfaces[k].hasOwnProperty(k2)) {
             address = interfaces[k][k2];
             if (address.family === "IPv4" && !address.internal) {
-              const ipif = Object.assign({}, new IP(address.cidr));
+              const ipif = new IP(address.cidr);
               // delete ipif.family;
               // delete ipif.internal;
-              A.If("interface to be used: %O:", ipif);
+              // A.If("interface to be used: %s:", ipif);
               this._ipif.push(ipif);
             }
           }
@@ -1915,12 +1931,20 @@ class Broadlink extends EventEmitter {
     return this._ipif;
   }
 
+  addressOnInterface(address) {
+    for (const ip of this._ipif) {
+      const res = ip.broadcast(address);
+      // A.If(`CHeck ${address}=${res} on ${ip.bcaddr}`);
+      if (res == ip.bcaddr) return true;
+    }
+    return false;
+  }
+
   async start15001() {
     const self = this;
     if (this._ls) await this._ls.renew();
     else {
       this._ls = new Udp(15001);
-      await Promise.resolve(this._ls._ready);
       this._ls.on("message", function (message, rinfo) {
         let host = self.parsePublic(message, rinfo);
         //            A.Df(`15001 Message from: %O`, host);
@@ -1928,41 +1952,44 @@ class Broadlink extends EventEmitter {
         if (!self._devices[host.mac] || self._devices[host.mac].dummy)
           self.discover(host);
       });
+      await Promise.resolve(this._ls._ready);
     }
     return true;
-  }
-  genDevice(devtype, host, mac) {
-    //        A.Df('got device type %s @host:%O', devtype.toString(16), host);
-    host.devtype = devtype;
-    // eslint-disable-next-line no-console
-    // console.log("Found", devtype, host, mac);
-    host.type = "unknown";
-    host.name = "unknown_" + devtype.toString(16) + "_" + host.mac;
-    let dev = null;
-    for (let cl of A.ownKeys(this._devlist)) {
-      const typ = this._devlist[cl];
-      if (
-        typ[devtype] ||
-        (typ.range && devtype >= typ.range.min && devtype <= typ.range.max)
-      ) {
-        dev = new typ.class(host, mac, devtype, this);
-        host.type = dev.type;
-        host.devname = typ.range ? typ.range.name : typ[devtype];
-        return dev;
-      }
-    }
-    host.type = "unknown";
-    host.devname = "UKN";
-    //        A.If('Unknown...%O, %s, %s',host, mac, devtype);
-    return new Device(host, mac, devtype, this);
   }
 
   parsePublic(msg, rinfo) {
     const self = this;
+    function genDevice(devtype, host, mac) {
+      //        A.Df('got device type %s @host:%O', devtype.toString(16), host);
+      host.devtype = devtype;
+      // eslint-disable-next-line no-console
+      // console.log("Found", devtype, host, mac);
+      host.type = "unknown";
+      host.name = "unknown_" + devtype.toString(16) + "_" + host.mac;
+      let dev = null;
+      for (let c of Object.entries(self._devlist)) {
+        const [cl, typ] = c;
+        if (
+          typ[devtype] ||
+          (typ.range &&
+            typ.range.find((i) => devtype >= i.min && devtype <= i.max))
+        ) {
+          dev = new typ.class(host, mac, devtype, self);
+          host.type = dev.type;
+          host.devname = typ[devtype]
+            ? typ[devtype]
+            : typ.range.find((i) => devtype >= i.min && devtype <= i.max).name;
+          return dev;
+        }
+      }
+      host.devname = "UKN";
+      //        A.If('Unknown...%O, %s, %s',host, mac, devtype);
+      return new Device(host, mac, devtype, self);
+    }
     const host = Object.assign({}, rinfo);
     let mac = Buffer.alloc(6, 0);
     //                    self._cs.setMulticastInterface(this.lastaddr);
-    delete host.family;
+    // delete host.family;
     delete host.size;
     //        host.command = Number(msg[0x26]) + Number(msg[0x27]) * 256;
     if (msg.length >= 0x40) {
@@ -1981,20 +2008,20 @@ class Broadlink extends EventEmitter {
     mac = Array.prototype.map
       .call(new Uint8Array(mac), (x) => x.toString(16))
       .reverse();
-    mac = mac.map((x) => (x.length < 2 ? "0" + x : x)).join(":");
-
-    //        mac = Array.prototype.map.call(new Uint8Array(mac), x => x.toString(16)).reverse().join(':');
-    host.mac = mac;
+    host.mac = mac = mac.map((x) => (x.length < 2 ? "0" + x : x)).join(":");
     //        A.Df('parsePublic found %O with %O',host,msg);
     //            console.log(mac);
     if ((!self._devices[mac] || self._devices[mac].dummy) && host.devtype) {
       //            A.If('new device found: host=%O',host);
-      var dev = self.genDevice(host.devtype, host, mac);
+      var dev = genDevice(host.devtype, host, mac);
       self._devices[mac] = dev;
       dev.once("deviceReady", async function () {
+        await A.wait(10);
+        await dev.get_firmware();
         let x = await A.c2p(dns.reverse)(dev.host.address).catch(
           () => dev.host.name
         );
+
         if (Array.isArray(x)) {
           dev.host.names = x.map((i) => i.split(".")[0]);
           x = x.slice(-1)[0].split(".")[0];
@@ -2008,17 +2035,14 @@ class Broadlink extends EventEmitter {
         self._devices[dev.name] = dev;
         self.emit("deviceReady", dev);
       });
-      A.retry(3, dev.auth.bind(dev), 300).then(
-        (_) => dev.get_firmware(),
-        (err) => {
-          A.W(`Failed to authenticate device ${dev} with err ${err}`);
-          if (dev.host.cloud)
-            A.Wf(
-              "Warning: Device discovered which operates in cloud mode and could not be authenticated!\nDelete device from mobile app, reset device and bring it into WiFi network again but do not assign it any name, room or function, close app immediately!\nDevice: %O",
-              dev.host
-            );
-        }
-      );
+      A.retry(3, dev.auth.bind(dev), 100).catch((err) => {
+        A.W(`Failed to authenticate device ${dev} with err ${err}`);
+        if (dev.host.cloud)
+          A.Wf(
+            "Warning: Device discovered which operates in cloud mode and could not be authenticated!\nDelete device from mobile app, reset device and bring it into WiFi network again but do not assign it any name, room or function, close app immediately!\nDevice: %O",
+            dev.host
+          );
+      });
     }
     return host;
   }
@@ -2036,7 +2060,8 @@ class Broadlink extends EventEmitter {
     let address = "0.0.0.0";
     this.getInterfaces();
     //  address = typeof what == "object" && what.address ? what.address : address;
-    if (this._interface) address = this._interface;
+    if (this._interface && this.addressOnInterface(this._interface))
+      address = this._interface;
 
     // else if (self._afound.length == 1) address = self._afound[0];
     self._cs = new Udp(
@@ -2109,7 +2134,7 @@ class Broadlink extends EventEmitter {
     return A.wait(ms - n);
     //        return true;
   }
-
+  /* 
   getAll(mac) {
     if (!this._devices[mac])
       return A.resolve({
@@ -2125,7 +2150,7 @@ class Broadlink extends EventEmitter {
       });
     return this._devices[mac].val;
   }
-
+ */
   close() {
     if (this._ls) this._ls.close();
 

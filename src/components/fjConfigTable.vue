@@ -27,6 +27,7 @@
       :items="table || []"
       :search="search"
       :disableSort="disableSort"
+      v-bind="$attrs"
     >
       <template v-slot:item="{ item, headers, index }" height="auto">
         <tr class="alternate">

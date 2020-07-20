@@ -237,6 +237,14 @@ const iobroker = {
         this.$store.commit("iobrokerAdapterCommon", value);
       },
     },
+    iobrokerAdapterNative: {
+      get() {
+        return this.$store.state.iobrokerAdapterNative;
+      },
+      set(value) {
+        this.$store.commit("iobrokerAdapterNative", value);
+      },
+    },
     ioBrokerCerts: {
       get() {
         return this.$store.state.ioBrokerCerts;
@@ -334,6 +342,7 @@ const iobroker = {
     const res = await this.$socketEmit("getObject", id);
     if (res) {
       this.iobrokerConfig = res.native;
+      this.iobrokerAdapterNative = res;
       if (res.common) this.iobrokerAdapterCommon = res.common;
       //      this.$alert("new config received");
       await this.wait(10);

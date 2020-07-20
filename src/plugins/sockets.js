@@ -126,8 +126,8 @@ Vue.prototype.$socketEmit = async function (event, ...data) {
       timeout
     );
     // debugger;
-    //          console.log("emit:", event, ...data);
-    this.$socket.emit(event, ...data, (err, result) => {
+    // console.log("emit:", socket, event, ...data);
+    socket.emit(event, ...data, (err, result) => {
       //           console.log(`emit ${event} returned:`, err, result);
       if (tout) clearTimeout(tout);
       if (err) rej(err);
@@ -142,15 +142,16 @@ Vue.prototype.$socketSendTo = async function (event, ...data) {
     timeout = Number(event.timeout || 5000);
     event = event.event || "pong";
   }
-  console.log("SendTo:", event, ...data);
+  // console.log("SendTo:", event, ...data);
   return new Promise((res, rej) => {
     let tout = setTimeout(
       () => rej(new Error(`socketSendTo - timeout for ${event}: ${data}`)),
       timeout
     );
     //          console.log("socketSendTo:", event, ...data);
-    this.$socket.emit(event, ...data, (result) => {
+    socket.emit(event, ...data, (result) => {
       if (tout) clearTimeout(tout);
+      // console.log("SocketSendTo:", result);
       //            console.log(`socketSendTo ${event} returned:`, result);
       res(result);
     });
