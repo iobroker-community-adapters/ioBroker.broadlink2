@@ -20,90 +20,6 @@ const options = {
 //const server = "ws://buster10.fritz.box:8081/";
 //const server = "/";
 const socket = SocketIO(server, options);
-/* 
-    // 1. add global method or property
-  Vue.myGlobalMethod = function () {
-    // some logic ...
-  };
-
-  // 2. add a global asset
-  Vue.directive("my-directive", {
-    bind(_el, _binding, _vnode, _oldVnode) {
-      // some logic ...
-    },
-  });
-
-  // 3. inject some component options
-  Vue.mixin({
-    created: function () {
-      // some logic ...
-    },
-  });
-
-  // 4. add an instance method
-  Vue.prototype.$myMethod = function (_methodOptions) {
-    // some logic ...
-  };
-};
- */
-//console.log("SocketIO:", server, options, socket);
-
-//console.log(process.env);
-
-/* const install = function (Vue, _options) {
-  Vue.mixin({
-    methods: {
-      async socketEmit(event, ...data) {
-        let timeout = 5000;
-        if (typeof event == "object") {
-          timeout = Number(event.timeout || 1000);
-          event = event.event || "pong";
-        }
-        return new Promise((res, rej) => {
-          let tout = setTimeout(
-            () =>
-              rej(
-                (tout = null),
-                new Error(`socketEmit - timeout for ${event}: ${data}`)
-              ),
-            timeout
-          );
-          //          console.log("emit:", event, ...data);
-          this.$socket.emit(event, ...data, (err, result) => {
-            //           console.log(`emit ${event} returned:`, err, result);
-            if (tout) clearTimeout(tout);
-            if (err) rej(err);
-            else res(result);
-          });
-        });
-      },
-
-      async socketSendTo(event, ...data) {
-        let timeout = 5000;
-        if (typeof event == "object") {
-          timeout = Number(event.timeout || 1000);
-          event = event.event || "pong";
-        }
-        return new Promise((res, rej) => {
-          let tout = setTimeout(
-            () =>
-              rej(
-                (tout = null),
-                new Error(`socketSendTo - timeout for ${event}: ${data}`)
-              ),
-            timeout
-          );
-          //          console.log("socketSendTo:", event, ...data);
-          this.$socket.emit(event, ...data, (result) => {
-            if (tout) clearTimeout(tout);
-            //            console.log(`socketSendTo ${event} returned:`, result);
-            res(result);
-          });
-        });
-      },
-    },
-  });
- */
 
 const socketIo = new VueSocketIO({
   // debug: devMode,
@@ -114,7 +30,7 @@ const socketIo = new VueSocketIO({
   },
 });
 
-Vue.prototype.$socketEmit = async function (event, ...data) {
+Vue.prototype.$socketEmit = async function socketEmit(event, ...data) {
   let timeout = 5000;
   if (typeof event == "object") {
     timeout = Number(event.timeout || 1000);
@@ -136,7 +52,7 @@ Vue.prototype.$socketEmit = async function (event, ...data) {
   });
 };
 
-Vue.prototype.$socketSendTo = async function (event, ...data) {
+Vue.prototype.$socketSendTo = async function socketSendTo(event, ...data) {
   let timeout = 5000;
   if (typeof event == "object") {
     timeout = Number(event.timeout || 5000);

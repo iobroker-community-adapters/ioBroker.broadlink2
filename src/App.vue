@@ -119,24 +119,6 @@
     <v-main id="MyAppContent" class="flex-wrap">
       <fjConfigContainer :cItem="iobrokerConfig" :configPage="configPage" />
       <fjConfirm />
-      <!--       
-        <v-data-table
-        dense
-        :headers="[
-          {
-            text: 'Severity',
-            value: 'severity',
-          },
-          {
-            text: 'Message',
-            value: 'message',
-          },
-        ]"
-        :items="adapterLog"
-        class="elevation-1"
-      >
-      </v-data-table>
- -->
       <v-simple-table v-if="!page" dense class="elevation-2 xa-1">
         <template v-slot:default>
           <thead>

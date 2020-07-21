@@ -1665,11 +1665,16 @@ class LB1 extends Device {
     if (len > 0) payload = payload.slice(0xe, len + 0xe);
     else payload = "";
     payload = payload.toString();
-    ret.here = true;
-    ret = Object.assign(ret, JSON.parse(payload));
-    ret.bulb_colormode = LB1.colorModeArr[ret.bulb_colormode];
-    ret.bulb_scenes = JSON.parse(ret.bulb_scenes);
-    ret.pwr = !!ret.pwr;
+    try {
+      payload = JSON.parse(payload);
+      ret.here = true;
+      ret = Object.assign(ret, payload);
+      ret.bulb_colormode = LB1.colorModeArr[ret.bulb_colormode];
+      ret.bulb_scenes = JSON.parse(ret.bulb_scenes);
+      ret.pwr = !!ret.pwr;
+    } catch (e) {
+      ret.here = false;
+    }
     // console.log(ret);
     return ret;
   }

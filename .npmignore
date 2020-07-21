@@ -5,6 +5,8 @@ node_modules
 .idea
 .git
 doc/
+/broadlink_doc
+/iobroker_admin
 lib/otherProjectSources/
 /node_modules
 test

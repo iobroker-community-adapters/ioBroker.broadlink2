@@ -1,0 +1,167 @@
+<html>
+
+<head>
+
+	<!-- Load ioBroker scripts and styles-->
+	<link rel="stylesheet" type="text/css" href="../../css/adapter.css" />
+	<link rel="stylesheet" type="text/css" href="../../lib/css/materialize.css">
+
+	<script type="text/javascript" src="../../lib/js/jquery-3.2.1.min.js"></script>
+	<script type="text/javascript" src="../../socket.io/socket.io.js"></script>
+
+	<script type="text/javascript" src="../../js/translate.js"></script>
+	<script type="text/javascript" src="../../lib/js/materialize.js"></script>
+	<script type="text/javascript" src="../../js/adapter-settings.js"></script>
+
+	<!-- Load our own files -->
+	<link rel="stylesheet" type="text/css" href="style.css" />
+	<script type="text/javascript" src="words.js"></script>
+
+	<script type="text/javascript">
+		// This will be called by the admin adapter when the settings page loads
+		function load(settings, onChange) {
+			// example: select elements with id=key and class=value and insert value
+			$('.adapter-version').html("Version: " + common.version);
+//			$('.adapter-readme')[0].href = common.readme;
+			if (!settings) return;
+			$('.value').each(function () {
+				var $key = $(this);
+				var id = $key.attr('id');
+				if ($key.attr('type') === 'checkbox') {
+					// do not call onChange direct, because onChange could expect some arguments
+					$key.prop('checked', settings[id])
+						.on('change', () => onChange());
+				} else {
+					// do not call onChange direct, because onChange could expect some arguments
+					$key.val(settings[id])
+						.on('change', () => onChange())
+						.on('keyup', () => onChange());
+				}
+			});
+			onChange(false);
+			values2table('pathtable', settings.pathtable, onChange);
+			// reinitialize all the Materialize labels on the page if you are dynamically adding inputs:
+			if (M) M.updateTextFields();
+		}
+
+		// This will be called by the admin adapter when the user presses the save button
+		function save(callback) {
+			// example: select elements with class=value and build settings object
+			var obj = {};
+			$('.value').each(function () {
+				var $this = $(this);
+				if ($this.attr('type') === 'checkbox') {
+					obj[$this.attr('id')] = $this.prop('checked');
+				} else {
+					obj[$this.attr('id')] = $this.val();
+				}
+			});
+			obj.pathtable = table2values('pathtable');
+			callback(obj);
+		}
+	</script>
+
+</head>
+
+<body>
+
+	<div class="m adapter-container">
+
+		<div class="row">
+			<div class="col s12 m4 l2">
+				<img src="acceptdata.png" class="logo">
+				<span style="vertical-align: top; font-size:18px" class="adapter-version"></span>
+<!-- 				<a style="margin-left: 6px; vertical-align: top; font-size:18px" class="adapter-readme" target="_blank" href="test">Readme</a>
+ -->			</div>
+		</div>
+
+		<!-- Put your content here -->
+
+		<!-- For example columns with settings: -->
+		<!-- 		<div class="row">
+			<div class="col s6 input-field">
+				<input type="checkbox" class="value" id="option1" />
+				<label for="option1" class="translate">option1</label>
+			</div>
+
+			<div class="col s6 input-field">
+				<input type="text" class="value" id="option2" />
+				<label for="option2" class="translate">option2</label>
+			</div>
+		</div>
+ -->
+		<div class="row">
+			<div class="col s3 input-field">
+				<input type="text" class="value" id="port" />
+				<label for="option1" class="translate">port to listen on</label>
+				<div class="translate">The external device can connect to the adapter's server at the following port:
+				</div>
+			</div>
+
+			<div class="col s9 input-field">
+				<div class="translate"><strong>For Path field:<br></strong>The external device can connect to the
+					adapter's server using following
+					path:<br>example "http://iobroker-server:port/<strong>path</strong>?data=..."</div>
+				<div style="margin-top: 6px;" class="translate"><strong>The conversion field:<br></strong>Conversion
+					receives data as variable $ and can convert it to some new format which will then be stored in
+					state(s) named with path.
+					<br>example: "{ tempC: FtoC($.tempf, 1) }" where FtoC an internal conversion for Farenheit to
+					Celsius is.<br>Other functions are <strong>toNum(str, digits_after_comma), CtoF(..) and ItoMM(...)
+					</strong><br>
+					The field names can end with '_' and type/unit information. The text after the '_' will be the type
+					like with '_date', or if type should be number with specific unit you can name it "_$km/h". There
+					are some predefined types available as well which can be named directly (without $): <strong>'Hum',
+						'Kmh', 'Deg', 'Date', 'Hpa', 'Mm', 'Wm2', 'Txt', 'C', 'V'</strong> where V is just a number
+					Value, the many of the other set also roles.
+				</div>
+				<div style="margin-top: 6px;">
+					By entering the below URL in your browser (changing iobroker-server to your server name or ip) you
+					can test the 'Test' entry.
+					<a target="_blank"
+						href="http://iobroker-server:3000/Test?what=ok&length_$m=12&temp_$%C2%B0F=13&speed_$mp/h=88">http://iobroker-server:3000/Test?what=ok&length_$m=12&temp_$%C2%B0F=13&speed_$mp/h=88</a>
+				</div>
+			</div>
+		</div>
+		<!-- 		<div class="row">
+			<div class="input-field col s12 m12 l12">
+				<textarea id="convert" class="value materialize-textarea"
+					style="height: 200px; resize: vertical;"></textarea>
+				<label for="convert" class="translate">Convert script ($ is original data)</label>
+				<div class="translate">Convert received data into a format in which it should be stored to states in
+					path.<br>example: "{ temp: FtoC($.tempf, 1) }" where FtoC an internal conversion for Farenheit to
+					Celsius is.</div>
+			</div>
+		</div>
+ -->
+		<div class="row">
+			<div class="input-field col s12 m12 l12">
+				<div id="pathtable" style="width: 100%; height: calc(100% - 205px)">
+					<button class="table-button-add" style="margin-left: 10px" class="translate">Add Path</button><br>
+					<div style="width: 100%; height: calc(100% - 30px); overflow: auto;">
+						<table class="table-values" style="width: 100%;">
+							<thead>
+								<tr>
+									<th data-name="path" class="translate" style="width: 10%"
+										data-style="text-align: left">Path</th>
+									<!-- 									<th data-name="room" class="translate" data-type="select">Room</th>
+ -->
+									<th data-name="method" class="translate" data-options="1/GET;2/POST"
+										data-type="select">Method</th>
+									<th data-name="convert" data-type="textarea" style="width: 70%"
+ 										data-class="materialize-textarea"
+										data-style="width: 100%; text-align: left">Conversion</th>
+									<th data-name="enabled" class="translate" data-type="checkbox" data-default="true">
+										Enabled</th>
+									<th data-buttons="delete up down copy" style="width: 32px"></th>
+								</tr>
+							</thead>
+						</table>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+
+</body>
+
+</html>

@@ -4,7 +4,7 @@
 // const dns = require('dns');
 
 const A = require('@frankjoke/myadapter').MyAdapter,
-    Broadlink = require('../broadlink_fj');
+    Broadlink = require('../../broadlink_fj');
 
 const readline = require('readline');
 readline.emitKeypressEvents(process.stdin);
