@@ -32,7 +32,6 @@ export default {
     },
   },
   created() {
-    //      console.log(newV);
     this.createItems();
   },
 
@@ -40,17 +39,7 @@ export default {
     createItems() {
       const newV = this.copyObject(this.configPage.items);
       this.wait(0).then(() => {
-        this.$set(this, "items", []);
-        // if (newV)
-        //   for (const i in newV) {
-        // console.log(
-        //   "item for ",
-        //   this.configPage.label,
-        //   newV[i].type,
-        //   newV[i].label
-        // );
-        //   this.items.splice(i, 1, newV[i]);
-        // }
+        // this.$set(this, "items", []);
         this.$set(this, "items", newV);
         return this.wait(2).then(() => this.$forceUpdate());
       });

@@ -9,7 +9,8 @@ doc/
 /iobroker_admin
 lib/otherProjectSources/
 /node_modules
+/public
+/src
 test
 .travis.yml
-appveyor.yml
 .vscode
