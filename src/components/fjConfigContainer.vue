@@ -15,7 +15,6 @@
 export default {
   name: "fjConfigContainer",
 
-  //  mixins: [attrsMixin],
   data() {
     return {
       items: [],

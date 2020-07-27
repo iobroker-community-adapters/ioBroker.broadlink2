@@ -169,6 +169,13 @@ const iobroker = {
         this.$store.commit("iobrokerHostConnection", value);
       },
     },
+    iobrokerHostPath() {
+      const host = this.iobrokerHostConnection;
+      return (
+        (host.secure ? "https://" : "http://") + host.hostname + ":" + host.port
+      );
+    },
+
     iobrokerLang: {
       get() {
         return this.$store.state.iobrokerLang;
@@ -364,7 +371,10 @@ const iobroker = {
     if (res) {
       this.iobrokerConfig = res.native;
       this.iobrokerAdapterNative = res;
-      if (res.common) this.iobrokerAdapterCommon = res.common;
+      if (res.common) {
+        this.iobrokerAdapterCommon = res.common;
+        this.$store.commit("iobrokerHost", res.common.host);
+      }
       //      this.$alert("new config received");
 
       await this.wait(10);
@@ -604,12 +614,17 @@ const iobroker = {
     },
 
     async getState(id) {
+      const sts = this.adapterStates;
+      if (sts[id]) return sts[id];
       return this.$socketEmit("getState", id).then(
-        (res) => res,
+        (res) => {
+          this.$store.commit("adapterStates", [id, res]);
+          return res;
+        },
         (e) => (console.log(e), null)
       );
     },
-
+    /*
     async getEnums(_enum) {
       return this.$socketEmit("getObjectView", "system", "enum", {
         startkey: "enum." + _enum,
@@ -690,7 +705,7 @@ const iobroker = {
         (e) => (console.log(e), [])
       );
     },
-
+*/
     async loadSystemConfig() {
       const that = this;
 

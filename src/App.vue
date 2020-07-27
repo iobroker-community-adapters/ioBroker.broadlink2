@@ -33,7 +33,7 @@
         <fjB
           :color="['red', 'orange', 'green'][adapterStatus]"
           :img="
-            ['mdi-arrow-right-box', 'mdi-pause-circle', 'mdi-pause-octagon'][
+            ['mdi-play-circle', 'mdi-pause-circle', 'mdi-pause-octagon'][
               adapterStatus
             ]
           "
@@ -42,7 +42,7 @@
         />
         <fjB
           :disabled="!adapterStatus"
-          color="grey"
+          color="warning"
           img="mdi-refresh"
           @click="enableDisableInstance('restart')"
           :tooltip="$t('restart adapter')"
@@ -162,6 +162,8 @@
           </tbody>
         </template>
       </v-simple-table>
+      <fjStateSelector v-model="testSel" />
+      {{ testSel }}
     </v-main>
   </v-app>
 </template>
@@ -171,8 +173,12 @@
 
 // import helper from "./plugins/helper";
 import Vue from "vue";
-import ioBroker from "./plugins/iobroker";
+// import ioBroker from "./plugins/iobroker";
 import broadlink from "./plugins/broadlink";
+
+import fjStateSelector from "./components/fjStateSelector";
+
+Vue.component("fjStateSelector", fjStateSelector);
 
 // let what = null;
 // console.log(process.env);
@@ -188,13 +194,14 @@ function fix(number, digits, min, max) {
 
 export default {
   name: "App",
-  mixins: [ioBroker, broadlink],
+  mixins: [broadlink],
 
   data: () => {
     return {
       page: -1,
       configPage: { items: [] },
       markRed: "",
+      testSel: [],
       //      tmptext: "",
     };
   },

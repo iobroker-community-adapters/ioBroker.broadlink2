@@ -400,7 +400,7 @@ class Device extends EventEmitter {
           clearTimeout(self.tout);
         }
         self.tout = null;
-        self.udp.removeAllListeners("message");
+        if (self.udp) self.udp.removeAllListeners("message");
         rej(what);
       }
 

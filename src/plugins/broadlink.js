@@ -1,5 +1,6 @@
 // import Vue from "vue";
 import { mapActions, mapGetters } from "vuex";
+import ioBroker from "./iobroker";
 
 const broadlink = {
   // data() {
@@ -9,7 +10,7 @@ const broadlink = {
   // },
 
   // sockets: { },
-
+  extends: ioBroker,
   computed: {
     adapterObjects() {
       return this.$store.state.adapterObjects;
@@ -23,8 +24,31 @@ const broadlink = {
       return this.$store.state.adapterStateUpdate;
     },
 
+    adapterLastObject() {
+      return this.$store.state.adapterLastObject;
+    },
+
     interfaces() {
       return this.$store.state.interfaces;
+    },
+
+    sStates() {
+      return this.$store.state.sstate;
+    },
+
+    icons() {
+      return this.$store.state.icons;
+    },
+
+    instances() {
+      return this.$store.state.instances;
+    },
+
+    stateNames() {
+      const sst = this.sStates;
+      const nl = [];
+      for (const i in sst) if (typeof sst[i] === "string") nl.push(i);
+      return nl;
     },
 
     broadlinkDevices() {
@@ -83,13 +107,25 @@ const broadlink = {
     //   deep: true,
     // },
     adapterStateUpdate(newV, oldV) {
+      const that = this;
       const [id, state] = newV;
+      const name = id.split(".")[2];
+      const config = this.$store.state.iobrokerConfig;
+      const devlist = (config && config.devList) || [];
+
+      if (!state) {
+        // delete state
+        if (id.endsWith("._notReachable")) {
+          const item = devlist.find((i) => i.name == name);
+          if (item) {
+            this.$set(item, "active", false);
+          }
+        }
+        return;
+      }
       if (id.endsWith("._NewDeviceScan")) {
         this.$alert(`info:Device Scan ${state.val ? "Started" : "Stopped"}`);
       } else if (id.endsWith("._notReachable")) {
-        const name = id.split(".")[2];
-        const config = this.$store.state.iobrokerConfig;
-        const devlist = (config && config.devList) || [];
         const item = devlist.find((i) => i.name == name);
         if (item) {
           this.$set(item, "active", !state.val);
@@ -104,6 +140,14 @@ const broadlink = {
       },
       deep: true,
     },
+
+    adapterLastObject(newV) {
+      const [id, obj] = newV;
+      if (id.split(".").length == 3 && obj && obj.native && obj.native.host) {
+        // console.log("UpdateObject", id, obj);
+        this.addDevice(obj.native.host, id.split(".")[2]);
+      }
+    },
   },
   // async created() { },
 
@@ -111,10 +155,8 @@ const broadlink = {
 
   methods: {
     // ...mapActions(["loadAdapterObjects", "loadInterfaces"]),
-
-    async loadDevList() {
+    async addDevice(host, name) {
       const that = this;
-      //    console.log("beforeMount:", this.$socket);
       async function isDeviceHere(name) {
         const id = that.iobrokerAdapterInstance + "." + name + "._notReachable";
         let state = that.adapterStates[id];
@@ -125,6 +167,47 @@ const broadlink = {
         // console.log(id, state);
         return state && !state.val;
       }
+      const config = this.$store.state.iobrokerConfig;
+      if (!Array.isArray(config.devList) || !config.devList.length)
+        this.$set(config, "devList", []);
+      const dl = config.devList;
+      const {
+        address,
+        mac,
+        devname,
+        devhex,
+        oname,
+        names,
+        type,
+        fware,
+        cloud,
+      } = host;
+      name = name || devname;
+      if (parseInt(address.split(".")[3]) < 110) return; //// DEMO limit!!!
+      const found =
+        dl.find((i) => i.mac == mac) || dl.find((i) => i.ip == address);
+      const info = `${type.toUpperCase()}:${devname}, id=${devhex}, netnames=${
+        (names && names.join("; ")) || oname
+      }${fware ? ", v" + fware.toString() : ""}${cloud ? ", cloud" : ""}`;
+      const active = await isDeviceHere(name);
+      if (found) {
+        found.mac = found.mac || mac;
+        found.ip = found.ip || address;
+        found.info = found.info || info;
+        found.active = active;
+      } else
+        dl.push({
+          name,
+          ip: address,
+          mac: mac.toLowerCase(),
+          info,
+          active,
+        });
+    },
+
+    async loadDevList() {
+      const that = this;
+      //    console.log("beforeMount:", this.$socket);
       await this.wait(100);
       const config = this.$store.state.iobrokerConfig;
       if (!Array.isArray(config.devList) || !config.devList.length)
@@ -135,36 +218,7 @@ const broadlink = {
       for (const devo of Object.entries(this.broadlinkDevices)) {
         const [name, dev] = devo;
         if (!dev.$native || !dev.$native.host) continue;
-        const {
-          address,
-          mac,
-          devname,
-          devhex,
-          oname,
-          names,
-          type,
-          fware,
-          cloud,
-        } = dev.$native.host;
-        const found =
-          dl.find((i) => i.mac == mac) || dl.find((i) => i.ip == address);
-        const info = `${type.toUpperCase()}:${devname}, id=${devhex}, netnames=${
-          (names && names.join("; ")) || oname
-        }${fware ? ", v" + fware.toString() : ""}${cloud ? ", cloud" : ""}`;
-        const active = await isDeviceHere(name);
-        if (found) {
-          found.mac = found.mac || mac;
-          found.ip = found.ip || address;
-          found.info = found.info || info;
-          found.active = active;
-        } else
-          dl.push({
-            name,
-            ip: address,
-            mac: mac.toLowerCase(),
-            info,
-            active,
-          });
+        await this.addDevice(dev.$native.host, name);
       }
       await this.wait(20);
     },

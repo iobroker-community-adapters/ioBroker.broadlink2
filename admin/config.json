@@ -111,8 +111,8 @@
                             "class": "text-body-2",
                             "rules": [
                                 {
-                                    "regexp": "/^[0-9]+\\.[0-9]+\\.[0-9]+\\.[0-9]+$/",
-                                    "message": "Need to be an IPv4 address (like 1.2.3.4)"
+                                    "regexp": "/^([0-9]+\\.[0-9]+\\.[0-9]+\\.[0-9]+)?$/",
+                                    "message": "Need to be an IPv4 address (like 11.222.3.444)"
                                 }
                             ]
         
@@ -126,7 +126,7 @@
                             "class": "text-body-2",
                             "rules": [
                                 {
-                                    "regexp": "/^(([\\dA-F]{2}:){5}[\\dA-F]{2})$/i",
+                                    "regexp": "/^(([\\dA-F]{2}:){5}[\\dA-F]{2})?$/i",
                                     "message": "Need to be a mac address (like 01:23:45:56:78:9a)"
                                 }
                             ]

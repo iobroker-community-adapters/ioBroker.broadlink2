@@ -44,7 +44,6 @@ export default {
   name: "fjB",
   inheritAttrs: false,
 
-  //  mixins: [attrsMixin],
   data() {
     //    return { my_attrs: "top,bottom,left,right" };
     return {

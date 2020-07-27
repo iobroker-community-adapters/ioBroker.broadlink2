@@ -30,7 +30,7 @@ Vue.component("fjConfigTable", fjConfigTable);
 
 export default {
   name: "fjConfigElement",
-  //  mixins: [attrsMixin],
+
   data() {
     return {
       nToolItem: {},

@@ -977,9 +977,9 @@ class MyAdapter {
         timer = null;
       }
     }
-    this.I(
-      `Adapter disconnected and stopped with dostop(${dostop}) and callback(${!!callback})`
-    );
+    // this.I(
+    //   `Adapter disconnected and stopped with dostop(${dostop}) and callback(${!!callback})`
+    // );
     if (!callback) {
       const x = dostop < 0 ? 0 : dostop || 0;
       MyAdapter.Df(

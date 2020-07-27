@@ -12,6 +12,8 @@ import fjConfigElement from "./components/fjConfigElement"
 import fjConfigContainer from "./components/fjConfigContainer"
 import fjFileLoadButton from "./components/fjFileLoadButton"
 import fjFileSaveButton from "./components/fjFileSaveButton"
+import fjAvatar from "./components/fjAvatar";
+
 
 Vue.component("fjB", fjB);
 Vue.component("fjAlerts", fjAlerts);
@@ -20,6 +22,7 @@ Vue.component("fjConfigElement", fjConfigElement);
 Vue.component("fjConfigContainer", fjConfigContainer);
 Vue.component("fjFileLoadButton", fjFileLoadButton);
 Vue.component("fjFileSaveButton", fjFileSaveButton);
+Vue.component("fjAvatar", fjAvatar);
 
 Vue.config.productionTip = false;
 //Vue.component(VueChart.name, VueChart);
@@ -106,7 +109,7 @@ Vue.mixin({
       //   rule = rule.map(i => i.trim());
       else if (typeof rule == "object") {
         if (typeof rule.regexp == "string") {
-          const m = rule.regexp.match(/^\/(.*)\/([gimy])?$/);
+          const m = rule.regexp.match(/^\/(.*)\/([gimy]*)$/);
           const re = m ? new RegExp(...m.slice(1, 3)) : null;
           let f;
           let r = this.$t(rule.message);
@@ -114,14 +117,14 @@ Vue.mixin({
             f = (v) => {
               if (Array.isArray(v))
                 v = v.slice(-1)[0];
-              return v && !!v.match(re) || r
+              return !!(v || "").match(re) || r
             };
           } else {
             f = (v) => {
               if (Array.isArray(v))
                 v = v.slice(-1)[0];
               // console.log(v);
-              return v && v.indexOf(rule.regexp) >= 0 || r;
+              return (v || "").indexOf(rule.regexp) >= 0 || r;
             }
           }
           return f.bind(that);

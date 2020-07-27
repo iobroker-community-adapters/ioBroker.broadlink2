@@ -13,7 +13,6 @@
 export default {
   name: "fjConfigRuler",
 
-  //  mixins: [attrsMixin],
   data() {
     return {};
   },

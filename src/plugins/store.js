@@ -1,6 +1,6 @@
 import Vue from "vue";
 import Vuex, { Store } from "vuex";
-import { states } from "../../fjadapter";
+import { states, objects } from "../../fjadapter";
 
 Vue.use(Vuex);
 
@@ -43,6 +43,7 @@ export default new Vuex.Store({
     adapterStateUpdate: [],
     adapterStates: {},
     adapterLastState: {},
+    adapterLastObject: {},
     interfaces: ["0.0.0.0"],
     socketConnected: false,
     adapterObjects: {},
@@ -50,6 +51,10 @@ export default new Vuex.Store({
     // broadlinkConfig: {},
     // broadlinkConfigCompare: "",
     devMode,
+    sstate: {},
+    icons: {},
+    instances: [],
+    // mstate: {},
   },
   mutations: {
     iobrokerAdapterNative(state, value) {
@@ -67,11 +72,45 @@ export default new Vuex.Store({
       state.adapterDebugLevel = value;
     },
 
+    adapterLastObject(state, value) {
+      state.adapterLastObject = value;
+    },
+
     adapterStates(state, payload) {
       const [id, obj] = payload;
       state.adapterLastState = payload;
       if (!obj) delete state.adapterStates[id];
       else state.adapterStates[id] = obj;
+    },
+
+    addSState(state, value) {
+      const [id, obj] = value;
+      if (!obj) {
+        // delete state!
+        console.log("Please code delete state!");
+        return;
+      }
+      const an = obj._id.split(".")[2];
+      const ids = id.split(".");
+      // if (obj.common && obj.common.icon)
+      //   state.icons[id] =
+      //     "/adapter/" + id.split(".")[2] + "/" + obj.common.icon;
+      if (an && obj.type == "adapter")
+        state.icons[an] = "/adapter/" + an + "/" + obj.common.icon;
+      if (obj.type === "instance") state.instances.push(ids.slice(2).join("."));
+
+      if (obj.type === "state" && !id.startsWith("system.adapter.")) {
+        const n = obj && obj.common && obj.common.name;
+        const st = state.sstate;
+        if (!n) return;
+        //                    var i = {id: id, icon: main.icons['system.adapter.'+split]};
+        const stn = st[n];
+        if (!stn) st[n] = id;
+        else if (Array.isArray(stn)) {
+          if (stn.indexOf(id) < 0) stn.push(id);
+        } else if (stn !== id) st[n] = [stn, id];
+        if (!state.sstate[id]) state.sstate[id] = id;
+      }
     },
 
     interfaces(state, value) {
@@ -194,9 +233,9 @@ export default new Vuex.Store({
       const [id, obj] = message;
       const instance = getters.adapterInstance + ".";
       if (
-        // !id.startsWith(getters.adapterInstance) &&
-        // !id.startsWith("system.adapter." + getters.adapterInstance)
-        id.indexOf(instance) < 0
+        !id.startsWith(getters.adapterInstance) &&
+        !id.startsWith("system.adapter." + getters.adapterInstance)
+        // id.indexOf(instance) < 0
       )
         return;
       if (id == "system.adapter." + instance + "logLevel")
@@ -221,15 +260,16 @@ export default new Vuex.Store({
 
     SOCKET_objectChange({ commit, state, getters }, message) {
       const [id, obj] = message;
+      const instance = getters.adapterInstance;
+      commit("addSState", message);
       // if (id.indexOf(getters.adapterInstance + ".") < 0) return;
       if (
-        // !id.startsWith(getters.adapterInstance) &&
-        !id.startsWith("system.adapter." + getters.adapterInstance)
+        !id.startsWith(getters.adapterInstance + ".") &&
+        !id.startsWith("system.adapter." + instance)
       )
         return;
-      console.log("store objectChange", id, obj);
-      // console.log("store adapter log:", message);
-      // commit("adapterLog", message);
+      // console.log("store objectChange", id, obj);
+      commit("adapterLastObject", message);
     },
 
     async loadConfigFile({ commit, state, dispatch }) {
@@ -293,12 +333,18 @@ export default new Vuex.Store({
           null
         )) || {};
       obj =
-        (await emit("getForeignObjects", alist + "*").catch(
+        (await emit("getObjects").catch(
           (e) => console.log("getForeignObjects error:", e),
           null
         )) || {};
       // console.log(obj);
-      commit("adapterObjects", obj);
+      if (obj) {
+        commit("adapterObjects", obj);
+        for (const oitem of Object.entries(obj))
+          if (oitem[0].startsWith(alist)) commit("addSState", oitem);
+        for (const oitem of Object.entries(obj))
+          if (!oitem[0].startsWith(alist)) commit("addSState", oitem);
+      }
       await dispatch("wait");
       const states =
         (await emit("getStates").catch(

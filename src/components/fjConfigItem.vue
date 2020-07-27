@@ -100,7 +100,6 @@
 export default {
   name: "fjConfigItem",
 
-  //  mixins: [attrsMixin],
   data() {
     //    return { my_attrs: "top,bottom,left,right" };
     return {

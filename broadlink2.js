@@ -528,7 +528,7 @@ async function doPoll() {
       na.push(device.host);
       if (
         device.lastResponse &&
-        device.lastResponse < Date.now() - 1000 * 60 * 5
+        device.lastResponse < Date.now() - 1000 * 60 * 5 // after 5 minutes set device offline!
       ) {
         if (device.close) device.close();
         A.W(
@@ -624,9 +624,13 @@ async function sendState(state, val) {
 async function updateValues(device, val, values) {
   for (const item of values) {
     let i = Object.assign({}, item);
-    const name = i.name;
-    delete i.name;
-    i.id = device.host.iname + (i.id || i.id === "" ? i.id : "." + name);
+    let name = i.name;
+    // delete i.name;
+    if (i.id && i.id.startsWith(".")) {
+      name = i.id.slice(1);
+      i.id = device.host.iname + i.id;
+    } else i.id = device.host.iname + (i.id || i.id === "" ? i.id : "." + name);
+    i.name = i.id;
     i.write = !!i.write;
     let v = val[name];
     i.native = {
@@ -656,21 +660,21 @@ async function createStatesDevice(device) {
     return [
       {
         id: dn + ".startHour",
-        name: "startHour",
+        name: dn + ".startHour",
         write: true,
         type: typeof 1,
         role: "value",
       },
       {
         id: dn + ".startMinute",
-        name: "startMinute",
+        name: dn + ".startMinute",
         write: true,
         type: typeof 1,
         role: "value",
       },
       {
         id: dn + ".temp",
-        name: "temp",
+        name: dn + ".temp",
         write: true,
         type: typeof 1.0,
         role: "value.temperature",
@@ -724,7 +728,6 @@ async function createStatesDevice(device) {
         }
         await updateValues(device, val, [
           {
-            name: "energy",
             id: ".CurrentPower",
             role: "level",
             write: false,
@@ -732,7 +735,6 @@ async function createStatesDevice(device) {
             type: typeof 1.1,
           },
           {
-            name: "nightlight",
             id: ".NightLight",
             role: "switch",
             write: true,
@@ -751,9 +753,11 @@ async function createStatesDevice(device) {
     case "S1":
       device.update = async (val) => {
         for (const i of A.ownKeysSorted(val)) {
+          const id = device.host.iname + (i === "here" ? "" : "." + i)
           await A.makeState(
             {
-              id: device.host.iname + (i === "here" ? "" : "." + i),
+              id,
+              name: id,
               write: false,
               role: "value",
               type: i === "here" ? typeof true : typeof 1,
@@ -776,7 +780,6 @@ async function createStatesDevice(device) {
           {
             id: tempName,
             role: "temperature",
-            name: "temperature",
             write: false,
             unit: "°C",
             type: typeof 1.1,
@@ -784,7 +787,6 @@ async function createStatesDevice(device) {
           {
             id: humName,
             role: "value.humidity",
-            name: "humidity",
             min: 0,
             max: 100,
             write: false,
@@ -842,7 +844,7 @@ async function createStatesDevice(device) {
       device.update = async (val) => {
         await updateValues(device, val, [
           {
-            name: "pwr",
+            id: ".pwr",
             type: typeof true,
             write: true,
             role: "switch.light",
@@ -855,7 +857,7 @@ async function createStatesDevice(device) {
             role: "switch.light",
           },
           {
-            name: "brightness",
+            id: ".brightness",
             type: typeof 1,
             role: "level.dimmer",
             write: true,
@@ -864,7 +866,7 @@ async function createStatesDevice(device) {
             unit: "%",
           },
           {
-            name: "bulb_colormode",
+            id: ".bulb_colormode",
             type: typeof 0,
             write: true,
             role: "level",
@@ -874,19 +876,19 @@ async function createStatesDevice(device) {
               "0:lovely color;1:flashlight;2:lightning;3:color fading;4:color breathing;5:multicolor breathing;6:color jumping;7:multicolor jumping",
           },
           {
-            name: "bulb_scenes",
+            id: ".bulb_scenes",
             type: "array",
             write: true,
             role: "level",
           },
           {
-            name: "bulb_scene",
+            id: ".bulb_scene",
             type: typeof "",
             write: true,
             role: "level",
           },
           {
-            name: "bulb_sceneidx",
+            id: ".bulb_sceneidx",
             type: typeof 1,
             role: "level",
             write: true,
@@ -922,56 +924,56 @@ async function createStatesDevice(device) {
             },
           },
           {
-            name: "thermostatTemp",
+            id: ".thermostatTemp",
             write: true,
             type: typeof 1.1,
             role: "value.temperature",
             unit: "°C",
           },
           {
-            name: "roomTempAdj",
+            id: ".roomTempAdj",
             write: true,
             type: typeof 1.1,
             role: "value.temperature",
             unit: "°C",
           },
           {
-            name: "externalTemp",
+            id: ".externalTemp",
             type: typeof 1.1,
             role: "value.temperature",
             unit: "°C",
           },
           {
-            name: "roomTemp",
+            id: ".roomTemp",
             type: typeof 1.1,
             role: "value.temperature",
             unit: "°C",
           },
           {
-            name: "remoteLock",
+            id: ".remoteLock",
             type: typeof true,
             write: true,
             role: "switch",
           },
           {
-            name: "power",
+            id: ".power",
             type: typeof true,
             write: true,
             role: "switch",
           },
           {
-            name: "active",
+            id: ".active",
             type: typeof true,
             write: true,
             role: "switch",
           },
           {
-            name: "time",
+            id: ".time",
             type: typeof "",
             role: "value",
           },
           {
-            name: "autoMode",
+            id: ".autoMode",
             type: typeof 0,
             role: "value",
             min: 0,
@@ -980,7 +982,7 @@ async function createStatesDevice(device) {
             write: true,
           },
           {
-            name: "loopMode",
+            id: ".loopMode",
             type: typeof 0,
             write: true,
             role: "value",
@@ -990,7 +992,7 @@ async function createStatesDevice(device) {
               "1:weekend starts Saturday;2:weekend starts Sunday;3:All days are weekdays",
           },
           {
-            name: "sensor",
+            id: ".sensor",
             type: typeof 0,
             write: true,
             role: "value",
@@ -999,7 +1001,7 @@ async function createStatesDevice(device) {
             states: "0:internal;1:external;2:internalControl-externalLimit",
           },
           {
-            name: "weekday",
+            id: ".weekday",
             fun: (device, i, v) => {
               let d = 0;
               return A.seriesOf(
@@ -1013,7 +1015,7 @@ async function createStatesDevice(device) {
             },
           },
           {
-            name: "weekend",
+            id: ".weekend",
             fun: (device, i, v) => {
               let d = 0;
               return A.seriesOf(
@@ -1027,7 +1029,7 @@ async function createStatesDevice(device) {
             },
           },
           {
-            name: "osv",
+            id: ".osv",
             type: typeof 0.1,
             write: true,
             role: "value.temperature",
@@ -1036,7 +1038,7 @@ async function createStatesDevice(device) {
             max: 99,
           },
           {
-            name: "dif",
+            id: ".dif",
             type: typeof 0.1,
             write: true,
             role: "value.temperature",
@@ -1045,7 +1047,7 @@ async function createStatesDevice(device) {
             max: 9,
           },
           {
-            name: "svh",
+            id: ".svh",
             type: typeof 0.1,
             write: true,
             role: "value.temperature",
@@ -1054,7 +1056,7 @@ async function createStatesDevice(device) {
             max: 99,
           },
           {
-            name: "svl",
+            id: ".svl",
             type: typeof 0.1,
             write: true,
             role: "value.temperature",
@@ -1080,7 +1082,6 @@ async function createStatesDevice(device) {
           },
           {
             id: humName,
-            name: "humidity",
             type: typeof 1.1,
             role: "value.humidity",
             write: false,
@@ -1090,7 +1091,6 @@ async function createStatesDevice(device) {
           },
           {
             id: lightName,
-            name: "light",
             type: typeof 0,
             role: "value",
             min: 0,
@@ -1099,7 +1099,6 @@ async function createStatesDevice(device) {
           },
           {
             id: airQualityName,
-            name: "air_quality",
             type: typeof 0,
             role: "value",
             min: 0,
@@ -1108,7 +1107,6 @@ async function createStatesDevice(device) {
           },
           {
             id: noiseName,
-            name: "noise",
             type: typeof 0,
             role: "value",
             min: 0,
@@ -1129,6 +1127,13 @@ async function createStatesDevice(device) {
 let aif = "";
 const macList = {};
 const macObjects = {};
+function aconv(item) {
+  if (item && typeof item === "string")
+    return item.split(",").map((i) => i.trim());
+  else if (item && Array.isArray(item)) return item.map((i) => i.trim());
+  return [];
+}
+
 async function main() {
   function renId(id, oldid, newid) {
     if (id.startsWith(A.ain + oldid + "."))
@@ -1267,14 +1272,14 @@ async function main() {
     brlink.start15001();
     await deviceScan(A.I("Discover Broadlink devices for 10sec on " + A.ains));
     for (const state of A.C.switches) {
-      let name = state.name && state.name.trim(),
-        on = state.on && state.on.trim(),
-        off = state.off && state.off.trim();
-      if (!name || !on) {
+      let name = (state.name && state.name.trim()) || "";
+      let on = aconv(state.on);
+      let off = aconv(state.off);
+      if (!name || !on.length) {
         A.W(`Invalid State without name or 'on' string: ${A.O(state)}`);
         continue;
       }
-      if (!off || off === "") off = null;
+      off = !off.length ? null : off[0];
       const mult = off === "+" ? 1 : parseInt(off);
       if (mult) off = null;
       on = A.trim(A.split(on, ","));
