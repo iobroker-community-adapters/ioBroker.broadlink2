@@ -39,24 +39,24 @@
             ></v-img>
             <v-icon v-else>{{ data.item.icon }}</v-icon>
           </v-list-item-avatar>
- -->
+          -->
           <div class="pr-2">
             <fjAvatar :icon="data.item.icon" size="32" tile left />
           </div>
           <v-list-item-content>
-            <v-list-item-title>
-              {{ data.item.cname }} = {{ data.item.value }}
-            </v-list-item-title>
+            <v-list-item-title>{{ data.item.cname }} = {{ data.item.value }}</v-list-item-title>
             <v-list-item-subtitle v-text="data.item.id" />
           </v-list-item-content>
         </template>
       </template>
     </v-autocomplete>
-    {{ items }} <br />
-    {{ active.map((i) => i.$id + "=" + i.cname) }} <br />
+    {{ items }}
+    <br />
+    {{ active.map((i) => i.$id + "=" + i.cname) }}
+    <br />
     <!--     {{ tree.map((i) => i.$id + "=" + i.id) }} <br />
     {{ open.map((i) => i.$id + "=" + i.id) }}
- -->
+    -->
     <v-text-field dense label="filter" v-model="search" style="width: 550px;" />
     <v-treeview
       style="width: 550px;"
@@ -75,9 +75,9 @@
         <fjAvatar :icon="item.icon" tile />
       </template>
       <template v-slot:append="{ item }">
-        <template v-if="item.isState && customFilter(item, search)">
-          {{ item.cname }} = {{ item.value }}
-        </template>
+        <template
+          v-if="item.isState && customFilter(item, search)"
+        >{{ item.cname }} = {{ item.value }}</template>
       </template>
     </v-treeview>
   </div>
@@ -156,11 +156,10 @@ export default {
     },
 
     async getAState(item) {
-      item.value = (
-        await this.$app.getState(item.id).catch((_) => {
-          val: NaN;
-        })
-      ).val;
+      const v = await this.$app.getState(item.id).catch((_) => {
+        val: NaN;
+      });
+      item.value = v && typeof v === "object" ? v.val : undefined;
     },
 
     genTree(filter) {
@@ -175,7 +174,6 @@ export default {
         for (const ida of idarr) {
           if (ida && !ida.startsWith(filter)) continue;
           const ids = ida.split(".");
-          const idf = ids[0];
           if (ids.length >= 2 && !isNaN(parseInt(ids[1])))
             ids.splice(0, 2, ids[0] + "." + ids[1]);
           let arr = res;
@@ -195,7 +193,7 @@ export default {
                 $name: this.getName(id),
                 isState: idn === ida,
               };
-              n.icon = this.getIcon(idf);
+              n.icon = this.getIcon(ida);
               this.getAState(n);
               sub = n;
               if (n.isState) stList.push(n);
@@ -212,10 +210,22 @@ export default {
 
     getIcon(idf) {
       const icons = this.$store.state.icons;
-      if (idf === "scene") idf = "scenes";
-      else if (idf === "system") return "mdi-cog";
-      let icon = icons[idf];
-      icon = icon ? this.$app.iobrokerHostPath + icon : "mdi-heart-box";
+      const ids = idf.split(".");
+      const host = this.$app.devMode ? this.$app.iobrokerHostPath : "";
+      let icon;
+      while (ids.length) {
+        if (icons[ids.join(".")]) {
+          icon = icons[ids.join(".")];
+          break;
+        }
+        idf = ids.pop();
+      }
+      if (!icon) {
+        if (idf === "scene") idf = "scenes";
+        else if (idf === "system") return "mdi-cog";
+        icon = icons[idf];
+      }
+      icon = icon ? host + icon : "mdi-heart-box";
       return icon;
     },
 

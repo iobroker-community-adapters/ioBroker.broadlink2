@@ -90,13 +90,14 @@ export default new Vuex.Store({
         console.log("Please code delete state!");
         return;
       }
-      const an = obj._id.split(".")[2];
       const ids = id.split(".");
+      const an = id.startsWith("system.adapter.") ? ids[2] : ids[0];
       // if (obj.common && obj.common.icon)
       //   state.icons[id] =
       //     "/adapter/" + id.split(".")[2] + "/" + obj.common.icon;
-      if (an && obj.type == "adapter")
-        state.icons[an] = "/adapter/" + an + "/" + obj.common.icon;
+      if (obj.common && obj.common.icon)
+        state.icons[obj.type == "adapter" ? an : id] =
+          "/adapter/" + an + "/" + obj.common.icon;
       if (obj.type === "instance") state.instances.push(ids.slice(2).join("."));
 
       if (obj.type === "state" && !id.startsWith("system.adapter.")) {
