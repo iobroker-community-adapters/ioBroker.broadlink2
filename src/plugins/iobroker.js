@@ -145,6 +145,22 @@ const iobroker = {
     iobrokerIsTab() {
       return this.$store.state.ioBrokerIsTab;
     },
+    iobrokerEnums: {
+      get() {
+        return this.$store.state.iobrokerEnums;
+      },
+      set(value) {
+        this.$store.commit("iobrokerEnums", value);
+      },
+    },
+    iobrokerGroups: {
+      get() {
+        return this.$store.state.iobrokerGroups;
+      },
+      set(value) {
+        this.$store.commit("iobrokerGroups", value);
+      },
+    },
     adapterDebugLevel: {
       get() {
         return this.$store.state.adapterDebugLevel;
@@ -389,6 +405,9 @@ const iobroker = {
 
     this.setAdapterReadme(this.iobrokerLang, this.iobrokerAdapterCommon);
 
+    await this.wait(20);
+    const groups = await this.getGroups();
+    this.iobrokerGroups = groups;
     /*     return this.loadSystemConfig()
           .then(() => this.wait(10))
           .then(() => (this.iobrokerHostConnection = this.$socket.io.opts))
@@ -624,11 +643,12 @@ const iobroker = {
         (e) => (console.log(e), null)
       );
     },
-    /*
+
     async getEnums(_enum) {
+      _enum = _enum || "";
       return this.$socketEmit("getObjectView", "system", "enum", {
         startkey: "enum." + _enum,
-        endkey: "enum." + _enum + ".\u9999",
+        endkey: "enum." + _enum + "\u9999",
       }).then(
         (res) => {
           var _res = {};
@@ -705,7 +725,6 @@ const iobroker = {
         (e) => (console.log(e), [])
       );
     },
-*/
     async loadSystemConfig() {
       const that = this;
 

@@ -119,49 +119,7 @@
     <v-main id="MyAppContent" class="flex-wrap">
       <fjConfigContainer :cItem="iobrokerConfig" :configPage="configPage" />
       <fjConfirm />
-      <v-simple-table v-if="!page" dense class="elevation-2 xa-1">
-        <template v-slot:default>
-          <thead>
-            <tr>
-              <th class="text-left">Adapter log Time@Severity</th>
-              <th class="text-left">
-                {{ $t("Messages:") + " " + adapterLog.length + " " }}
-                <fjB
-                  label="Clear"
-                  img="mdi-delete-forever"
-                  right
-                  x-small
-                  @click="adapterLog.splice(1)"
-                  tooltip="delete all but last message"
-                />
-                <v-text-field
-                  dense
-                  flat
-                  hide-details
-                  hint="Enter filter Text:"
-                  v-model="markRed"
-                  label="Filter:"
-                  class="caption"
-                  clearable
-                />
-              </th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr
-              v-for="(item, index) in adapterLogFiltered"
-              :key="index.toString() + item.ts.toString()"
-            >
-              <td :class="'height24 caption ' + sevColor(item)">
-                {{ timeStamp(item.ts) + "/" + item.severity }}
-              </td>
-              <td :class="'height24 caption ' + sevColor(item)">
-                {{ item.message }}
-              </td>
-            </tr>
-          </tbody>
-        </template>
-      </v-simple-table>
+      <!-- <fjIoBrokerLog /> -->
       <fjStateSelector v-model="testSel" />
       {{ testSel }}
     </v-main>
@@ -177,6 +135,9 @@ import Vue from "vue";
 import broadlink from "./plugins/broadlink";
 
 import fjStateSelector from "./components/fjStateSelector";
+
+// import fjIoBrokerLog from "./components/fjIoBrokerLog";
+// Vue.component("fjIoBrokerLog", fjIoBrokerLog);
 
 Vue.component("fjStateSelector", fjStateSelector);
 
@@ -233,38 +194,6 @@ export default {
     //   else this.tmptext = "" + newT;
     // },
 
-    sevColor(item) {
-      const sev = item.severity;
-      let color = "primary";
-      switch (sev) {
-        case "warning":
-        case "error":
-          color = sev;
-          break;
-        case "debug":
-          color = "grey";
-          break;
-        case "info":
-          if (item.message.indexOf(" debug: ") >= 0) color = "grey";
-        default:
-          break;
-      }
-      return color + " lighten-4";
-    },
-
-    timeStamp(ts) {
-      function digits(v, p) {
-        p = p || 2;
-        v = v.toString();
-        while (v.length < p) v = "0" + v;
-        return v;
-      }
-      const d = new Date(ts);
-      return `${digits(d.getHours())}:${digits(d.getMinutes())}:${digits(
-        d.getSeconds()
-      )}.${digits(d.getMilliseconds(), 3)}`;
-    },
-
     makeConfigPage(page) {
       const cp = Object.assign(
         {},
@@ -300,15 +229,7 @@ export default {
     },
   },
 
-  computed: {
-    adapterLogFiltered() {
-      const log = this.adapterLog;
-      const filter = this.markRed ? this.markRed.toLowerCase() : null;
-      return filter
-        ? log.filter((i) => i.message.toLowerCase().indexOf(filter) >= 0)
-        : log;
-    },
-  },
+//  computed: {  },
 };
 </script>
 <style scoped.vue>

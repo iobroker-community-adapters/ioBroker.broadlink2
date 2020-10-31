@@ -34,7 +34,7 @@
                     "persistent-hint": true,
                     "rules": [
                         {
-                            "regexp": "/^(0x)?[0-9a-f]+=[0-9a-z]+$/i",
+                            "regexp": "/^((0x)?[0-9a-f]+=[0-9a-z]+)*$/i",
                             "message": "Need to be something like 0x12ab=RMP"
                         }
                     ],
@@ -112,7 +112,7 @@
                             "rules": [
                                 {
                                     "regexp": "/^([0-9]+\\.[0-9]+\\.[0-9]+\\.[0-9]+)?$/",
-                                    "message": "Need to be an IPv4 address (like 11.222.3.444)"
+                                    "message": "Need to be an IPv4 address (like 11.22.33.44)"
                                 }
                             ]
         
@@ -166,6 +166,11 @@
                             "class": "text-caption"
                         }
                     ]
+                },
+                {
+                    "type": "log",
+                    "showMax": 20,
+                    "cols": 12
                 }
             ]
         },

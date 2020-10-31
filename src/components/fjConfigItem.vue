@@ -50,7 +50,7 @@
   />
   <v-textarea
     v-else-if="cToolItem.type == 'textarea'"
-    style="font-family: monospace !important; font-size: 14px;"
+    style="font-family: monospace !important; font-size: 14px"
     auto-grow
     row-height="15"
     hide-details="auto"
@@ -83,6 +83,7 @@
     v-bind="attrs()"
     @change="cToolItem.click ? cToolItem.click($event) : null"
   />
+  <fjIoBrokerLog v-bind="attrs()" v-else-if="cToolItem.type == 'log'" />
   <v-switch
     v-else-if="cToolItem.type == 'switch'"
     dense
@@ -97,8 +98,13 @@
 </template>
 
 <script>
+import fjIoBrokerLog from "./fjIoBrokerLog";
+
 export default {
   name: "fjConfigItem",
+  components: {
+    fjIoBrokerLog,
+  },
 
   data() {
     //    return { my_attrs: "top,bottom,left,right" };

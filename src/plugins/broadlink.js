@@ -12,8 +12,8 @@ const broadlink = {
   // sockets: { },
   extends: ioBroker,
   computed: {
-    adapterObjects() {
-      return this.$store.state.adapterObjects;
+    iobrokerObjects() {
+      return this.$store.state.iobrokerObjects;
     },
 
     adapterStates() {
@@ -64,7 +64,7 @@ const broadlink = {
         return no;
       }
 
-      const bo = Object.assign({}, this.$store.state.adapterObjects);
+      const bo = Object.assign({}, this.$store.state.iobrokerObjects);
       const d = {};
       const ai = this.iobrokerAdapterInstance;
       for (const e of Object.entries(bo)) {
@@ -100,7 +100,7 @@ const broadlink = {
   },
 
   watch: {
-    // adapterObjects: {
+    // iobrokerObjects: {
     //   handler: function () {
     //     this.updateBroadlinkDevices();
     //   },
@@ -154,7 +154,7 @@ const broadlink = {
   // async mounted() {},
 
   methods: {
-    // ...mapActions(["loadAdapterObjects", "loadInterfaces"]),
+    // ...mapActions(["loadIobrokerObjects", "loadInterfaces"]),
     async addDevice(host, name) {
       const that = this;
       async function isDeviceHere(name) {

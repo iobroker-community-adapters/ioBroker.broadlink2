@@ -10,7 +10,7 @@
     <input
       type="file"
       :id="myId"
-      style="display: none;"
+      style="display: none"
       @change="loadTextFromFile"
     />
   </fjB>

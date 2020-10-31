@@ -34,6 +34,8 @@ export default new Vuex.Store({
     iobrokerAdapterNative: {},
     iobrokerAdapterCommon: {}, // iopackage.common,
     ioBrokerCerts: [],
+    iobrokerEnums: {},
+    iobrokerGroups: {},
     configTranslated: [],
     socketConnected: false,
     iobrokerReadme: "",
@@ -46,7 +48,7 @@ export default new Vuex.Store({
     adapterLastObject: {},
     interfaces: ["0.0.0.0"],
     socketConnected: false,
-    adapterObjects: {},
+    iobrokerObjects: {},
     adapterStatus: 0,
     // broadlinkConfig: {},
     // broadlinkConfigCompare: "",
@@ -60,8 +62,14 @@ export default new Vuex.Store({
     iobrokerAdapterNative(state, value) {
       state.iobrokerAdapterNative = value;
     },
-    adapterObjects(state, value) {
-      state.adapterObjects = value;
+    iobrokerEnums(state, value) {
+      state.iobrokerEnums = value;
+    },
+    iobrokerGroups(state, value) {
+      state.iobrokerGroups = value;
+    },
+    iobrokerObjects(state, value) {
+      state.iobrokerObjects = value;
     },
     adapterLog(state, value) {
       if (state.adapterLog.length >= 100) state.adapterLog.pop();
@@ -208,7 +216,7 @@ export default new Vuex.Store({
       commit("iobrokerHostConnection", this._vm.$socket.io.opts);
       await dispatch("wait");
       // await dispatch("wait");
-      await dispatch("loadAdapterObjects");
+      await dispatch("loadIobrokerObjects");
       await dispatch("wait");
       dispatch("loadInterfaces");
     },
@@ -225,8 +233,8 @@ export default new Vuex.Store({
     },
 
     SOCKET_log({ commit, getters }, message) {
-      if (message.from != getters.adapterInstance) return;
       // console.log("store adapter log:", message);
+      if (message.from != getters.adapterInstance) return;
       commit("adapterLog", message);
     },
 
@@ -316,7 +324,7 @@ export default new Vuex.Store({
       commit("interfaces", ifs);
     },
 
-    async loadAdapterObjects({ commit, state, dispatch }, params) {
+    async loadIobrokerObjects({ commit, state, dispatch }, params) {
       const alist = `${state.iobrokerAdapter}.${state.iobrokerInstance}.`;
       const emit = Vue.prototype.$socketEmit;
       const options = {
@@ -339,12 +347,23 @@ export default new Vuex.Store({
           null
         )) || {};
       // console.log(obj);
+      const ienums = {};
       if (obj) {
-        commit("adapterObjects", obj);
-        for (const oitem of Object.entries(obj))
-          if (oitem[0].startsWith(alist)) commit("addSState", oitem);
+        commit("iobrokerObjects", obj);
+        for (const enums of Object.entries(obj)) {
+          const [name, cobj] = enums;
+          if (name.startsWith(alist)) commit("addSState", enums);
+          if (cobj.type !== "enum") continue;
+          const members = (cobj.common && cobj.common.members) || [];
+          for (const menum of members) {
+            const eli = ienums[menum] || [];
+            if (!eli.length) ienums[menum] = eli;
+            eli.push(name);
+          }
+        }
         for (const oitem of Object.entries(obj))
           if (!oitem[0].startsWith(alist)) commit("addSState", oitem);
+        commit("iobrokerEnums", ienums);
       }
       await dispatch("wait");
       const states =
