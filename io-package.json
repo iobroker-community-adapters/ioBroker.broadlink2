@@ -96,7 +96,8 @@
             {
               "name": "TestDummy",
               "ip": "193.168.1.168",
-              "mac": "43:ea:34:bd:92:4a"
+              "mac": "43:ea:34:bd:92:4a",
+              "poll": false
             }
           ],
         "debug": false,
@@ -105,5 +106,4 @@
         "new": ["0xabcd=RM4"]
     },
     "objects": []    
-    }
 }

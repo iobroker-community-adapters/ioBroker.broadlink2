@@ -21,6 +21,7 @@
       <fjB
         label="Clear"
         text
+        left
         img="mdi-delete-forever"
         small
         @click="adapterLog.splice(1)"
@@ -31,6 +32,7 @@
         text
         img="mdi-clipboard-plus-outline"
         small
+        left
         @click="clipboard"
         tooltip="copy filtered items to clipboard"
       />
@@ -39,6 +41,7 @@
         text
         img="mdi-format-indent-decrease"
         small
+        right
         @click="changeMax(-5)"
         tooltip="reduse number of shown lines by 5"
       />
@@ -48,6 +51,7 @@
         text
         img="mdi-format-indent-increase"
         small
+        left
         @click="changeMax(+5)"
         tooltip="increase number of shown lines by 5"
       />
@@ -56,14 +60,15 @@
       dense
       class="elevation-2 xa-1"
       :style="`display: block; max-height: ${
-        64 + myMax * 24
+        36 + myMax * 24
       }px; overflow: auto; width: 100%;`"
     >
       <template v-slot:default>
         <thead>
           <tr>
-            <th class="text-left">Time/Severity</th>
-            <th class="text-left">{{ $t("Log Message") }}</th>
+            <th class="text-left" v-text="$t('Time')" />
+            <th class="text-left" v-text="$t('Severity')" />
+            <th class="text-left" v-text="$t('Log Message')" />
           </tr>
         </thead>
         <tbody>
@@ -71,12 +76,18 @@
             v-for="(item, index) in adapterLogFiltered"
             :key="index.toString() + item.ts.toString()"
           >
-            <td :class="'height24 caption ' + sevColor(item)">
-              {{ timeStamp(item.ts) + "/" + item.severity }}
-            </td>
-            <td :class="'height24 caption ' + sevColor(item)">
-              {{ item.message }}
-            </td>
+            <td
+              :class="'height24 caption ' + sevColor(item)"
+              v-text="timeStamp(item.ts)"
+            />
+            <td
+              :class="'height24 caption ' + sevColor(item)"
+              v-text="item.severity"
+            />
+            <td
+              :class="'height24 caption ' + sevColor(item)"
+              v-text="item.message"
+            />
           </tr>
         </tbody>
       </template>

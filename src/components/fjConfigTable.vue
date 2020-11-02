@@ -6,8 +6,8 @@
       <v-spacer /><v-text-field
         v-model="search"
         class="body-1"
-        append-icon="mdi-magnify"
-        :label="$t('Search')"
+        append-icon="mdi-filter"
+        :label="$t('Filter')"
         single-line
         hide-details
         dense

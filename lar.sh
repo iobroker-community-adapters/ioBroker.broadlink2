@@ -20,10 +20,15 @@ else
 fi
 
 inspect="--inspect"
-if [ "$1" == "d" ] || [ $# -gt 1 ]; then
-        echo "Debug mode set"
-        shift
-        inspect="--inspect-brk"
+if [ "$1" == "n" ]; then
+   echo "no node"
+   inspect="n"
+else
+   if [ "$1" == "d" ] || [ $# -gt 1 ]; then
+         echo "Debug mode set"
+         shift
+         inspect="--inspect-brk"
+   fi
 fi
 
 #shift
@@ -44,12 +49,17 @@ done
 
 echo "all done!"
 ls -CFA $dpath
-cd /c/iobroker/Test2
-/c/iobroker/Test2/iobroker.bat upload $a
+#cd /c/iobroker/Test2
+#/c/iobroker/Test2/iobroker.bat upload $a
+
+sss=`pwd`
+echo "we are in:" $sss
+gsudo $sss/wiobroker.bat $a $dpath $inspect
+
 #iobroker upload $a
 #echo sudo chown -hR iobroker  $dpath
 #sudo chown -hR iobroker  $dpath
 #sudo chgrp -hR iobroker  $dpath
 
-echo sudo -u iobroker node --inspect=localhost:9229  $dpath/$a.js --force --logs --nolazy
-node $inspect=localhost:9229  $dpath/$a.js --force --logs --nolazy
+#echo sudo -u iobroker node --inspect=localhost:9229  $dpath/$a.js --force --logs --nolazy
+#node $inspect=localhost:9229  $dpath/$a.js --force --logs --nolazy

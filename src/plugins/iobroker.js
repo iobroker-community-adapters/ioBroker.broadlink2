@@ -79,43 +79,7 @@ const mylang = (navigator.language || navigator.userLanguage).slice(0, 2);
 const myCache = {};
 
 const iobroker = {
-  /*   data() {
-    return {
-      iobrokerConfigOrig: "",
-      iobrokerHost: "",
-      iobrokerHostConnection: {},
-      iobrokerLang: mylang || "en",
-      iobrokerInstance: inst,
-      iobrokerConfigFile: {},
-      iobrokerConfig: {}, //iopackage.native,
-      ioBrokerSystemConfig: null,
-      iobrokerAdapter: aname, // iopackage.common.name,
-      iobrokerPackage: {}, // packagej,
-      iobrokerIoPackage: {}, //iopackage,
-      iobrokerAdapterCommon: {}, // iopackage.common,
-      ioBrokerCerts: [],
-      configTranslated: [],
-      socketConnected: false,
-      iobrokerReadme: "",
-      adapterIcon: "",
-      devMode,
-    };
-  },
- */
-  // sockets: {
-  //   connect() {
-  //     console.log("Socket connected");
-  //     this.iobrokerHostConnection = this.$socket.io.opts;
-  //     if (!this.ioBrokerSystemConfig) this.loadSystemConfig();
-  //     // this.$alert("socket connected...");
-  //   },
-
-  //   disconnect() {
-  //     console.log("Socket disconnected");
-  //     // this.$alert("Socket disconnected. try to reconnect...");
-  //     this.$socket.open();
-  //   },
-  // },
+  //   data() { return {}; },
 
   computed: {
     adapterStatus() {

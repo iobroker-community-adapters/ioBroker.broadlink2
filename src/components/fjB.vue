@@ -6,9 +6,10 @@
     @click.stop="click"
   >
     <v-icon
-      v-if="!!img && (bAttrs.left && !bAttrs.right)"
+      v-if="!!img && bAttrs.left && !bAttrs.right"
       v-bind="bAttrs"
       v-text="img"
+      left
     />
     <span v-if="label">{{ label }}</span>
     <v-icon
@@ -92,6 +93,9 @@ export default {
     bAttrs() {
       const tt = this.bAttr;
       Object.assign(tt, this.$attrs);
+      for (const ii of Object.keys(tt))
+        if (tt[ii] === "" && (ii == "left" || ii == "right" || ii == "dense"))
+          tt[ii] = true;
       return tt;
     },
     activator() {

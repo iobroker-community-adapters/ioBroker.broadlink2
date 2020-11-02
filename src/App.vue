@@ -119,7 +119,7 @@
     <v-main id="MyAppContent" class="flex-wrap">
       <fjConfigContainer :cItem="iobrokerConfig" :configPage="configPage" />
       <fjConfirm />
-      <!-- <fjIoBrokerLog /> -->
+      <!--       <fjB text small dense label="Test" img="mdi-close" /> -->
       <fjStateSelector v-model="testSel" />
       {{ testSel }}
     </v-main>
@@ -229,7 +229,7 @@ export default {
     },
   },
 
-//  computed: {  },
+  //  computed: {  },
 };
 </script>
 <style scoped.vue>
