@@ -357,7 +357,13 @@ class MyAdapter {
     // err => this.W(`invalid Message ${this.O(obj)} caused error ${this.O(err)}`, err))
     // return (obj.command === "debug" ? this.resolve(`debug set to '${inDebug = isNaN(parseInt(obj.message)) ?  this.parseLogic(obj.message) : parseInt(obj.message)}'`) : messages(obj))
     if (obj.callback)
-      await adapter.sendTo(obj.from, obj.command, res, obj.callback);
+      await adapter.sendTo(
+        obj.from,
+        obj.command,
+        "Message received:" + res,
+        obj.callback
+      );
+    // await adapter.sendTo(obj.from, obj.command, res, obj.callback);
     return res;
   }
 

@@ -33,7 +33,7 @@
         <fjB
           :color="['red', 'orange', 'green'][adapterStatus]"
           :img="
-            ['mdi-play-circle', 'mdi-pause-circle', 'mdi-pause-octagon'][
+            ['mdi-play-circle', 'mdi-pause-octagon', 'mdi-pause-circle'][
               adapterStatus
             ]
           "
@@ -41,9 +41,9 @@
           :tooltip="adapterStatus ? $t('stop adapter') : $t('start adapter')"
         />
         <fjB
-          :disabled="!adapterStatus"
+          v-if="!!adapterStatus"
           color="warning"
-          img="mdi-refresh"
+          img="mdi-refresh-circle"
           @click="enableDisableInstance('restart')"
           :tooltip="$t('restart adapter')"
         />
@@ -120,8 +120,13 @@
       <fjConfigContainer :cItem="iobrokerConfig" :configPage="configPage" />
       <fjConfirm />
       <!--       <fjB text small dense label="Test" img="mdi-close" /> -->
-      <fjStateSelector v-model="testSel" />
-      {{ testSel }}
+      <v-card outlined elevation="3">
+        <v-card-title>Test of new fjStateSlector</v-card-title>
+        <v-card-text>
+          <fjStateSelector v-model="testSel" />
+          {{ testSel }}
+        </v-card-text>
+      </v-card>
     </v-main>
   </v-app>
 </template>
@@ -229,7 +234,11 @@ export default {
     },
   },
 
-  //  computed: {  },
+  computed: {
+    adapterStatusL() {
+      return this.$store.adapterStatus ? this.$store.adapterStatus.status : 0;
+    },
+  },
 };
 </script>
 <style scoped.vue>

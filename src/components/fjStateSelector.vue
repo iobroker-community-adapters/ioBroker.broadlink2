@@ -1,7 +1,5 @@
-
-
 <template>
-  <div>
+  <div style="max-width: 600px">
     {{ items.map((i) => i.$id) }}
     <br />
     {{ active.map((i) => i.$id) }}
@@ -9,21 +7,33 @@
     <!--     {{ tree.map((i) => i.$id + "=" + i.id) }} <br />
     -->
     {{ open.map((i) => i.name + "=" + i.id) }} <br />
-    <v-btn small @click.stop="smenu = !smenu">
-      {{ smenu ? "Listview" : "Treeview" }}</v-btn
-    >
-    <v-text-field
-      dense
-      label="filter"
-      v-model="search"
-      style="width: 550px;"
-      clearable
-      filled
-    />
+    <v-toolbar dark height="36" color="primary">
+      <v-icon left>mdi-application-cog</v-icon>
+      <v-toolbar-title class="subtitle-2">{{ label }} &nbsp;</v-toolbar-title>
+      <fjB
+        small
+        :img="!smenu ? 'mdi-file-tree' : 'mdi-format-list-bulleted-square'"
+        right
+        text
+        @click.stop="smenu = !smenu"
+        :tooltip="smenu ? $t('Switch to listview') : $t('Switch to treeview')"
+      />
+      <v-spacer />
+      <v-text-field
+        v-model="search"
+        append-icon="mdi-filter"
+        :label="$t('Filter')"
+        single-line
+        hide-details
+        clearable
+        @keydown="$event.keyCode == 27 ? (search = null) : null"
+        dense
+      ></v-text-field>
+    </v-toolbar>
     <v-card
       class="px-2 py-1"
       outlined
-      style="max-width: 600px; max-height: 500px; overflow-y: auto;"
+      style="max-width: 600px; max-height: 500px; overflow-y: auto"
     >
       <v-treeview
         v-if="smenu"
@@ -151,6 +161,7 @@ export default {
       const v = await this.$app.getState(item.id).catch((_) => {
         val: NaN;
       });
+      if (item.id.startsWith("broadlink2.0.A")) console.log(item.id, v);
       item.value = v && typeof v === "object" ? v.val : undefined;
     },
 

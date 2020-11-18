@@ -147,7 +147,6 @@
                         {
                             "text": "Here",
                             "type": "checkbox",
-                            "valuex": "(this.$app.isDeviceHere(ci.name))",
                             "value": "active",
                             "align": "center",
                             "divider": true,

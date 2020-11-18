@@ -28,10 +28,6 @@ const broadlink = {
       return this.$store.state.adapterLastObject;
     },
 
-    interfaces() {
-      return this.$store.state.interfaces;
-    },
-
     sStates() {
       return this.$store.state.sstate;
     },

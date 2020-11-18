@@ -516,7 +516,7 @@ async function doPoll() {
     let x = await device.getAll();
     if (firsttime) A.Dr(x, "Device %s returned %O", device.name, x);
     if (x && x.here && device.update) await device.update(x);
-    if (x && x.here && !device.update) {
+    else if (x && x.here && !device.update) {
       x.noUpdateFunction = "do not know how to update";
     } else if (!x)
       x = {
@@ -622,17 +622,21 @@ async function sendState(state, val) {
 }
 
 async function updateValues(device, val, values) {
+  // A.Df("Update Values: %s %O %O", device.host.iname, val, values);
   for (const item of values) {
     let i = Object.assign({}, item);
     let name = i.name;
     // delete i.name;
     if (i.id && i.id.startsWith(".")) {
-      name = i.id.slice(1);
+      if (!name) name = i.id.slice(1);
       i.id = device.host.iname + i.id;
     } else i.id = device.host.iname + (i.id || i.id === "" ? i.id : "." + name);
     i.name = i.id;
     i.write = !!i.write;
     let v = val[name];
+    v = v === undefined ? val[name.toLowerCase()] : v;
+    // if (v === undefined)
+    //   A.Df("Update Value: %s: %s %O %O", device.host.iname, name, v, i);
     i.native = {
       host: device.host,
     };
@@ -753,7 +757,7 @@ async function createStatesDevice(device) {
     case "S1":
       device.update = async (val) => {
         for (const i of A.ownKeysSorted(val)) {
-          const id = device.host.iname + (i === "here" ? "" : "." + i)
+          const id = device.host.iname + (i === "here" ? "" : "." + i);
           await A.makeState(
             {
               id,
@@ -1127,6 +1131,7 @@ async function createStatesDevice(device) {
 let aif = "";
 const macList = {};
 const macObjects = {};
+
 function aconv(item) {
   if (item && typeof item === "string")
     return item.split(",").map((i) => i.trim());

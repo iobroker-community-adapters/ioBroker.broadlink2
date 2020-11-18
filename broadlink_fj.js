@@ -1000,7 +1000,7 @@ class A1 extends Device {
       ret.temperature = (payload[0x4] * 10 + payload[0x5]) / 10.0;
       ret.humidity = (payload[0x6] * 10 + payload[0x7]) / 10.0;
       ret.light = payload[0x8]; // "0:finster;1:dunkel;2:normal;3:hell"
-      ret.air_quality = payload[0x0a]; // "0:sehr gut;1:gut;2:normal;3:schlecht"
+      ret.airquality = payload[0x0a]; // "0:sehr gut;1:gut;2:normal;3:schlecht"
       ret.noise = payload[0xc]; // "0:ruhig;1:normal;2:laut;3:sehr laut"
       ret.here = true;
     }

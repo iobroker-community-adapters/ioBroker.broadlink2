@@ -28,6 +28,7 @@ export default new Vuex.Store({
     iobrokerConfig: {}, //iopackage.native,
     ioBrokerSystemConfig: null,
     iobrokerAdapter: aname, // iopackage.common.name,
+    iobrokerAdapterInstance: aname + "." + inst, // iopackage.common.name,
     ioBrokerIsTab: !window.location.search,
     iobrokerPackage: {}, // packagej,
     iobrokerIoPackage: {}, //iopackage,
@@ -49,7 +50,9 @@ export default new Vuex.Store({
     interfaces: ["0.0.0.0"],
     socketConnected: false,
     iobrokerObjects: {},
-    adapterStatus: 0,
+    adapterStatus: {
+      status: 0,
+    },
     // broadlinkConfig: {},
     // broadlinkConfigCompare: "",
     devMode,
@@ -72,7 +75,7 @@ export default new Vuex.Store({
       state.iobrokerObjects = value;
     },
     adapterLog(state, value) {
-      if (state.adapterLog.length >= 100) state.adapterLog.pop();
+      if (state.adapterLog.length >= 256) state.adapterLog.pop();
       state.adapterLog.unshift(value);
     },
 
@@ -131,16 +134,23 @@ export default new Vuex.Store({
     },
 
     adapterStatus(state) {
-      const sai =
-        "system.adapter." +
-        state.iobrokerAdapter +
-        "." +
-        state.iobrokerInstance;
+      const sai = "system.adapter." + state.iobrokerAdapterInstance;
       let alive = state.adapterStates[sai + ".alive"];
       alive = alive && alive.val;
       let connected = state.adapterStates[sai + ".connected"];
       connected = connected && connected.val;
-      state.adapterStatus = alive ? (connected ? 2 : 1) : 0;
+      let connection =
+        state.adapterStates[state.iobrokerAdapterInstance + ".info.connection"];
+      connection = !connection || connection.val;
+      const status = alive ? (connection ? 2 : 0) : 0;
+      const r = {
+        alive,
+        connected,
+        connection,
+        status,
+      };
+      // console.log(state.iobrokerAdapterInstance, r);
+      state.adapterStatus = r;
       return state.adapterStatus;
     },
     // broadlinkConfig(state, value) {
@@ -230,6 +240,7 @@ export default new Vuex.Store({
     SOCKET_reconnect({ commit }) {
       console.log("store socket_reconnected");
       commit("socketConnected", true);
+      commit("adapterStatus");
     },
 
     SOCKET_log({ commit, getters }, message) {
@@ -241,6 +252,13 @@ export default new Vuex.Store({
     SOCKET_stateChange({ commit, state, getters }, message) {
       const [id, obj] = message;
       const instance = getters.adapterInstance + ".";
+      if (
+        id.indexOf(state.iobrokerAdapterInstance) &&
+        (id.endsWith(".alive") ||
+          id.endsWith(".connected") ||
+          id.endsWith(".info.connection"))
+      )
+        commit("adapterStatus");
       if (
         !id.startsWith(getters.adapterInstance) &&
         !id.startsWith("system.adapter." + getters.adapterInstance)
@@ -256,8 +274,6 @@ export default new Vuex.Store({
         commit("adapterStateUpdate", message);
       }
       commit("adapterStates", message);
-      if (id.startsWith("system.adapter." + getters.adapterInstance))
-        commit("adapterStatus");
     },
 
     SOCKET_onUpdate({ commit, state, getters }, message) {

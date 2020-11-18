@@ -40,6 +40,6 @@ export default {
       }
     }
     this.avprops = av;
-  }
+  },
 };
 </script>

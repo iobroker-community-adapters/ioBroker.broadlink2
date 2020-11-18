@@ -50,7 +50,7 @@ export default {
     },
     droplabel: {
       type: String,
-      default: "Drop here",
+      default: "",
     },
   },
   data() {
@@ -58,6 +58,7 @@ export default {
       loading: false,
       drop: false,
       over: false,
+      mOpts: {},
     };
   },
   computed: {
@@ -118,7 +119,7 @@ export default {
       const file = ev.target.files[0];
       const reader = new FileReader();
       this.$nextTick((_) => {
-        this.opts.name = file.name;
+        this.mOpts.name = file.name;
         //      debugger;
         //      console.log(ev.target.value, reader);
         reader.onload = (e) => {
@@ -154,6 +155,7 @@ export default {
   },
   mounted() {
     const that = this;
+    this.mOpts = this.opts;
     this.drop = typeof window.FileReader !== "undefined";
     //    console.log(this.$el, "FileReader supported:", this.drop);
     const holder = this.$el;

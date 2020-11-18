@@ -16,7 +16,7 @@ export default {
 
   props: {
     content: {
-      type: Object,
+      type: [Object, String],
       default: () => "empty file!",
     },
     opts: {

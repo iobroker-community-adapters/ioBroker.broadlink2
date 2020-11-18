@@ -111,6 +111,7 @@ export default {
     return {
       //      myUid: "tooltipa_" + this._uid,
       search: null,
+      mToolItem: {},
     };
   },
   props: {
@@ -243,14 +244,14 @@ export default {
         this.cToolItem.convertold &&
         typeof this.cToolItem.convertold !== "function"
       )
-        this.cToolItem.convertold = this.makeFunction(
-          this.cToolItem.convertold,
+        this.mToolItem.convertold = this.makeFunction(
+          this.mToolItem.convertold,
           this,
           "item",
           "conf"
         );
-      if (this.cToolItem.click && typeof this.cToolItem.click !== "function")
-        this.cToolItem.click = this.makeFunction(
+      if (this.mToolItem.click && typeof this.mToolItem.click !== "function")
+        this.mToolItem.click = this.makeFunction(
           this.cToolItem.click,
           this,
           "item",
@@ -280,7 +281,7 @@ export default {
         typeof this.cToolItem.disabled === "string" &&
         this.cToolItem.disabled.length > 1
       )
-        this.cToolItem.disabled = this.makeFunction(
+        this.mToolItem.disabled = this.makeFunction(
           this.cToolItem.disabled,
           null,
           "conf"
@@ -319,6 +320,9 @@ export default {
     },
   },
   //  created() {},
+  mounted() {
+    this.mToolItem = this.cToolItem;
+  },
 };
 </script>
 

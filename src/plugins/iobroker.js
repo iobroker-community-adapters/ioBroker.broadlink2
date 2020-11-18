@@ -83,7 +83,7 @@ const iobroker = {
 
   computed: {
     adapterStatus() {
-      return this.$store.state.adapterStatus;
+      return this.$store.state.adapterStatus.status;
     },
 
     adapterLastState() {
@@ -289,6 +289,9 @@ const iobroker = {
       get() {
         return this.$store.state.adapterIcon;
       },
+    },
+    interfaces() {
+      return this.$store.state.interfaces;
     },
     devMode: {
       get() {
@@ -599,13 +602,14 @@ const iobroker = {
     async getState(id) {
       const sts = this.adapterStates;
       if (sts[id]) return sts[id];
-      return this.$socketEmit("getState", id).then(
+      let res = await this.$socketEmit("getState", id).then(
         (res) => {
           this.$store.commit("adapterStates", [id, res]);
           return res;
         },
         (e) => (console.log(e), null)
       );
+      return res;
     },
 
     async getEnums(_enum) {

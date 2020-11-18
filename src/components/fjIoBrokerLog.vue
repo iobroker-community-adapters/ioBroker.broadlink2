@@ -7,6 +7,17 @@
           adapterLog.length
         }&nbsp;`
       }}</v-toolbar-title>
+      <fjB
+        :label="show ? $t('hide') : $t('show')"
+        text
+        left
+        :img="
+          show ? 'mdi-unfold-less-horizontal' : 'mdi-unfold-more-horizontal'
+        "
+        small
+        @click="show = !show"
+        :tooltip="$t('show or hide all entries')"
+      />
       <v-spacer />
       <v-text-field
         v-model="markRed"
@@ -15,6 +26,8 @@
         :label="$t('Filter')"
         single-line
         hide-details
+        @keydown="$event.keyCode == 27 ? (markRed = null) : null"
+        clearable
         dense
       ></v-text-field
       ><v-spacer>&#x2060;</v-spacer>
@@ -25,7 +38,7 @@
         img="mdi-delete-forever"
         small
         @click="adapterLog.splice(1)"
-        tooltip="delete all but last message"
+        :tooltip="$t('delete all but last message')"
       />
       <fjB
         label="To Clipboard"
@@ -34,7 +47,7 @@
         small
         left
         @click="clipboard"
-        tooltip="copy filtered items to clipboard"
+        :tooltip="$t('copy filtered items to clipboard')"
       />
       <fjB
         label="Show lines -5"
@@ -43,7 +56,7 @@
         small
         right
         @click="changeMax(-5)"
-        tooltip="reduse number of shown lines by 5"
+        :tooltip="$t('reduce number of shown lines by 5')"
       />
       {{ myMax }}
       <fjB
@@ -53,10 +66,11 @@
         small
         left
         @click="changeMax(+5)"
-        tooltip="increase number of shown lines by 5"
+        :tooltip="$t('increase number of shown lines by 5')"
       />
     </v-toolbar>
     <v-simple-table
+      v-if="show"
       dense
       class="elevation-2 xa-1"
       :style="`display: block; max-height: ${
@@ -105,12 +119,17 @@ export default {
       type: Number,
       default: 25,
     },
+    maxLog: {
+      type: Number,
+      default: 100,
+    },
     icon: { type: String, required: false, default: "mdi-playlist-star" },
   },
   data() {
     return {
       markRed: "",
       myMax: 25,
+      show: true,
     };
   },
   computed: {

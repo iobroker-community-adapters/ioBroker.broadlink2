@@ -10,6 +10,8 @@
         :label="$t('Filter')"
         single-line
         hide-details
+        clearable
+        @keydown="$event.keyCode == 27 ? (search = null) : null"
         dense
       ></v-text-field
       ><v-spacer />
@@ -34,7 +36,7 @@
           <td
             v-for="column in headers"
             :key="column.value"
-            style="padding: 0px 1px 0px 1px;"
+            style="padding: 0px 1px 0px 1px"
           >
             <span v-if="column.value == '-'" class="d-flex justify-center">
               <fjB
@@ -86,6 +88,7 @@ export default {
   },
   data: () => ({
     search: "",
+    mTable: [],
   }),
   methods: {
     async itemDelete(item) {
@@ -94,15 +97,15 @@ export default {
       const ret = await this.$confirm(
         this.$t("Do you really want to delete item") + ` '${item.path}' ?`
       );
-      if (ret) this.table.splice(i, 1);
+      if (ret) this.mTable.splice(i, 1);
     },
 
     itemMove(i, dir) {
       const index = this.table.indexOf(i);
       if (index >= 0) i = index;
       else return;
-      const item = this.table.splice(i, 1);
-      this.table.splice(i + dir, 0, item[0]);
+      const item = this.mTable.splice(i, 1);
+      this.mTable.splice(i + dir, 0, item[0]);
     },
 
     numberRule(val) {
@@ -143,10 +146,13 @@ export default {
               }[c.type] || "";
       });
 
-      this.table.push(ni);
+      this.mTable.push(ni);
     },
   },
   //  watch: {},
+  mounted() {
+    this.mTable = this.table;
+  },
   computed: {
     icolumns() {
       return [
