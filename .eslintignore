@@ -1,5 +1,6 @@
 **/.eslintrc.js
 doc/**
+lib/test.js
 admin/words.js
 broadlink2.js
 broadlink_fj.js
