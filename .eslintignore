@@ -2,6 +2,8 @@
 doc/**
 admin/words.js
 lib/test.js
+lib/tools.js
 broadlink2.js
 broadlink_fj.js
 fjadapter.js
+gulpfile.js
