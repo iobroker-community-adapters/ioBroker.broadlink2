@@ -3,7 +3,19 @@
         "name": "broadlink2",
         "version": "2.1.5",
         "title": "Broadlink W-Lan devices (RM+, SP+, A1, T1, S1C, LB+, ..)",
-        "titleLang": "Broadlink2 (RM++, SP++, A1, T1, S1C, Beok313, Floureon, LB+) W-Lan Broadlink-protocol devices",
+        "titleLang": {
+                  "en": "\"Broadlink2 (RM++, SP++, A1, T1, S1C, Beok313, Floureon, LB+) W-Lan Broadlink-protocol devices\"",
+                  "de": "\"Broadlink2 (RM++, SP++, A1, T1, S1C, Beok313, Floureon, LB+) W-Lan Broadlink-Protokoll-Geräte\"",
+                  "ru": "\"Broadlink2 (RM++, SP++, A1, T1, S1C, Beok313, Floureon, LB+) W-Lan Broadlink-протокол устройства\"",
+                  "pt": "\"Broadlink2 (RM++, SP++, A1, T1, S1C, Beok313, Floureon, LB+) W-Lan Broadlink-protocol devices\"",
+                  "nl": "\"Broadlink2 (RM++, SP++, A1, T1, S1C, Beok313, Floureon, LB+) W-Lan Broadlink-protocol devices\"",
+                  "fr": "\"Broadlink2 (RM++, SP++, A1, T1, S1C, Beok313, Floureon, LB+) W-Lan Broadlink-protocol devices\"",
+                  "it": "\"Broadlink2 (RM++, SP++, A1, T1, S1C, Beok313, Floureon, LB+) W-Lan Broadlink-protocol dispositivi\"",
+                  "es": "\"Broadlink2 (RM++, SP++, A1, T1, S1C, Beok313, Floureon, LB+) dispositivos W-Lan Broadlink-protocol\"",
+                  "pl": "\"Broadlink2 (RM++, SP++, A1, T1, S1C, Beok313, Floureon, LB+) W-Lan Broadlink-protocol devices\"",
+                  "uk": "\"Broadlink2 (RM++, SP++, A1, T1, S1C, Beok313, Floureon, LB+) W-Lan Broadlink-protocol пристрої\"",
+                  "zh-cn": "“连接2(RM++, SP++, A1, T1, S1C, Beok313, Floureon, LB+)  W-Lan Broadlink-protocol装置”"
+                },
         "news": {
             "2.1.5": {
                 "en": "Bug fix for RM3 Mini and some other text/debug changes"
