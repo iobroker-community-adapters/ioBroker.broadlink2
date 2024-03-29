@@ -102,8 +102,17 @@
         "authors": [
             "Frank Joke <frankjoke@hotmail.com>"
         ],
-        "compact": false
-
+        "compact": false,
+        "dependencies": [
+            {
+              "js-controller": ">=5.0.0"
+            }
+          ],
+          "globalDependencies": [
+            {
+              "admin": ">=5.1.13"
+            }
+          ]      
     },
     "native": {
         "ip": ".fritz.box",

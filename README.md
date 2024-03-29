@@ -115,6 +115,10 @@ The adapter understands also 'sendTo' commands.
 
 ## Changelog
 
+### **WORK IN PROGRESS**
+* (mcm1957) Adapter requires node.js 18 and js-controller >= 5 now
+* (mcm1957) Dependencies have been updated
+
 ### 2.1.5
 
 * beta to try to make 0x5f36 working

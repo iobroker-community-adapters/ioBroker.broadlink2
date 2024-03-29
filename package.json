@@ -24,7 +24,7 @@
     "url": "git+https://github.com/frankjoke/ioBroker.broadlink2.git"
   },
   "engines": {
-    "node": ">= 16"
+    "node": ">= 18"
   },
   "dependencies": {
     "@iobroker/adapter-core": "^2.6.8",
