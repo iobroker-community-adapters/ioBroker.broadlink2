@@ -72,9 +72,13 @@
                 "de": "Adapter verarbeitet RM-, SP- und A1-Geräte"
             }
         },
-        "license": "MIT",
+        "licenseInformation": {
+            "license": "MIT",
+            "type": "free"
+          },
         "platform": "Javascript/Node.js",
         "materialize": true,
+        "tier": 2,
         "mode": "daemon",
         "icon": "broadlink2.png",
         "enabled": true,
