@@ -1,0 +1,4 @@
+{
+    "plugins": ["iobroker", "license", "manual-review"],
+    "numNews": 15
+}
