@@ -1,160 +1,173 @@
 {
-    "common": {
-        "name": "broadlink2",
-        "version": "2.1.5",
-        "news": {
-            "2.1.5": {
-                "en": "Bug fix for RM3 Mini and some other text/debug changes"
-            },
-            "2.1.4": {
-                "en": "Bug fix of RM4 temperature and Scenes/States, also new naming convention for found devices and LB1/RM devices update their data in device"
-            },
-            "2.1.0": {
-                "en": "Added RM4+LB1 protocol and also check now device names according mac address or find additional ip addresses",
-                "de": "RM4+LB1-Protokolle hinzugefügt und auch automatische Erkennung von Geräten mittels mac-Adresse, oder in Konfig IP-Adresse hinzugefügt"
-            },
-            "2.0.3": {
-                "en": "Changed myAdapter to support js-controller v2.x & v3.x!",
-                "de": "myAdapter geändert um js-controller v2.x & v3.x zu unterstützen."
-            },
-            "2.0.1": {
-                "en": "Complete rewrite of adaper with multiple options, please read readme.md!",
-                "de": "Komplett neu geschriebenen Adapter mit neuen Funktionen und Konfiguration, bitte README lesen!"
-            },
-            "1.9.1": {
-                "en": "Added RM Mini new support with",
-                "de": "Broadlink RM Mini unterstützung"
-            },
-            "1.9.0": {
-                "en": "Added SP3S support with power meter reading and changed config page to work with admin 3.0",
-                "de": "Broadlink SP3S Steckdosen mit Power-Meter funktionieren nun und Adapter-Konfig funktioniert in Admin-3"
-            },
-            "1.8.0": {
-                "en": "Added states which you can set with on/off or level values",
-                "de": "States können erzeugt werden welche ein/aus simulieren oder levels können"
-            },
-            "1.7.0": {
-                "en": "A1 devices fields changed to correct original mistakes in unit and type",
-                "de": "Verarbeitung von A1-Geräten geändert um Daten besser anzuzeigen."
-            },
-            "1.6.0": {
-                "en": "Adapter handles RM, SP and A1 devices and can rescan them, it should be able to learn RF codes frr RM-Plus devices",
-                "de": "Adapter verarbeitet RM-, SP- und A1-Geräte und sollte auch Funkbefehle von RM-Plus lernen können"
-            },
-            "1.1.1": {
-                "en": "Adapter handles RM, SP and A1 devices and can rescan them",
-                "de": "Adapter verarbeitet RM-, SP- und A1-Geräte"
-            }
-        },
-        "titleLang": {
-            "en": "Broadlink2",
-            "de": "Broadlink2",
-            "ru": "Broadlink2",
-            "pt": "Broadlink2",
-            "nl": "Broadlink2",
-            "fr": "Broadlink2",
-            "it": "Broadlink2",
-            "es": "Broadlink2",
-            "pl": "Broadlink2",
-            "uk": "Broadlink2",
-            "zh-cn": "连接2"
-        },
-        "desc": {
-          "en": "Integrates wireless devices (RM++, SP++, A1, T1, S1C, Beok313, Floureon, LB+)",
-          "de": "Integriert drahtlose Geräte (RM++, SP++, A1, T1, S1C, Beok313, Floureon, LB+)",
-          "ru": "Интеграция беспроводных устройств (RM++, SP++, A1, T1, S1C, Beok313, Floureon, LB+)",
-          "pt": "Integra dispositivos sem fio (RM++, SP++, A1, T1, S1C, Beok313, Floureon, LB+)",
-          "nl": "Integreert draadloze apparaten (RM++, SP++, A1, T1, S1C, Beok313, Floureon, LB+)",
-          "fr": "Intégration des appareils sans fil (RM++, SP++, A1, T1, S1C, Beok313, Floureon, LB+)",
-          "it": "Integra i dispositivi wireless (RM++, SP++, A1, T1, S1C, Beok313, Floureon, LB+)",
-          "es": "Integra dispositivos inalámbricos (RM++, SP++, A1, T1, S1C, Beok313, Floureon, LB+)",
-          "pl": "Integracja urządzeń bezprzewodowych (RM++, SP++, A1, T1, S1C, Beok313, Floureon, LB+)",
-          "uk": "Інтеграція бездротових пристроїв (RM++, SP++, A1, T1, S1C, Beok313, Floureon, LB+)",
-          "zh-cn": "无线装置的一体化 (RM++, SP++, A1, T1, S1C, Beok313, Floureon, LB+)"
-        },
-        "authors": [
-            "Frank Joke <frankjoke@hotmail.com>",
-            "mcm1957 <mcm57@gmx.at>"
-        ],
-        "keywords": [
-            "Broadlink",
-            "W-Lan",
-            "IR/RF",
-            "Remote",
-            "Switch",
-            "Plug",
-            "A1",
-            "RM2",
-            "RM3",
-            "SP1",
-            "SP2",
-            "RM4",
-            "LB1"
-        ],
-        "licenseInformation": {
-            "license": "MIT",
-            "type": "free"
-          },
-        "platform": "Javascript/Node.js",
-        "icon": "broadlink2.png",
-        "enabled": true,
-        "extIcon": "https://raw.githubusercontent.com/iobroker-community-adapters/ioBroker.broadlink2/master/admin/broadlink2.png",
-        "readme": "https://github.com/iobroker-community-adapters/ioBroker.broadlink2/blob/master/README.md",
-        "loglevel": "info",
-        "tier": 2,
-        "mode": "daemon",
-        "type": "iot-systems",
-        "compact": false,
-        "connectionType": "local",
-        "dataSource": "poll",
-        "materialize": true,
-        "messagebox": true,
-        "subscribe": "messagebox",
-        "dependencies": [
-            {
-              "js-controller": ">=5.0.0"
-            }
-          ],
-          "globalDependencies": [
-            {
-              "admin": ">=5.1.13"
-            }
-          ]      
+  "common": {
+    "name": "broadlink2",
+    "version": "2.2.0",
+    "news": {
+      "2.2.0": {
+        "en": "Adapter requires node.js 18 and js-controller >= 5 now\nDependencies have been updated",
+        "de": "Adapter benötigt node.js 18 und js-controller >= 5 jetzt\nAbhängigkeiten wurden aktualisiert",
+        "ru": "Адаптер требует node.js 18 и js-controller >= 5 сейчас\nЗависимость обновлена",
+        "pt": "Adapter requer node.js 18 e js-controller >= 5 agora\nAs dependências foram atualizadas",
+        "nl": "Adapter vereist node.js 18 en js-controller Nu 5\nAfhankelijkheden zijn bijgewerkt",
+        "fr": "Adaptateur nécessite node.js 18 et js-controller >= 5 maintenant\nLes dépendances ont été actualisées",
+        "it": "Adattatore richiede node.js 18 e js-controller >= 5 ora\nLe dipendenze sono state aggiornate",
+        "es": "Adaptador requiere node.js 18 y js-controller √= 5 ahora\nSe han actualizado las dependencias",
+        "pl": "Adapter wymaga node.js 18 i sterownika js- > = 5 teraz\nZaktualizowano zależności",
+        "uk": "Адаптер вимагає node.js 18 і js-controller >= 5 тепер\nЗалежність було оновлено",
+        "zh-cn": "适配器需要节点.js 18和js控制器 QQ 现在5号\n依赖关系已更新"
+      },
+      "2.1.5": {
+        "en": "Bug fix for RM3 Mini and some other text/debug changes"
+      },
+      "2.1.4": {
+        "en": "Bug fix of RM4 temperature and Scenes/States, also new naming convention for found devices and LB1/RM devices update their data in device"
+      },
+      "2.1.0": {
+        "en": "Added RM4+LB1 protocol and also check now device names according mac address or find additional ip addresses",
+        "de": "RM4+LB1-Protokolle hinzugefügt und auch automatische Erkennung von Geräten mittels mac-Adresse, oder in Konfig IP-Adresse hinzugefügt"
+      },
+      "2.0.3": {
+        "en": "Changed myAdapter to support js-controller v2.x & v3.x!",
+        "de": "myAdapter geändert um js-controller v2.x & v3.x zu unterstützen."
+      },
+      "2.0.1": {
+        "en": "Complete rewrite of adaper with multiple options, please read readme.md!",
+        "de": "Komplett neu geschriebenen Adapter mit neuen Funktionen und Konfiguration, bitte README lesen!"
+      },
+      "1.9.1": {
+        "en": "Added RM Mini new support with",
+        "de": "Broadlink RM Mini unterstützung"
+      },
+      "1.9.0": {
+        "en": "Added SP3S support with power meter reading and changed config page to work with admin 3.0",
+        "de": "Broadlink SP3S Steckdosen mit Power-Meter funktionieren nun und Adapter-Konfig funktioniert in Admin-3"
+      },
+      "1.8.0": {
+        "en": "Added states which you can set with on/off or level values",
+        "de": "States können erzeugt werden welche ein/aus simulieren oder levels können"
+      },
+      "1.7.0": {
+        "en": "A1 devices fields changed to correct original mistakes in unit and type",
+        "de": "Verarbeitung von A1-Geräten geändert um Daten besser anzuzeigen."
+      },
+      "1.6.0": {
+        "en": "Adapter handles RM, SP and A1 devices and can rescan them, it should be able to learn RF codes frr RM-Plus devices",
+        "de": "Adapter verarbeitet RM-, SP- und A1-Geräte und sollte auch Funkbefehle von RM-Plus lernen können"
+      },
+      "1.1.1": {
+        "en": "Adapter handles RM, SP and A1 devices and can rescan them",
+        "de": "Adapter verarbeitet RM-, SP- und A1-Geräte"
+      }
     },
-    "native": {
-        "ip": ".fritz.box",
-        "scenes": [
-            {
-                "name": "Fernsehen",
-                "scene": "FernseherAn, FernsehLichtAn, 500, TVWZKanal=12"
-            }
-        ],
-        "switches": [
-            {
-                "name": "Steckdose_A",
-                "on": "Steckdose_A_Ein",
-                "off:": "Steckdose_A_Aus"
-            },
-            {
-                "name": "Lüfter_A",
-                "on": "Lüfter_A_Aus, Lüfter_A_Mittel, Lüfter_A_Stark"
-            },
-            {
-                "name": "TVWZKanal",
-                "on": "TVWZK0, TVWZK1, TVWZK2, TVWZK3, TVWZK4, TVWZK5, TVWZK6, TVWZK7, TVWZK8, TVWZK9",
-                "off": "+"
-            }
-        ],
-        "poll": "30",
-        "new": "0xabcd=RM4",
-        "rename": "LB:hostName-aa-bb-cc=LB:SmartBulb",
-        "additional": "192.168.1.199"
+    "titleLang": {
+      "en": "Broadlink2",
+      "de": "Broadlink2",
+      "ru": "Broadlink2",
+      "pt": "Broadlink2",
+      "nl": "Broadlink2",
+      "fr": "Broadlink2",
+      "it": "Broadlink2",
+      "es": "Broadlink2",
+      "pl": "Broadlink2",
+      "uk": "Broadlink2",
+      "zh-cn": "连接2"
     },
-    "objects": [],
-    "config": {
-        "minWidth": 800,
-        "width ": 1024,
-        "minHeight": 800,
-        "height": 900
-    }
+    "desc": {
+      "en": "Integrates wireless devices (RM++, SP++, A1, T1, S1C, Beok313, Floureon, LB+)",
+      "de": "Integriert drahtlose Geräte (RM++, SP++, A1, T1, S1C, Beok313, Floureon, LB+)",
+      "ru": "Интеграция беспроводных устройств (RM++, SP++, A1, T1, S1C, Beok313, Floureon, LB+)",
+      "pt": "Integra dispositivos sem fio (RM++, SP++, A1, T1, S1C, Beok313, Floureon, LB+)",
+      "nl": "Integreert draadloze apparaten (RM++, SP++, A1, T1, S1C, Beok313, Floureon, LB+)",
+      "fr": "Intégration des appareils sans fil (RM++, SP++, A1, T1, S1C, Beok313, Floureon, LB+)",
+      "it": "Integra i dispositivi wireless (RM++, SP++, A1, T1, S1C, Beok313, Floureon, LB+)",
+      "es": "Integra dispositivos inalámbricos (RM++, SP++, A1, T1, S1C, Beok313, Floureon, LB+)",
+      "pl": "Integracja urządzeń bezprzewodowych (RM++, SP++, A1, T1, S1C, Beok313, Floureon, LB+)",
+      "uk": "Інтеграція бездротових пристроїв (RM++, SP++, A1, T1, S1C, Beok313, Floureon, LB+)",
+      "zh-cn": "无线装置的一体化 (RM++, SP++, A1, T1, S1C, Beok313, Floureon, LB+)"
+    },
+    "authors": [
+      "Frank Joke <frankjoke@hotmail.com>",
+      "mcm1957 <mcm57@gmx.at>"
+    ],
+    "keywords": [
+      "Broadlink",
+      "W-Lan",
+      "IR/RF",
+      "Remote",
+      "Switch",
+      "Plug",
+      "A1",
+      "RM2",
+      "RM3",
+      "SP1",
+      "SP2",
+      "RM4",
+      "LB1"
+    ],
+    "licenseInformation": {
+      "license": "MIT",
+      "type": "free"
+    },
+    "platform": "Javascript/Node.js",
+    "icon": "broadlink2.png",
+    "enabled": true,
+    "extIcon": "https://raw.githubusercontent.com/iobroker-community-adapters/ioBroker.broadlink2/master/admin/broadlink2.png",
+    "readme": "https://github.com/iobroker-community-adapters/ioBroker.broadlink2/blob/master/README.md",
+    "loglevel": "info",
+    "tier": 2,
+    "mode": "daemon",
+    "type": "iot-systems",
+    "compact": false,
+    "connectionType": "local",
+    "dataSource": "poll",
+    "materialize": true,
+    "messagebox": true,
+    "subscribe": "messagebox",
+    "dependencies": [
+      {
+        "js-controller": ">=5.0.0"
+      }
+    ],
+    "globalDependencies": [
+      {
+        "admin": ">=5.1.13"
+      }
+    ]
+  },
+  "native": {
+    "ip": ".fritz.box",
+    "scenes": [
+      {
+        "name": "Fernsehen",
+        "scene": "FernseherAn, FernsehLichtAn, 500, TVWZKanal=12"
+      }
+    ],
+    "switches": [
+      {
+        "name": "Steckdose_A",
+        "on": "Steckdose_A_Ein",
+        "off:": "Steckdose_A_Aus"
+      },
+      {
+        "name": "Lüfter_A",
+        "on": "Lüfter_A_Aus, Lüfter_A_Mittel, Lüfter_A_Stark"
+      },
+      {
+        "name": "TVWZKanal",
+        "on": "TVWZK0, TVWZK1, TVWZK2, TVWZK3, TVWZK4, TVWZK5, TVWZK6, TVWZK7, TVWZK8, TVWZK9",
+        "off": "+"
+      }
+    ],
+    "poll": "30",
+    "new": "0xabcd=RM4",
+    "rename": "LB:hostName-aa-bb-cc=LB:SmartBulb",
+    "additional": "192.168.1.199"
+  },
+  "objects": [],
+  "config": {
+    "minWidth": 800,
+    "width ": 1024,
+    "minHeight": 800,
+    "height": 900
+  }
 }
