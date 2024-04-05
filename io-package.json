@@ -2,32 +2,6 @@
     "common": {
         "name": "broadlink2",
         "version": "2.1.5",
-        "titleLang": {
-            "en": "Broadlink2",
-            "de": "Broadlink2",
-            "ru": "Broadlink2",
-            "pt": "Broadlink2",
-            "nl": "Broadlink2",
-            "fr": "Broadlink2",
-            "it": "Broadlink2",
-            "es": "Broadlink2",
-            "pl": "Broadlink2",
-            "uk": "Broadlink2",
-            "zh-cn": "连接2"
-        },
-        "desc": {
-          "en": "Integrates wireless devices (RM++, SP++, A1, T1, S1C, Beok313, Floureon, LB+)",
-          "de": "Integriert drahtlose Geräte (RM++, SP++, A1, T1, S1C, Beok313, Floureon, LB+)",
-          "ru": "Интеграция беспроводных устройств (RM++, SP++, A1, T1, S1C, Beok313, Floureon, LB+)",
-          "pt": "Integra dispositivos sem fio (RM++, SP++, A1, T1, S1C, Beok313, Floureon, LB+)",
-          "nl": "Integreert draadloze apparaten (RM++, SP++, A1, T1, S1C, Beok313, Floureon, LB+)",
-          "fr": "Intégration des appareils sans fil (RM++, SP++, A1, T1, S1C, Beok313, Floureon, LB+)",
-          "it": "Integra i dispositivi wireless (RM++, SP++, A1, T1, S1C, Beok313, Floureon, LB+)",
-          "es": "Integra dispositivos inalámbricos (RM++, SP++, A1, T1, S1C, Beok313, Floureon, LB+)",
-          "pl": "Integracja urządzeń bezprzewodowych (RM++, SP++, A1, T1, S1C, Beok313, Floureon, LB+)",
-          "uk": "Інтеграція бездротових пристроїв (RM++, SP++, A1, T1, S1C, Beok313, Floureon, LB+)",
-          "zh-cn": "无线装置的一体化 (RM++, SP++, A1, T1, S1C, Beok313, Floureon, LB+)"
-        },
         "news": {
             "2.1.5": {
                 "en": "Bug fix for RM3 Mini and some other text/debug changes"
@@ -72,19 +46,36 @@
                 "de": "Adapter verarbeitet RM-, SP- und A1-Geräte"
             }
         },
-        "licenseInformation": {
-            "license": "MIT",
-            "type": "free"
-          },
-        "platform": "Javascript/Node.js",
-        "materialize": true,
-        "tier": 2,
-        "mode": "daemon",
-        "icon": "broadlink2.png",
-        "enabled": true,
-        "messagebox": true,
-        "subscribe": "messagebox",
-        "extIcon": "https://raw.githubusercontent.com/frankjoke/ioBroker.broadlink2/master/admin/broadlink2.png",
+        "titleLang": {
+            "en": "Broadlink2",
+            "de": "Broadlink2",
+            "ru": "Broadlink2",
+            "pt": "Broadlink2",
+            "nl": "Broadlink2",
+            "fr": "Broadlink2",
+            "it": "Broadlink2",
+            "es": "Broadlink2",
+            "pl": "Broadlink2",
+            "uk": "Broadlink2",
+            "zh-cn": "连接2"
+        },
+        "desc": {
+          "en": "Integrates wireless devices (RM++, SP++, A1, T1, S1C, Beok313, Floureon, LB+)",
+          "de": "Integriert drahtlose Geräte (RM++, SP++, A1, T1, S1C, Beok313, Floureon, LB+)",
+          "ru": "Интеграция беспроводных устройств (RM++, SP++, A1, T1, S1C, Beok313, Floureon, LB+)",
+          "pt": "Integra dispositivos sem fio (RM++, SP++, A1, T1, S1C, Beok313, Floureon, LB+)",
+          "nl": "Integreert draadloze apparaten (RM++, SP++, A1, T1, S1C, Beok313, Floureon, LB+)",
+          "fr": "Intégration des appareils sans fil (RM++, SP++, A1, T1, S1C, Beok313, Floureon, LB+)",
+          "it": "Integra i dispositivi wireless (RM++, SP++, A1, T1, S1C, Beok313, Floureon, LB+)",
+          "es": "Integra dispositivos inalámbricos (RM++, SP++, A1, T1, S1C, Beok313, Floureon, LB+)",
+          "pl": "Integracja urządzeń bezprzewodowych (RM++, SP++, A1, T1, S1C, Beok313, Floureon, LB+)",
+          "uk": "Інтеграція бездротових пристроїв (RM++, SP++, A1, T1, S1C, Beok313, Floureon, LB+)",
+          "zh-cn": "无线装置的一体化 (RM++, SP++, A1, T1, S1C, Beok313, Floureon, LB+)"
+        },
+        "authors": [
+            "Frank Joke <frankjoke@hotmail.com>",
+            "mcm1957 <mcm57@gmx.at>"
+        ],
         "keywords": [
             "Broadlink",
             "W-Lan",
@@ -100,13 +91,25 @@
             "RM4",
             "LB1"
         ],
-        "readme": "https://github.com/frankjoke/ioBroker.broadlink2/blob/master/README.md",
+        "licenseInformation": {
+            "license": "MIT",
+            "type": "free"
+          },
+        "platform": "Javascript/Node.js",
+        "icon": "broadlink2.png",
+        "enabled": true,
+        "extIcon": "https://raw.githubusercontent.com/iobroker-community-adapters/ioBroker.broadlink2/master/admin/broadlink2.png",
+        "readme": "https://github.com/iobroker-community-adapters/ioBroker.broadlink2/blob/master/README.md",
         "loglevel": "info",
+        "tier": 2,
+        "mode": "daemon",
         "type": "iot-systems",
-        "authors": [
-            "Frank Joke <frankjoke@hotmail.com>"
-        ],
         "compact": false,
+        "connectionType": "local",
+        "dataSource": "poll",
+        "materialize": true,
+        "messagebox": true,
+        "subscribe": "messagebox",
         "dependencies": [
             {
               "js-controller": ">=5.0.0"
