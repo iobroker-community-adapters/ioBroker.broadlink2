@@ -4,9 +4,10 @@
   "description": "ioBroker Broadlink2 Adapter",
   "author": "Frank Joke <frankjoke@hotmail.com>",
   "contributors": [
-    "Reinhard Hiebl <reinhard@hieblmedia.com>"
+    "Reinhard Hiebl <reinhard@hieblmedia.com>",
+    "mcm1957 <mcm57@gmx.at>"
   ],
-  "homepage": "https://github.com/frankjoke/ioBroker.broadlink2",
+  "homepage": "https://github.com/iobroker-community-adapters/ioBroker.broadlink2",
   "license": "MIT",
   "keywords": [
     "ioBroker",
@@ -21,7 +22,7 @@
   ],
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/frankjoke/ioBroker.broadlink2.git"
+    "url": "git+https://github.com/iobroker-community-adapters/ioBroker.broadlink2.git"
   },
   "engines": {
     "node": ">= 18"
