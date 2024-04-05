@@ -180,6 +180,7 @@ with ioBroker admin, npm install iobroker.broadlink2 or from <https://github.com
 
 The MIT License (MIT)
 
+Copyright (c) 2024, iobroker-community-adapters <iobroker-community-adapters@gmx.de>
 Copyright (c) 2014-2020, frankjoke <frankjoke@hotmail.com>
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
