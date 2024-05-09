@@ -123,6 +123,9 @@
     "materialize": true,
     "messagebox": true,
     "subscribe": "messagebox",
+    "adminUI": {
+      "config": "json"
+    },
     "dependencies": [
       {
         "js-controller": ">=5.0.0"
