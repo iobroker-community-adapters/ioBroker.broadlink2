@@ -1,0 +1,128 @@
+{
+    "i18n": true,
+    "type": "panel",
+    "items": {
+        "interface": {
+            "newLine": true,
+            "label": "Use IP interface:",
+            "type": "text",
+            "noInternal": true,
+            "sm": 12,
+            "md": 4,
+            "lg": 4
+        },
+        "poll": {
+            "label": "Poll switches every x seconds (0 = no polling)",
+            "type": "number",
+            "default": 300,
+            "min": 0,
+            "max": 65535,
+            "sm": 12,
+            "md": 4,
+            "lg": 4
+        },
+        "new": {
+            "label": "Define new devices:",
+            "type": "text",
+            "sm": 12,
+            "md": 4,
+            "lg": 4
+        },
+        "rename": {
+            "newLine": true,
+            "label": "Rename devices:",
+            "type": "text",
+            "sm": 12,
+            "md": 6,
+            "lg": 6
+        },
+        "additional": {
+            "label": "Additional IP's to scan",
+            "type": "text",
+            "noInternal": true,
+            "sm": 12,
+            "md": 6,
+            "lg": 6
+        },
+        "scenes": {
+            "newLine": true,
+            "type": "table",
+            "sm": 12,
+            "md": 12,
+            "lg": 12,
+            "label": "Scene setup",
+            "items": [
+                {
+                    "type": "text",
+                    "attr": "name",
+                    "width": "15%",
+                    "title": {
+                        "en": "Name",
+                        "de": "Name"
+                    },
+                    "filter": true,
+                    "sort": true,
+                    "default": ""
+                },
+                {
+                    "type": "text",
+                    "attr": "scene",
+                    "width": "80%",
+                    "title": {
+                        "en": "Scene",
+                        "de": "Scene"
+                    },
+                    "filter": false,
+                    "sort": false,
+                    "default": ""
+                }
+            ]
+        },
+        "switches": {
+            "newLine": true,
+            "type": "table",
+            "sm": 12,
+            "md": 12,
+            "lg": 12,
+            "label": "Switch setup",
+            "items": [
+                {
+                    "type": "text",
+                    "attr": "name",
+                    "width": "15%",
+                    "title": {
+                        "en": "Name",
+                        "de": "Name"
+                    },
+                    "filter": true,
+                    "sort": true,
+                    "default": ""
+                },
+                {
+                    "type": "text",
+                    "attr": "on",
+                    "width": "40%",
+                    "title": {
+                        "en": "on",
+                        "de": "an"
+                    },
+                    "filter": false,
+                    "sort": false,
+                    "default": ""
+                },
+                {
+                    "type": "text",
+                    "attr": "off",
+                    "width": "40%",
+                    "title": {
+                        "en": "off",
+                        "de": "aus"
+                    },
+                    "filter": false,
+                    "sort": false,
+                    "default": ""
+                }
+            ]
+        }
+    }
+}
