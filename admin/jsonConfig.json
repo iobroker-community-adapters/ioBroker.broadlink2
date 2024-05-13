@@ -4,51 +4,62 @@
     "items": {
         "interface": {
             "newLine": true,
-            "label": "Use IP interface:",
+            "label": {
+                "en": "IP adress:",
+                "de": "IP-Adresse:"
+            },
             "type": "text",
             "sm": 12,
-            "md": 4,
-            "lg": 4
+            "md": 3,
+            "lg": 3
         },
         "poll": {
-            "label": "Poll switches every x seconds (0 = no polling)",
-            "type": "number",
-            "tooltip": {
+            "label": {
                 "en": "Refresh after x seconds",
-                "de": "Abfrage der Schalter alle x Sekunden"
+                "de": "Abfrage der Schalter alle X Sekunden"
             },
+            "type": "number",
             "default": 300,
             "min": 0,
             "max": 65535,
             "sm": 12,
-            "md": 4,
-            "lg": 4
+            "md": 3,
+            "lg": 3
         },
         "new": {
-            "label": "Define new devices:",
+            "label": {
+                "en": "Define new devices:",
+                "de": "Definieren Sie neue Geräte"
+            },
             "type": "text",
-            "tooltip": {
-                "en": "Define new devices : devicetype=class, ... (class one of= A1,MP1,RM,RMP,S1C,SP1,SP2,SP3P,T1)",
-                "de": "Neues Gerätetype(n) definieren: devicetype=class, ... (class = A1,MP1,RM,RMP,S1C,SP1,SP2,SP3P,T1)"
+            "help": {
+                "en": "devicetype=class, ... (class one of= A1,MP1,RM,RMP,S1C,SP1,SP2,SP3P,T1)",
+                "de": "devicetype=class, ... (class = A1,MP1,RM,RMP,S1C,SP1,SP2,SP3P,T1)"
             },
             "sm": 12,
-            "md": 4,
-            "lg": 4
+            "md": 6,
+            "lg": 6
         },
         "rename": {
             "newLine": true,
-            "label": "Rename devices:",
-            "tooltip": {
-                "en": "rename devices: 'SP:0x7547_34:ea:34:bd:67:a1=HeaterPlug, ...'",
-                "de": "Geräte umbenennen: 'SP:0x7547_34:ea:34:bd:67:a1=SteckdoseHeizung, ...'"
+            "label": {
+                "en": "Rename devices:",
+                "de": "Geräte umbenennen:"
             },
             "type": "text",
+            "help": {
+                "en": "'SP:0x7547_34:ea:34:bd:67:a1=HeaterPlug, ...'",
+                "de": "'SP:0x7547_34:ea:34:bd:67:a1=SteckdoseHeizung, ...'"
+            },
             "sm": 12,
             "md": 6,
             "lg": 6
         },
         "additional": {
-            "label": "Additional IP's to scan",
+            "label": {
+                "en": "Additional IP's to scan:",
+                "de": "Zusätzliche IPs zum Scannen:"
+            },
             "type": "text",
             "sm": 12,
             "md": 6,
@@ -57,26 +68,25 @@
         "scenes": {
             "newLine": true,
             "type": "table",
+            "label": {
+                "en": "Scene ",
+                "de": "Szenen"
+            },
             "sm": 12,
             "md": 12,
             "lg": 12,
-            "label": "Scene setup",
             "tooltip": {
-                "en": "Scene, this are commands separated with ','",
-                "de": "Szene, Kommandos mit ',' getrennt"
+                "en": "Scene can consist of learned states, scenes or Sender.CODE_xxx or a time delay in ms!",
+                "de": "Szenen können aus gelernten States, Szenen, Sender.CODE_xxx oder einer Verzögerung in Millisekunden bestehen."
             },
             "items": [
                 {
                     "type": "text",
                     "attr": "name",
-                    "width": "15%",
-                    "tooltip": {
-                        "en": "Scene Name",
-                        "de": "Name der Szene"   
-                    },
+                    "width": "20%",
                     "title": {
-                        "en": "Name",
-                        "de": "Name"
+                        "en": "Scene name",
+                        "de": "Name der Szene"
                     },
                     "filter": true,
                     "sort": true,
@@ -86,13 +96,9 @@
                     "type": "text",
                     "attr": "scene",
                     "width": "80%",
-                    "tooltip": {
-                        "en": "Scene can consist of learned states, scenes or Sender.CODE_xxx or a time delay in ms!",
-                        "de": "Szenen können aus gelernten States, Szenen, Sender.CODE_xxx oder einer Verzögerung in Millisekunden bestehen."
-                    },
                     "title": {
-                        "en": "Scene",
-                        "de": "Scene"
+                        "en": "Scene, this are commands separated with ','",
+                        "de": "Szene, Kommandos mit ',' getrennt"
                     },
                     "filter": false,
                     "sort": false,
@@ -103,10 +109,13 @@
         "switches": {
             "newLine": true,
             "type": "table",
+            "label": {
+                "en": "Switch",
+                "de": "Schalter"
+            },
             "sm": 12,
             "md": 12,
             "lg": 12,
-            "label": "Switch setup",
             "tooltip": {
                 "en": "States which will be switched on/off with learned states or sequences. THey can be lists where the first will be sent but the others will switch as well!",
                 "de": "States die mit gelernten Daten oder Sequenzen Ein/Aus geschaltet werden. Kann eine Liste mit ',' getrennt sein wo das 1. signal gesendet wird aber alle schalten"
@@ -115,14 +124,10 @@
                 {
                     "type": "text",
                     "attr": "name",
-                    "width": "15%",
-                    "tooltip": {
-                        "en": "State Name",
-                        "de": "Name des States"   
-                    },
+                    "width": "20%",
                     "title": {
-                        "en": "Name",
-                        "de": "Name"
+                        "en": "State name",
+                        "de": "Name des States"
                     },
                     "filter": true,
                     "sort": true,
@@ -132,13 +137,9 @@
                     "type": "text",
                     "attr": "on",
                     "width": "40%",
-                    "tooltip": {
+                    "title": {
                         "en": "On-signals",
                         "de": "Ein-Signale"
-                    },
-                    "title": {
-                        "en": "on",
-                        "de": "an"
                     },
                     "filter": false,
                     "sort": false,
@@ -148,13 +149,9 @@
                     "type": "text",
                     "attr": "off",
                     "width": "40%",
-                    "tooltip": {
+                    "title": {
                         "en": "Off-signals",
                         "de": "Aus-Signale"
-                    },
-                    "title": {
-                        "en": "off",
-                        "de": "aus"
                     },
                     "filter": false,
                     "sort": false,
