@@ -1,10 +1,10 @@
 {
     "Broadlink2 adapter settings": "Настройки Broadlink2",
-    "lblIpAddress": "айпи адрес",
+    "lblIpAddress": "Айпи адрес:",
     "lblPoll": "Обновить через x секунд",
-    "lblNew": "Определить новые устройства",
+    "lblNew": "Определите новые устройства:",
     "hlpNew": "тип устройства = класс, ... (класс = A1,MP1,RM,RMP,S1C,SP1,SP2,SP3P,T1)",
-    "lblRename": "устройства для переименования 'SP:0x7547_34:ea:34:bd:67:a1=HeaterPlug, ...'",
+    "lblRename": "Устройства для переименования:",
     "hlpRename": "SP:0x7547_34:ea:34:bd:67:a1=Нагревательная вилка, ...",
     "lblAdditional": "Дополнительные IP-адреса для сканирования",
     "lblScenes": "Сцены",
