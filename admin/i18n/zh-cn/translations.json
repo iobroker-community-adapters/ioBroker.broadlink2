@@ -1,0 +1,19 @@
+{
+    "Broadlink2 adapter settings": "Broadlink2 设置",
+    "lblIpAddress": "IP地址",
+    "lblPoll": "x 秒后刷新",
+    "lblNew": "定义新设备",
+    "hlpNew": "设备类型 = 类，...（类 = A1、MP1、RM、RMP、S1C、SP1、SP2、SP3P、T1）",
+    "lblRename": "设备重命名“SP:0x7547_34:ea:34:bd:67:a1=HeaterPlug, ...”",
+    "hlpRename": "SP:0x7547_34:ea:34:bd:67:a1=加热器插头，...",
+    "lblAdditional": "要扫描的其他 IP",
+    "lblScenes": "场景",
+    "ttScenes": "场景可以由学习状态、场景或 Sender.CODE_xxx 或以毫秒为单位的时间延迟组成！",
+    "lblScenesName": "场景名称",
+    "lblScenesScene": "场景、命令用“,”分隔",
+    "lblSwitches": "开关",
+    "ttSwitches": "将通过学习的状态或序列打开/关闭的状态。它们可以是列表，其中第一个将被发送，但其他也将切换。",
+    "lblSwitchesName": "州名",
+    "lblOn": "ON信号",
+    "lblOff": "关闭信号"
+}

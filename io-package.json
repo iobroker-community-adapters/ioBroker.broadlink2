@@ -43,46 +43,147 @@
         "zh-cn": "适配器需要节点.js 18和js控制器 QQ 现在5号\n依赖关系已更新"
       },
       "2.1.5": {
-        "en": "Bug fix for RM3 Mini and some other text/debug changes"
+        "en": "Bug fix for RM3 Mini and some other text/debug changes",
+        "de": "Fehlerbehebung für RM3 Mini und einige andere Text-/Debug-Änderungen",
+        "ru": "Исправлена ​​ошибка для RM3 Mini и некоторые другие изменения в тексте и отладке.",
+        "pt": "Correção de bug para RM3 Mini e algumas outras alterações de texto/depuração",
+        "nl": "Bugfix voor RM3 Mini en enkele andere tekst-/foutopsporingswijzigingen",
+        "fr": "Correction d'un bug pour RM3 Mini et quelques autres modifications de texte/débogage",
+        "it": "Correzione di bug per RM3 Mini e alcune altre modifiche di testo/debug",
+        "es": "Corrección de errores para RM3 Mini y algunos otros cambios de texto/depuración",
+        "pl": "Poprawka błędu dla RM3 Mini i kilka innych zmian w tekście/debugowaniu",
+        "uk": "Виправлено помилку для RM3 Mini та деякі інші зміни тексту/налагодження",
+        "zh-cn": "RM3 Mini 的错误修复和一些其他文本/调试更改"
       },
       "2.1.4": {
-        "en": "Bug fix of RM4 temperature and Scenes/States, also new naming convention for found devices and LB1/RM devices update their data in device"
+        "en": "Bug fix of RM4 temperature and Scenes/States, also new naming convention for found devices and LB1/RM devices update their data in device",
+        "de": "Fehlerbehebung für RM4-Temperatur und Szenen/Zustände, außerdem neue Namenskonvention für gefundene Geräte und LB1/RM-Geräte aktualisieren ihre Daten im Gerät",
+        "ru": "Исправлена ​​ошибка температуры RM4 и сцен/состояний, а также новое соглашение об именах для найденных устройств, а устройства LB1/RM обновляют свои данные в устройстве.",
+        "pt": "Correção de bug de temperatura e cenas/estados do RM4, também nova convenção de nomenclatura para dispositivos encontrados e dispositivos LB1/RM atualizam seus dados no dispositivo",
+        "nl": "Bugfix van RM4-temperatuur en scènes/statussen, ook nieuwe naamgevingsconventie voor gevonden apparaten en LB1/RM-apparaten updaten hun gegevens op het apparaat",
+        "fr": "Correction d'un bug de la température RM4 et des scènes/états, ainsi qu'une nouvelle convention de dénomination pour les appareils trouvés et les appareils LB1/RM mettent à jour leurs données dans l'appareil",
+        "it": "Correzione del bug della temperatura RM4 e delle scene/stati, inoltre la nuova convenzione di denominazione per i dispositivi trovati e i dispositivi LB1/RM aggiornano i loro dati nel dispositivo",
+        "es": "Corrección de errores de temperatura RM4 y escenas/estados, también nueva convención de nomenclatura para dispositivos encontrados y dispositivos LB1/RM actualizan sus datos en el dispositivo",
+        "pl": "Poprawka błędu temperatury i scen/stanów RM4, a także nowa konwencja nazewnictwa dla znalezionych urządzeń i urządzeń LB1/RM aktualizują swoje dane w urządzeniu",
+        "uk": "Виправлено помилку температури RM4 і сцен/станів, а також нові правила іменування знайдених пристроїв, а пристрої LB1/RM оновлюють свої дані на пристрої",
+        "zh-cn": "RM4 温度和场景/状态的错误修复，以及找到的设备和 LB1/RM 设备的新命名约定更新设备中的数据"
       },
       "2.1.0": {
         "en": "Added RM4+LB1 protocol and also check now device names according mac address or find additional ip addresses",
-        "de": "RM4+LB1-Protokolle hinzugefügt und auch automatische Erkennung von Geräten mittels mac-Adresse, oder in Konfig IP-Adresse hinzugefügt"
+        "de": "RM4+LB1-Protokolle hinzugefügt und auch automatische Erkennung von Geräten mittels mac-Adresse, oder in Konfig IP-Adresse hinzugefügt",
+        "ru": "Добавлен протокол RM4+LB1, а также теперь можно проверять имена устройств по MAC-адресу или находить дополнительные IP-адреса.",
+        "pt": "Adicionado protocolo RM4 + LB1 e também verifique agora os nomes dos dispositivos de acordo com o endereço MAC ou encontre endereços IP adicionais",
+        "nl": "RM4+LB1-protocol toegevoegd en controleer nu ook apparaatnamen op basis van het Mac-adres of vind extra IP-adressen",
+        "fr": "Ajout du protocole RM4 + LB1 et vérification également maintenant des noms d'appareils en fonction de l'adresse Mac ou recherche d'adresses IP supplémentaires",
+        "it": "Aggiunto il protocollo RM4+LB1 e ora controlla anche i nomi dei dispositivi in ​​base all'indirizzo Mac o trova indirizzi IP aggiuntivi",
+        "es": "Se agregó el protocolo RM4+LB1 y ahora también verifique los nombres de los dispositivos según la dirección mac o busque direcciones IP adicionales.",
+        "pl": "Dodano protokół RM4+LB1, a także sprawdź teraz nazwy urządzeń według adresu MAC lub znajdź dodatkowe adresy IP",
+        "uk": "Додано протокол RM4+LB1, а також тепер перевіряйте назви пристроїв відповідно до mac-адреси або знайдіть додаткові ip-адреси",
+        "zh-cn": "添加了 RM4+LB1 协议，现在还可以根据 mac 地址检查设备名称或查找其他 ip 地址"
       },
       "2.0.3": {
         "en": "Changed myAdapter to support js-controller v2.x & v3.x!",
-        "de": "myAdapter geändert um js-controller v2.x & v3.x zu unterstützen."
+        "de": "myAdapter geändert um js-controller v2.x & v3.x zu unterstützen.",
+        "ru": "Изменен myAdapter для поддержки js-контроллера v2.x и v3.x!",
+        "pt": "MyAdapter alterado para suportar js-controller v2.x e v3.x!",
+        "nl": "MyAdapter gewijzigd om js-controller v2.x & v3.x te ondersteunen!",
+        "fr": "Modification de myAdapter pour prendre en charge js-controller v2.x et v3.x !",
+        "it": "Modificato myAdapter per supportare js-controller v2.x e v3.x!",
+        "es": "¡Se cambió myAdapter para admitir js-controller v2.x y v3.x!",
+        "pl": "Zmieniono myAdapter, aby obsługiwał kontroler js v2.x i v3.x!",
+        "uk": "Змінено myAdapter для підтримки js-controller v2.x & v3.x!",
+        "zh-cn": "更改了 myAdapter 以支持 js-controller v2.x 和 v3.x！"
       },
       "2.0.1": {
         "en": "Complete rewrite of adaper with multiple options, please read readme.md!",
-        "de": "Komplett neu geschriebenen Adapter mit neuen Funktionen und Konfiguration, bitte README lesen!"
+        "de": "Komplett neu geschriebenen Adapter mit neuen Funktionen und Konfiguration, bitte README lesen!",
+        "ru": "Полная переработка адаптера с множеством опций, читайте readme.md!",
+        "pt": "Reescrita completa do adaptador com múltiplas opções, leia readme.md!",
+        "nl": "Volledige herschrijving van de adapter met meerdere opties, lees readme.md!",
+        "fr": "Réécriture complète de l'adaptateur avec plusieurs options, veuillez lire readme.md !",
+        "it": "Riscrittura completa di adaper con più opzioni, leggi readme.md!",
+        "es": "Reescritura completa del adaptador con múltiples opciones, lea readme.md.",
+        "pl": "Całkowite przepisanie adaptera z wieloma opcjami, przeczytaj readme.md!",
+        "uk": "Повний перепис адаптера з кількома параметрами, будь ласка, прочитайте readme.md!",
+        "zh-cn": "完整重写了 adaper，具有多个选项，请阅读 readme.md！"
       },
       "1.9.1": {
         "en": "Added RM Mini new support with",
-        "de": "Broadlink RM Mini unterstützung"
+        "de": "Broadlink RM Mini unterstützung",
+        "ru": "Добавлена ​​новая поддержка RM Mini с",
+        "pt": "Adicionado novo suporte ao RM Mini com",
+        "nl": "RM Mini nieuwe ondersteuning toegevoegd met",
+        "fr": "Ajout du nouveau support RM Mini avec",
+        "it": "Aggiunto nuovo supporto RM Mini con",
+        "es": "Se agregó nuevo soporte para RM Mini con",
+        "pl": "Dodano nową obsługę RM Mini z",
+        "uk": "Додано нову підтримку RM Mini",
+        "zh-cn": "添加了 RM Mini 新支持"
       },
       "1.9.0": {
         "en": "Added SP3S support with power meter reading and changed config page to work with admin 3.0",
-        "de": "Broadlink SP3S Steckdosen mit Power-Meter funktionieren nun und Adapter-Konfig funktioniert in Admin-3"
+        "de": "Broadlink SP3S Steckdosen mit Power-Meter funktionieren nun und Adapter-Konfig funktioniert in Admin-3",
+        "ru": "Добавлена ​​поддержка SP3S с показаниями измерителя мощности и изменена страница конфигурации для работы с администратором 3.0.",
+        "pt": "Adicionado suporte SP3S com leitura do medidor de energia e página de configuração alterada para funcionar com admin 3.0",
+        "nl": "SP3S-ondersteuning toegevoegd met uitlezing van vermogensmeters en gewijzigde configuratiepagina om te werken met admin 3.0",
+        "fr": "Ajout du support SP3S avec lecture du wattmètre et modification de la page de configuration pour fonctionner avec l'administrateur 3.0",
+        "it": "Aggiunto supporto SP3S con lettura del misuratore di potenza e pagina di configurazione modificata per funzionare con admin 3.0",
+        "es": "Se agregó compatibilidad con SP3S con lectura del medidor de energía y se cambió la página de configuración para que funcione con admin 3.0",
+        "pl": "Dodano obsługę SP3S z odczytem licznika energii i zmieniono stronę konfiguracyjną do pracy z administratorem 3.0",
+        "uk": "Додано підтримку SP3S із зчитуванням лічильника електроенергії та змінено сторінку конфігурації для роботи з admin 3.0",
+        "zh-cn": "添加了带有功率计读数的 SP3S 支持，并更改了配置页面以与 admin 3.0 一起使用"
       },
       "1.8.0": {
         "en": "Added states which you can set with on/off or level values",
-        "de": "States können erzeugt werden welche ein/aus simulieren oder levels können"
+        "de": "States können erzeugt werden welche ein/aus simulieren oder levels können",
+        "ru": "Добавлены состояния, которые вы можете установить с помощью значений включения/выключения или уровня.",
+        "pt": "Adicionados estados que você pode definir com valores ativados/desativados ou de nível",
+        "nl": "Toestanden toegevoegd die u kunt instellen met aan/uit- of niveauwaarden",
+        "fr": "États ajoutés que vous pouvez définir avec des valeurs marche/arrêt ou de niveau",
+        "it": "Aggiunti stati che è possibile impostare con valori di attivazione/disattivazione o di livello",
+        "es": "Estados agregados que puede configurar con valores de encendido/apagado o de nivel",
+        "pl": "Dodano stany, które można ustawić za pomocą wartości włączania/wyłączania lub poziomu",
+        "uk": "Додано стани, які можна встановити за допомогою увімкнення/вимкнення або значень рівня",
+        "zh-cn": "添加了可以使用开/关或级别值设置的状态"
       },
       "1.7.0": {
         "en": "A1 devices fields changed to correct original mistakes in unit and type",
-        "de": "Verarbeitung von A1-Geräten geändert um Daten besser anzuzeigen."
+        "de": "Verarbeitung von A1-Geräten geändert um Daten besser anzuzeigen.",
+        "ru": "Поля устройств A1 изменены для исправления исходных ошибок в единицах измерения и типе.",
+        "pt": "Os campos dos dispositivos A1 foram alterados para corrigir erros originais na unidade e no tipo",
+        "nl": "Velden voor A1-apparaten gewijzigd om oorspronkelijke fouten in eenheid en type te corrigeren",
+        "fr": "Les champs des appareils A1 ont été modifiés pour corriger les erreurs d'origine dans l'unité et le type.",
+        "it": "I campi dei dispositivi A1 sono stati modificati per correggere gli errori originali nell'unità e nel tipo",
+        "es": "Los campos de los dispositivos A1 cambiaron para corregir errores originales en unidad y tipo.",
+        "pl": "Zmieniono pola urządzeń A1, aby poprawić oryginalne błędy w jednostce i typie",
+        "uk": "Поля пристроїв A1 змінено, щоб виправити початкові помилки в одиниці вимірювання та типі",
+        "zh-cn": "A1 设备字段已更改，以更正单位和类型中的原始错误"
       },
       "1.6.0": {
         "en": "Adapter handles RM, SP and A1 devices and can rescan them, it should be able to learn RF codes frr RM-Plus devices",
-        "de": "Adapter verarbeitet RM-, SP- und A1-Geräte und sollte auch Funkbefehle von RM-Plus lernen können"
+        "de": "Adapter verarbeitet RM-, SP- und A1-Geräte und sollte auch Funkbefehle von RM-Plus lernen können",
+        "ru": "Адаптер работает с устройствами RM, SP и A1 и может их повторно сканировать. Он должен иметь возможность распознавать радиочастотные коды устройств RM-Plus.",
+        "pt": "O adaptador lida com dispositivos RM, SP e A1 e pode digitalizá-los novamente, deve ser capaz de aprender códigos RF de dispositivos RM-Plus",
+        "nl": "Adapter verwerkt RM-, SP- en A1-apparaten en kan ze opnieuw scannen, hij zou RF-codes van RM-Plus-apparaten moeten kunnen leren",
+        "fr": "L'adaptateur gère les appareils RM, SP et A1 et peut les scanner à nouveau. Il devrait être capable d'apprendre les codes RF des appareils RM-Plus.",
+        "it": "L'adattatore gestisce i dispositivi RM, SP e A1 e può scansionarli nuovamente, dovrebbe essere in grado di apprendere i codici RF dai dispositivi RM-Plus",
+        "es": "El adaptador maneja dispositivos RM, SP y A1 y puede volver a escanearlos; debería poder aprender códigos RF de dispositivos RM-Plus",
+        "pl": "Adapter obsługuje urządzenia RM, SP i A1 i może je ponownie skanować, powinien móc uczyć się kodów RF z urządzeń RM-Plus",
+        "uk": "Адаптер обробляє пристрої RM, SP і A1 і може повторно сканувати їх, він повинен мати можливість вивчати радіочастотні коди пристроїв RM-Plus",
+        "zh-cn": "适配器处理 RM、SP 和 A1 设备并可以重新扫描它们，它应该能够学习 RM-Plus 设备的 RF 代码"
       },
       "1.1.1": {
         "en": "Adapter handles RM, SP and A1 devices and can rescan them",
-        "de": "Adapter verarbeitet RM-, SP- und A1-Geräte"
+        "de": "Adapter verarbeitet RM-, SP- und A1-Geräte",
+        "ru": "Адаптер работает с устройствами RM, SP и A1 и может их повторно сканировать.",
+        "pt": "O adaptador lida com dispositivos RM, SP e A1 e pode digitalizá-los novamente",
+        "nl": "Adapter verwerkt RM-, SP- en A1-apparaten en kan deze opnieuw scannen",
+        "fr": "L'adaptateur gère les appareils RM, SP et A1 et peut les réanalyser",
+        "it": "L'adattatore gestisce i dispositivi RM, SP e A1 e può eseguirne nuovamente la scansione",
+        "es": "El adaptador maneja dispositivos RM, SP y A1 y puede volver a escanearlos",
+        "pl": "Adapter obsługuje urządzenia RM, SP i A1 oraz umożliwia ich ponowne skanowanie",
+        "uk": "Адаптер працює з пристроями RM, SP і A1 і може повторно сканувати їх",
+        "zh-cn": "适配器处理 RM、SP 和 A1 设备并可以重新扫描它们"
       }
     },
     "titleLang": {

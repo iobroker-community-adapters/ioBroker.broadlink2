@@ -4,38 +4,14 @@
     "items": {
         "interface": {
             "newLine": true,
-            "label": {
-                "en": "IP address:",
-                "de": "IP-Adresse:",
-                "ru": "IP-адрес:",
-                "pt": "Endereço IP:",
-                "nl": "IP-adres:",
-                "fr": "Adresse IP:",
-                "it": "Indirizzo IP:",
-                "es": "Dirección IP:",
-                "pl": "Adres IP:",
-                "uk": "IP адреса:",
-                "zh-cn": "IP 地址 :"
-            },
+            "label": "lblIpAddress",
             "type": "text",
             "sm": 12,
             "md": 3,
             "lg": 3
         },
         "poll": {
-            "label": {
-                "en": "Refresh after x seconds",
-                "de": "Refresh nach x Sekunden",
-                "ru": "Освещение после х секунд",
-                "pt": "Atualizar após x segundos",
-                "nl": "Verversen na x seconden",
-                "fr": "Rafraîchir après x secondes",
-                "it": "Rifiuti dopo x secondi",
-                "es": "Refresca después de x segundos",
-                "pl": "Odśwież po x sekundach",
-                "uk": "Refresh після x секунд",
-                "zh-cn": "X 秒后刷新"
-            },
+            "label": "lblPoll",
             "type": "number",
             "default": 300,
             "min": 0,
@@ -45,60 +21,24 @@
             "lg": 3
         },
         "new": {
-            "label": {
-                "en": "Define new devices:",
-                "de": "Neue Geräte definieren:",
-                "ru": "Определение новых устройств:",
-                "pt": "Defina novos dispositivos:",
-                "nl": "Nieuwe apparaten definiëren:",
-                "fr": "Définir de nouveaux appareils :",
-                "it": "Definire nuovi dispositivi:",
-                "es": "Definir nuevos dispositivos:",
-                "pl": "Zdefiniuj nowe urządzenia:",
-                "uk": "Визначте нові пристрої:",
-                "zh-cn": "定义新设备 :"
-            },
+            "label": "lblNew",
             "type": "text",
-            "help": "devicetype=class, ... (class = A1,MP1,RM,RMP,S1C,SP1,SP2,SP3P,T1)",
+            "help": "hlpNew",
             "sm": 12,
             "md": 6,
             "lg": 6
         },
         "rename": {
             "newLine": true,
-            "label": {
-                "en": "Devices rename:",
-                "de": "Geräte umbenennen:",
-                "ru": "Переименование устройств:",
-                "pt": "Dispositivos renomear:",
-                "nl": "Apparaten hernoemen:",
-                "fr": "Renommer :",
-                "it": "Rinominare i dispositivi:",
-                "es": "Los dispositivos renombran:",
-                "pl": "Urządzenia zmieniają nazwę:",
-                "uk": "Перейменування пристроїв:",
-                "zh-cn": "设备重命名 :"
-            },
+            "label": "lblRename",
             "type": "text",
-            "help": "SP:0x7547_34:ea:34:bd:67:a1=HeaterPlug, ...",
+            "help": "hlpRename",
             "sm": 12,
             "md": 6,
             "lg": 6
         },
         "additional": {
-            "label": {
-                "en": "Additional IP's to scan:",
-                "de": "Zusätzliche IPs zu scannen:",
-                "ru": "Дополнительные IP для сканирования:",
-                "pt": "IP adicional para escanear:",
-                "nl": "Extra IP's om te scannen:",
-                "fr": "Des IP supplémentaires pour scanner :",
-                "it": "Ulteriori IP per la scansione:",
-                "es": "IP adicional para escanear:",
-                "pl": "Dodatkowe IP do skanowania:",
-                "uk": "Додаткові IP-адреси:",
-                "zh-cn": "额外的 IP 扫描 :"
-            },
+            "label": "lblAdditional",
             "type": "text",
             "sm": 12,
             "md": 6,
@@ -107,53 +47,17 @@
         "scenes": {
             "newLine": true,
             "type": "table",
-            "label": {
-                "en": "Scene",
-                "de": "Szene",
-                "ru": "Сцена",
-                "pt": "Cena",
-                "nl": "Scène",
-                "fr": "Scène",
-                "it": "Scena",
-                "es": "Escena",
-                "pl": "Scena",
-                "uk": "Навігація",
-                "zh-cn": "场景"
-            },
+            "label": "lblScenes",
             "sm": 12,
             "md": 12,
             "lg": 12,
-            "tooltip": {
-                "en": "Scene can consist of learned states, scenes or Sender.CODE_xxx or a time delay in ms!",
-                "de": "Szene kann aus gelernten Zuständen, Szenen oder Sender bestehen. CODE_xxx oder eine Verzögerung in ms!",
-                "ru": "Сцена может состоять из изученных состояний, сцен или Sender. CODE_xxx или задержка времени в мс!",
-                "pt": "A cena pode consistir em estados, cenas ou remetentes aprendidos. CODE_xxx ou um atraso de tempo em ms!",
-                "nl": "Scène kan bestaan uit geleerde staten, scènes of Sender. CODE_xxx of een vertraging in ms!",
-                "fr": "Scène peut se composer d'états appris, scènes ou Sender. CODE_xxx ou un délai en ms !",
-                "it": "La scena può consistere in stati appresi, scene o Sender. CODE_xxx o un ritardo di tempo in ms!",
-                "es": "El escenario puede consistir en estados aprendidos, escenas o Sender. CODE_xxx o un retraso de tiempo en ms!",
-                "pl": "Scena może składać się z uczonych stanów, scen lub nadawcy. CODE _ xxx lub opóźnienie czasowe w ms!",
-                "uk": "Сцена може складатися з вчених станів, сцен або відступу. CODE_xxx або час затримки в ms!",
-                "zh-cn": "场景可以包括有学识的状态,场景或发送者. CODE_xxxx或时间延迟 ms!"
-            },
+            "tooltip": "ttScenes",
             "items": [
                 {
                     "type": "text",
                     "attr": "name",
                     "width": "20%",
-                    "title": {
-                        "en": "Scene name",
-                        "de": "Szenenname",
-                        "ru": "Название сцены",
-                        "pt": "Nome da cena",
-                        "nl": "Scènenaam",
-                        "fr": "Nom de la scène",
-                        "it": "Nome della scena",
-                        "es": "Nombre de escena",
-                        "pl": "Nazwa sceny",
-                        "uk": "Назва сцени",
-                        "zh-cn": "场景名称"
-                    },
+                    "title": "lblScenesName",
                     "filter": true,
                     "sort": true,
                     "default": ""
@@ -162,19 +66,7 @@
                     "type": "text",
                     "attr": "scene",
                     "width": "80%",
-                    "title": {
-                        "en": "Scene, are commands separated with ','",
-                        "de": "Szene, sind Befehle getrennt mit '",
-                        "ru": "Сцена, это команды, разделенные на \"",
-                        "pt": "Cena, são comandos separados com ','",
-                        "nl": "Scène, zijn commando's gescheiden met ','",
-                        "fr": "Scène, sont des commandes séparées par ','",
-                        "it": "Scena, sono comandi separati con ','",
-                        "es": "Escena, son comandos separados con ','",
-                        "pl": "Scena, są polecenia oddzielone ','",
-                        "uk": "Сцена, є команди, відокремлені \",\"",
-                        "zh-cn": "场景,由命令与 ',' 分隔"
-                    },
+                    "title": "lblScenesScene",
                     "filter": false,
                     "sort": false,
                     "default": ""
@@ -184,44 +76,17 @@
         "switches": {
             "newLine": true,
             "type": "table",
-            "label": {
-                "en": "Switch",
-                "de": "Schalter",
-                "ru": "Переключение",
-                "pt": "Interruptor",
-                "nl": "Wisselen",
-                "fr": "Commutateur",
-                "it": "Interruttore",
-                "es": "Cambio",
-                "pl": "Przełącz",
-                "uk": "Перемикач",
-                "zh-cn": "切换"
-            },
+            "label": "lblSwitches",
             "sm": 12,
             "md": 12,
             "lg": 12,
-            "tooltip": {
-                "en": "States which will be switched on/off with learned states or sequences. THey can be lists where the first will be sent but the others will switch as well!",
-                "de": "States die mit gelernten Daten oder Sequenzen Ein/Aus geschaltet werden. Kann eine Liste mit ',' getrennt sein wo das 1. signal gesendet wird aber alle schalten"
-            },
+            "tooltip": "ttSwitches",
             "items": [
                 {
                     "type": "text",
                     "attr": "name",
                     "width": "20%",
-                    "title": {
-                        "en": "State name",
-                        "de": "Bezeichnung",
-                        "ru": "Название государства",
-                        "pt": "Nome do Estado",
-                        "nl": "Naam",
-                        "fr": "Nom de l'État",
-                        "it": "Nome di stato",
-                        "es": "Nombre del Estado",
-                        "pl": "Nazwa państwa",
-                        "uk": "Назва держави",
-                        "zh-cn": "国名"
-                    },
+                    "title": "lblSwitchesName",
                     "filter": true,
                     "sort": true,
                     "default": ""
@@ -230,19 +95,7 @@
                     "type": "text",
                     "attr": "on",
                     "width": "40%",
-                    "title": {
-                        "en": "On-signals",
-                        "de": "On-Signale",
-                        "ru": "On-signals",
-                        "pt": "Nos sinais",
-                        "nl": "Signalen",
-                        "fr": "Signaux",
-                        "it": "Segnali",
-                        "es": "On-signals",
-                        "pl": "Sygnały dźwiękowe",
-                        "uk": "На знаках",
-                        "zh-cn": "信号"
-                    },
+                    "title": "lblOn",
                     "filter": false,
                     "sort": false,
                     "default": ""
@@ -251,19 +104,7 @@
                     "type": "text",
                     "attr": "off",
                     "width": "40%",
-                    "title": {
-                        "en": "Off-signals",
-                        "de": "Off-Signale",
-                        "ru": "Отключение-сигналов",
-                        "pt": "Sinais desligados",
-                        "nl": "Uitgeschakelde signalen",
-                        "fr": "Signalisations désactivées",
-                        "it": "Segnali spenti",
-                        "es": "Off signals",
-                        "pl": "Sygnały zewnętrzne",
-                        "uk": "Від сигналів",
-                        "zh-cn": "关闭信号"
-                    },
+                    "title": "lblOff",
                     "filter": false,
                     "sort": false,
                     "default": ""

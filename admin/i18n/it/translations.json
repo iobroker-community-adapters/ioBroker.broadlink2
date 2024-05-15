@@ -1,0 +1,19 @@
+{
+    "Broadlink2 adapter settings": "Impostazioni Broadlink2",
+    "lblIpAddress": "indirizzo IP",
+    "lblPoll": "Aggiorna dopo x secondi",
+    "lblNew": "Definire nuovi dispositivi",
+    "hlpNew": "tipo dispositivo=classe, ... (classe = A1,MP1,RM,RMP,S1C,SP1,SP2,SP3P,T1)",
+    "lblRename": "dispositivi da rinominare 'SP:0x7547_34:ea:34:bd:67:a1=HeaterPlug, ...'",
+    "hlpRename": "SP:0x7547_34:ea:34:bd:67:a1=Spina riscaldatore, ...",
+    "lblAdditional": "IP aggiuntivi da scansionare",
+    "lblScenes": "Scene",
+    "ttScenes": "Una scena può essere composta da stati appresi, scene o Sender.CODE_xxx o da un ritardo in ms!",
+    "lblScenesName": "Nome della scena",
+    "lblScenesScene": "Scena, comandi separati da ','",
+    "lblSwitches": "Interruttori",
+    "ttSwitches": "Stati che verranno accesi/spenti con stati o sequenze apprese. Possono essere liste dove verrà inviata la prima ma si scambieranno anche le altre.",
+    "lblSwitchesName": "Nome dello stato",
+    "lblOn": "Segnali ON",
+    "lblOff": "Segnali OFF"
+}

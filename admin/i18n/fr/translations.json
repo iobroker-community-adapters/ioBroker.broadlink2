@@ -1,0 +1,19 @@
+{
+    "Broadlink2 adapter settings": "Paramètres Broadlink2",
+    "lblIpAddress": "adresse IP",
+    "lblPoll": "Actualiser après x secondes",
+    "lblNew": "Définir de nouveaux appareils",
+    "hlpNew": "type d'appareil=classe, ... (classe = A1,MP1,RM,RMP,S1C,SP1,SP2,SP3P,T1)",
+    "lblRename": "appareils à renommer 'SP:0x7547_34:ea:34:bd:67:a1=HeaterPlug, ...'",
+    "hlpRename": "SP:0x7547_34:ea:34:bd:67:a1=HeaterPlug, ...",
+    "lblAdditional": "IP supplémentaires à analyser",
+    "lblScenes": "Scènes",
+    "ttScenes": "Une scène peut être constituée d'états appris, de scènes ou de Sender.CODE_xxx ou d'une temporisation en ms !",
+    "lblScenesName": "Nom de la scène",
+    "lblScenesScene": "Scène, commandes séparées par ','",
+    "lblSwitches": "Commutateurs",
+    "ttSwitches": "États qui seront activés/désactivés avec des états ou des séquences appris. Il peut s'agir de listes où le premier sera envoyé mais les autres basculeront également.",
+    "lblSwitchesName": "Nom d'état",
+    "lblOn": "Signaux ON",
+    "lblOff": "Signaux OFF"
+}

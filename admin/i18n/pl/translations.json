@@ -1,0 +1,19 @@
+{
+    "Broadlink2 adapter settings": "Ustawienia Broadlink2",
+    "lblIpAddress": "adres IP",
+    "lblPoll": "Odśwież po x sekundach",
+    "lblNew": "Zdefiniuj nowe urządzenia",
+    "hlpNew": "typ urządzenia=klasa, ... (klasa = A1,MP1,RM,RMP,S1C,SP1,SP2,SP3P,T1)",
+    "lblRename": "urządzenia, aby zmienić nazwę „SP:0x7547_34:ea:34:bd:67:a1=HeaterPlug, ...”",
+    "hlpRename": "SP:0x7547_34:ea:34:bd:67:a1=Wtyczka podgrzewacza, ...",
+    "lblAdditional": "Dodatkowe adresy IP do skanowania",
+    "lblScenes": "Sceny",
+    "ttScenes": "Scena może składać się z wyuczonych stanów, scen lub Sender.CODE_xxx lub opóźnienia czasowego w ms!",
+    "lblScenesName": "Nazwa sceny",
+    "lblScenesScene": "Scena, polecenia oddzielone znakiem „,”",
+    "lblSwitches": "Przełączniki",
+    "ttSwitches": "Stany, które zostaną włączone/wyłączone za pomocą wyuczonych stanów lub sekwencji. Mogą to być listy, do których zostanie wysłana pierwsza lista, ale pozostałe również się zmienią.",
+    "lblSwitchesName": "Nazwa stanu",
+    "lblOn": "Sygnały ON",
+    "lblOff": "Sygnały WYŁ"
+}
