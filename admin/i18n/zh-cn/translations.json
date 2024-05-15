@@ -1,10 +1,10 @@
 {
     "Broadlink2 adapter settings": "Broadlink2 设置",
-    "lblIpAddress": "IP地址",
+    "lblIpAddress": "IP地址：",
     "lblPoll": "x 秒后刷新",
-    "lblNew": "定义新设备",
+    "lblNew": "定义新设备：",
     "hlpNew": "设备类型 = 类，...（类 = A1、MP1、RM、RMP、S1C、SP1、SP2、SP3P、T1）",
-    "lblRename": "设备重命名“SP:0x7547_34:ea:34:bd:67:a1=HeaterPlug, ...”",
+    "lblRename": "要重命名的设备：",
     "hlpRename": "SP:0x7547_34:ea:34:bd:67:a1=加热器插头，...",
     "lblAdditional": "要扫描的其他 IP",
     "lblScenes": "场景",

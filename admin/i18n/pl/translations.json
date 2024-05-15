@@ -1,10 +1,10 @@
 {
     "Broadlink2 adapter settings": "Ustawienia Broadlink2",
-    "lblIpAddress": "adres IP",
+    "lblIpAddress": "Adres IP:",
     "lblPoll": "Odśwież po x sekundach",
-    "lblNew": "Zdefiniuj nowe urządzenia",
+    "lblNew": "Zdefiniuj nowe urządzenia:",
     "hlpNew": "typ urządzenia=klasa, ... (klasa = A1,MP1,RM,RMP,S1C,SP1,SP2,SP3P,T1)",
-    "lblRename": "urządzenia, aby zmienić nazwę „SP:0x7547_34:ea:34:bd:67:a1=HeaterPlug, ...”",
+    "lblRename": "Urządzenia do zmiany nazwy:",
     "hlpRename": "SP:0x7547_34:ea:34:bd:67:a1=Wtyczka podgrzewacza, ...",
     "lblAdditional": "Dodatkowe adresy IP do skanowania",
     "lblScenes": "Sceny",
