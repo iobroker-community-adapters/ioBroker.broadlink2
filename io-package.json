@@ -1,8 +1,21 @@
 {
   "common": {
     "name": "broadlink2",
-    "version": "2.3.0-alpha.1",
+    "version": "2.3.0-alpha.2",
     "news": {
+      "2.3.0-alpha.2": {
+        "en": "Adapter migrated to jsonConfig\nDependencies have been updated",
+        "de": "Adapter migriert zu jsonConfig\nAbhängigkeiten wurden aktualisiert",
+        "ru": "Адаптер мигрировал в jsonConfig\nЗависимость обновлена",
+        "pt": "Adaptador migrado para jsonConfig\nAs dependências foram atualizadas",
+        "nl": "Adapter gemigreerd naar jsonConfig\nAfhankelijkheden zijn bijgewerkt",
+        "fr": "Adaptateur migré vers jsonConfig\nLes dépendances ont été actualisées",
+        "it": "Adattatore migrato a jsonConfig\nLe dipendenze sono state aggiornate",
+        "es": "Adaptador migrado a jsonConfig\nSe han actualizado las dependencias",
+        "pl": "Adapter migrował do jsonConfig\nZaktualizowano zależności",
+        "uk": "Адаптер мігрований до jsonConfig\nЗалежність було оновлено",
+        "zh-cn": "将适配器迁移到 jsonConfig\n依赖关系已更新"
+      },
       "2.3.0-alpha.1": {
         "en": "Adapter migrated to jsonConfig\nDependencies have been updated",
         "de": "Adapter migriert zu jsonConfig\nAbhängigkeiten wurden aktualisiert",
