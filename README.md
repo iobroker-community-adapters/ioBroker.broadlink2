@@ -115,7 +115,7 @@ The adapter understands also 'sendTo' commands.
     Placeholder for the next version (at the beginning of the line):
     ### **WORK IN PROGRESS**
 -->
-### 2.3.0-alpha.1 (2024-05-15)
+### **WORK IN PROGRESS**
 * (mattreim) Adapter migrated to jsonConfig
 * (mcm1957) Dependencies have been updated
 
