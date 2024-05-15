@@ -2,7 +2,7 @@
     "i18n": true,
     "type": "panel",
     "items": {
-        "interface": {
+        "ip": {
             "newLine": true,
             "label": {
                 "en": "IP address:",
