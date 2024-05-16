@@ -1,8 +1,21 @@
 {
   "common": {
     "name": "broadlink2",
-    "version": "2.3.0-alpha.2",
+    "version": "2.3.0-alpha.3",
     "news": {
+      "2.3.0-alpha.3": {
+        "en": "Adapter migrated to jsonConfig\nAdapter requires admin >= 6 now\nDependencies have been updated",
+        "de": "Adapter migriert zu jsonConfig\nAdapter erfordert Admin >= 6 jetzt\nAbhängigkeiten wurden aktualisiert",
+        "ru": "Адаптер мигрировал в jsonConfig\nАдаптер требует admin >= 6 сейчас\nЗависимость обновлена",
+        "pt": "Adaptador migrado para jsonConfig\nAdapter requer admin >= 6 agora\nAs dependências foram atualizadas",
+        "nl": "Adapter gemigreerd naar jsonConfig\nAdapter vereist admin >= 6 nu\nAfhankelijkheden zijn bijgewerkt",
+        "fr": "Adaptateur migré vers jsonConfig\nAdaptateur nécessite admin >= 6 maintenant\nLes dépendances ont été actualisées",
+        "it": "Adattatore migrato a jsonConfig\nAdattatore richiede admin >= 6 ora\nLe dipendenze sono state aggiornate",
+        "es": "Adaptador migrado a jsonConfig\nAdaptador requiere administración >= 6 ahora\nSe han actualizado las dependencias",
+        "pl": "Adapter migrował do jsonConfig\nAdapter wymaga admin > = 6 teraz\nZaktualizowano zależności",
+        "uk": "Адаптер мігрований до jsonConfig\nАдаптер вимагає адміністратора >= 6 тепер\nЗалежність було оновлено",
+        "zh-cn": "将适配器迁移到 jsonConfig\n适配器需要管理员 现在6个\n依赖关系已更新"
+      },
       "2.3.0-alpha.2": {
         "en": "Adapter migrated to jsonConfig\nDependencies have been updated",
         "de": "Adapter migriert zu jsonConfig\nAbhängigkeiten wurden aktualisiert",
@@ -184,19 +197,6 @@
         "pl": "Adapter obsługuje urządzenia RM, SP i A1 i może je ponownie skanować, powinien móc uczyć się kodów RF z urządzeń RM-Plus",
         "uk": "Адаптер обробляє пристрої RM, SP і A1 і може повторно сканувати їх, він повинен мати можливість вивчати радіочастотні коди пристроїв RM-Plus",
         "zh-cn": "适配器处理 RM、SP 和 A1 设备并可以重新扫描它们，它应该能够学习 RM-Plus 设备的 RF 代码"
-      },
-      "1.1.1": {
-        "en": "Adapter handles RM, SP and A1 devices and can rescan them",
-        "de": "Adapter verarbeitet RM-, SP- und A1-Geräte",
-        "ru": "Адаптер работает с устройствами RM, SP и A1 и может их повторно сканировать.",
-        "pt": "O adaptador lida com dispositivos RM, SP e A1 e pode digitalizá-los novamente",
-        "nl": "Adapter verwerkt RM-, SP- en A1-apparaten en kan deze opnieuw scannen",
-        "fr": "L'adaptateur gère les appareils RM, SP et A1 et peut les réanalyser",
-        "it": "L'adattatore gestisce i dispositivi RM, SP e A1 e può eseguirne nuovamente la scansione",
-        "es": "El adaptador maneja dispositivos RM, SP y A1 y puede volver a escanearlos",
-        "pl": "Adapter obsługuje urządzenia RM, SP i A1 oraz umożliwia ich ponowne skanowanie",
-        "uk": "Адаптер працює з пристроями RM, SP і A1 і може повторно сканувати їх",
-        "zh-cn": "适配器处理 RM、SP 和 A1 设备并可以重新扫描它们"
       }
     },
     "titleLang": {
