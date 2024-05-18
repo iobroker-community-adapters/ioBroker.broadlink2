@@ -1,10 +1,10 @@
 {
     "Broadlink2 adapter settings": "Impostazioni Broadlink2",
-    "lblIpAddress": "Indirizzo IP:",
+    "lblIpAddress": "Indirizzo IP",
     "lblPoll": "Aggiorna dopo x secondi",
-    "lblNew": "Definire nuovi dispositivi:",
+    "lblNew": "Definire nuovi dispositivi",
     "hlpNew": "tipo dispositivo=classe, ... (classe = A1,MP1,RM,RMP,S1C,SP1,SP2,SP3P,T1)",
-    "lblRename": "Dispositivi da rinominare:",
+    "lblRename": "Dispositivi da rinominare",
     "hlpRename": "SP:0x7547_34:ea:34:bd:67:a1=Spina riscaldatore, ...",
     "lblAdditional": "IP aggiuntivi da scansionare",
     "lblScenes": "Scene",

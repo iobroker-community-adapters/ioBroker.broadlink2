@@ -1,10 +1,10 @@
 {
     "Broadlink2 adapter settings": "Paramètres Broadlink2",
-    "lblIpAddress": "Adresse IP:",
+    "lblIpAddress": "Adresse IP",
     "lblPoll": "Actualiser après x secondes",
-    "lblNew": "Définir de nouveaux appareils :",
+    "lblNew": "Définir de nouveaux appareils",
     "hlpNew": "type d'appareil=classe, ... (classe = A1,MP1,RM,RMP,S1C,SP1,SP2,SP3P,T1)",
-    "lblRename": "Appareils à renommer :",
+    "lblRename": "Appareils à renommer",
     "hlpRename": "SP:0x7547_34:ea:34:bd:67:a1=HeaterPlug, ...",
     "lblAdditional": "IP supplémentaires à analyser",
     "lblScenes": "Scènes",
