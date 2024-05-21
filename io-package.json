@@ -279,7 +279,6 @@
   },
   "native": {
     "interface": "",
-    "ip": ".fritz.box",
     "scenes": [
       {
         "name": "Fernsehen",
