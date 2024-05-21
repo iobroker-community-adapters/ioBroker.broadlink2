@@ -1004,7 +1004,6 @@ async function main() {
 
 	A.If('macObjects: %O', A.ownKeysSorted(macObjects));
 	try {
-		A.D('Config IP-Address end to remove: ' + A.C.ip);
 		for (const scene of A.C.scenes) {
 			await A.makeState({
 				id: scenesName + '.' + scene.name.trim(),
