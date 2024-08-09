@@ -16,58 +16,6 @@
         "uk": "Адаптер мігрований до jsonConfig\nАдаптер вимагає адміністратора >= 6 тепер\nЗалежність було оновлено",
         "zh-cn": "将适配器迁移到 jsonConfig\n适配器需要管理员 现在6个\n依赖关系已更新"
       },
-      "2.3.0-alpha.3": {
-        "en": "Adapter migrated to jsonConfig\nAdapter requires admin >= 6 now\nDependencies have been updated",
-        "de": "Adapter migriert zu jsonConfig\nAdapter erfordert Admin >= 6 jetzt\nAbhängigkeiten wurden aktualisiert",
-        "ru": "Адаптер мигрировал в jsonConfig\nАдаптер требует admin >= 6 сейчас\nЗависимость обновлена",
-        "pt": "Adaptador migrado para jsonConfig\nAdapter requer admin >= 6 agora\nAs dependências foram atualizadas",
-        "nl": "Adapter gemigreerd naar jsonConfig\nAdapter vereist admin >= 6 nu\nAfhankelijkheden zijn bijgewerkt",
-        "fr": "Adaptateur migré vers jsonConfig\nAdaptateur nécessite admin >= 6 maintenant\nLes dépendances ont été actualisées",
-        "it": "Adattatore migrato a jsonConfig\nAdattatore richiede admin >= 6 ora\nLe dipendenze sono state aggiornate",
-        "es": "Adaptador migrado a jsonConfig\nAdaptador requiere administración >= 6 ahora\nSe han actualizado las dependencias",
-        "pl": "Adapter migrował do jsonConfig\nAdapter wymaga admin > = 6 teraz\nZaktualizowano zależności",
-        "uk": "Адаптер мігрований до jsonConfig\nАдаптер вимагає адміністратора >= 6 тепер\nЗалежність було оновлено",
-        "zh-cn": "将适配器迁移到 jsonConfig\n适配器需要管理员 现在6个\n依赖关系已更新"
-      },
-      "2.3.0-alpha.2": {
-        "en": "Adapter migrated to jsonConfig\nDependencies have been updated",
-        "de": "Adapter migriert zu jsonConfig\nAbhängigkeiten wurden aktualisiert",
-        "ru": "Адаптер мигрировал в jsonConfig\nЗависимость обновлена",
-        "pt": "Adaptador migrado para jsonConfig\nAs dependências foram atualizadas",
-        "nl": "Adapter gemigreerd naar jsonConfig\nAfhankelijkheden zijn bijgewerkt",
-        "fr": "Adaptateur migré vers jsonConfig\nLes dépendances ont été actualisées",
-        "it": "Adattatore migrato a jsonConfig\nLe dipendenze sono state aggiornate",
-        "es": "Adaptador migrado a jsonConfig\nSe han actualizado las dependencias",
-        "pl": "Adapter migrował do jsonConfig\nZaktualizowano zależności",
-        "uk": "Адаптер мігрований до jsonConfig\nЗалежність було оновлено",
-        "zh-cn": "将适配器迁移到 jsonConfig\n依赖关系已更新"
-      },
-      "2.3.0-alpha.1": {
-        "en": "Adapter migrated to jsonConfig\nDependencies have been updated",
-        "de": "Adapter migriert zu jsonConfig\nAbhängigkeiten wurden aktualisiert",
-        "ru": "Адаптер мигрировал в jsonConfig\nЗависимость обновлена",
-        "pt": "Adaptador migrado para jsonConfig\nAs dependências foram atualizadas",
-        "nl": "Adapter gemigreerd naar jsonConfig\nAfhankelijkheden zijn bijgewerkt",
-        "fr": "Adaptateur migré vers jsonConfig\nLes dépendances ont été actualisées",
-        "it": "Adattatore migrato a jsonConfig\nLe dipendenze sono state aggiornate",
-        "es": "Adaptador migrado a jsonConfig\nSe han actualizado las dependencias",
-        "pl": "Adapter migrował do jsonConfig\nZaktualizowano zależności",
-        "uk": "Адаптер мігрований до jsonConfig\nЗалежність було оновлено",
-        "zh-cn": "将适配器迁移到 jsonConfig\n依赖关系已更新"
-      },
-      "2.3.0-alpha.0": {
-        "en": "Adapter migrated to jsonConfig\nDependencies have been updated",
-        "de": "Adapter migriert zu jsonConfig\nAbhängigkeiten wurden aktualisiert",
-        "ru": "Адаптер мигрировал в jsonConfig\nЗависимость обновлена",
-        "pt": "Adaptador migrado para jsonConfig\nAs dependências foram atualizadas",
-        "nl": "Adapter gemigreerd naar jsonConfig\nAfhankelijkheden zijn bijgewerkt",
-        "fr": "Adaptateur migré vers jsonConfig\nLes dépendances ont été actualisées",
-        "it": "Adattatore migrato a jsonConfig\nLe dipendenze sono state aggiornate",
-        "es": "Adaptador migrado a jsonConfig\nSe han actualizado las dependencias",
-        "pl": "Adapter migrował do jsonConfig\nZaktualizowano zależności",
-        "uk": "Адаптер мігрований до jsonConfig\nЗалежність було оновлено",
-        "zh-cn": "将适配器迁移到 jsonConfig\n依赖关系已更新"
-      },
       "2.2.0": {
         "en": "Adapter requires node.js 18 and js-controller >= 5 now\nDependencies have been updated",
         "de": "Adapter benötigt node.js 18 und js-controller >= 5 jetzt\nAbhängigkeiten wurden aktualisiert",
@@ -133,7 +81,7 @@
         "uk": "Змінено myAdapter для підтримки js-controller v2.x & v3.x!",
         "zh-cn": "更改了 myAdapter 以支持 js-controller v2.x 和 v3.x！"
       },
-      "2.0.1": {
+      "2.0.0": {
         "en": "Complete rewrite of adaper with multiple options, please read readme.md!",
         "de": "Komplett neu geschriebenen Adapter mit neuen Funktionen und Konfiguration, bitte README lesen!",
         "ru": "Полная переработка адаптера с множеством опций, читайте readme.md!",
@@ -145,58 +93,6 @@
         "pl": "Całkowite przepisanie adaptera z wieloma opcjami, przeczytaj readme.md!",
         "uk": "Повний перепис адаптера з кількома параметрами, будь ласка, прочитайте readme.md!",
         "zh-cn": "完整重写了 adaper，具有多个选项，请阅读 readme.md！"
-      },
-      "1.9.1": {
-        "en": "Added RM Mini new support with",
-        "de": "Broadlink RM Mini unterstützung",
-        "ru": "Добавлена ​​новая поддержка RM Mini с",
-        "pt": "Adicionado novo suporte ao RM Mini com",
-        "nl": "RM Mini nieuwe ondersteuning toegevoegd met",
-        "fr": "Ajout du nouveau support RM Mini avec",
-        "it": "Aggiunto nuovo supporto RM Mini con",
-        "es": "Se agregó nuevo soporte para RM Mini con",
-        "pl": "Dodano nową obsługę RM Mini z",
-        "uk": "Додано нову підтримку RM Mini",
-        "zh-cn": "添加了 RM Mini 新支持"
-      },
-      "1.9.0": {
-        "en": "Added SP3S support with power meter reading and changed config page to work with admin 3.0",
-        "de": "Broadlink SP3S Steckdosen mit Power-Meter funktionieren nun und Adapter-Konfig funktioniert in Admin-3",
-        "ru": "Добавлена ​​поддержка SP3S с показаниями измерителя мощности и изменена страница конфигурации для работы с администратором 3.0.",
-        "pt": "Adicionado suporte SP3S com leitura do medidor de energia e página de configuração alterada para funcionar com admin 3.0",
-        "nl": "SP3S-ondersteuning toegevoegd met uitlezing van vermogensmeters en gewijzigde configuratiepagina om te werken met admin 3.0",
-        "fr": "Ajout du support SP3S avec lecture du wattmètre et modification de la page de configuration pour fonctionner avec l'administrateur 3.0",
-        "it": "Aggiunto supporto SP3S con lettura del misuratore di potenza e pagina di configurazione modificata per funzionare con admin 3.0",
-        "es": "Se agregó compatibilidad con SP3S con lectura del medidor de energía y se cambió la página de configuración para que funcione con admin 3.0",
-        "pl": "Dodano obsługę SP3S z odczytem licznika energii i zmieniono stronę konfiguracyjną do pracy z administratorem 3.0",
-        "uk": "Додано підтримку SP3S із зчитуванням лічильника електроенергії та змінено сторінку конфігурації для роботи з admin 3.0",
-        "zh-cn": "添加了带有功率计读数的 SP3S 支持，并更改了配置页面以与 admin 3.0 一起使用"
-      },
-      "1.8.0": {
-        "en": "Added states which you can set with on/off or level values",
-        "de": "States können erzeugt werden welche ein/aus simulieren oder levels können",
-        "ru": "Добавлены состояния, которые вы можете установить с помощью значений включения/выключения или уровня.",
-        "pt": "Adicionados estados que você pode definir com valores ativados/desativados ou de nível",
-        "nl": "Toestanden toegevoegd die u kunt instellen met aan/uit- of niveauwaarden",
-        "fr": "États ajoutés que vous pouvez définir avec des valeurs marche/arrêt ou de niveau",
-        "it": "Aggiunti stati che è possibile impostare con valori di attivazione/disattivazione o di livello",
-        "es": "Estados agregados que puede configurar con valores de encendido/apagado o de nivel",
-        "pl": "Dodano stany, które można ustawić za pomocą wartości włączania/wyłączania lub poziomu",
-        "uk": "Додано стани, які можна встановити за допомогою увімкнення/вимкнення або значень рівня",
-        "zh-cn": "添加了可以使用开/关或级别值设置的状态"
-      },
-      "1.7.0": {
-        "en": "A1 devices fields changed to correct original mistakes in unit and type",
-        "de": "Verarbeitung von A1-Geräten geändert um Daten besser anzuzeigen.",
-        "ru": "Поля устройств A1 изменены для исправления исходных ошибок в единицах измерения и типе.",
-        "pt": "Os campos dos dispositivos A1 foram alterados para corrigir erros originais na unidade e no tipo",
-        "nl": "Velden voor A1-apparaten gewijzigd om oorspronkelijke fouten in eenheid en type te corrigeren",
-        "fr": "Les champs des appareils A1 ont été modifiés pour corriger les erreurs d'origine dans l'unité et le type.",
-        "it": "I campi dei dispositivi A1 sono stati modificati per correggere gli errori originali nell'unità e nel tipo",
-        "es": "Los campos de los dispositivos A1 cambiaron para corregir errores originales en unidad y tipo.",
-        "pl": "Zmieniono pola urządzeń A1, aby poprawić oryginalne błędy w jednostce i typie",
-        "uk": "Поля пристроїв A1 змінено, щоб виправити початкові помилки в одиниці вимірювання та типі",
-        "zh-cn": "A1 设备字段已更改，以更正单位和类型中的原始错误"
       }
     },
     "titleLang": {
@@ -262,7 +158,6 @@
     "dataSource": "poll",
     "materialize": true,
     "messagebox": true,
-    "subscribe": "messagebox",
     "adminUI": {
       "config": "json"
     },
