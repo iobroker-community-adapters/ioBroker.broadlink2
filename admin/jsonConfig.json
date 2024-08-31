@@ -11,7 +11,7 @@
             "lg": 3
         },
         "poll": {
-            "label": "lblPoll",
+            "label": "Poll switches every x seconds (0 = no polling)",
             "type": "number",
             "default": 300,
             "min": 0,
@@ -21,7 +21,7 @@
             "lg": 3
         },
         "new": {
-            "label": "lblNew",
+            "label": "new",
             "type": "text",
             "help": "hlpNew",
             "sm": 12,
@@ -30,7 +30,7 @@
         },
         "rename": {
             "newLine": true,
-            "label": "lblRename",
+            "label": "Rename Device",
             "type": "text",
             "help": "hlpRename",
             "sm": 12,
@@ -47,17 +47,17 @@
         "scenes": {
             "newLine": true,
             "type": "table",
-            "label": "lblScenes",
+            "label": "Scene setup",
             "sm": 12,
             "md": 12,
             "lg": 12,
-            "tooltip": "ttScenes",
+            "tooltip": "SceneDescription",
             "items": [
                 {
                     "type": "text",
                     "attr": "name",
                     "width": "20%",
-                    "title": "lblScenesName",
+                    "title": "scname",
                     "filter": true,
                     "sort": true,
                     "default": ""
@@ -66,7 +66,7 @@
                     "type": "text",
                     "attr": "scene",
                     "width": "80%",
-                    "title": "lblScenesScene",
+                    "title": "scene",
                     "filter": false,
                     "sort": false,
                     "default": ""
@@ -80,13 +80,13 @@
             "sm": 12,
             "md": 12,
             "lg": 12,
-            "tooltip": "ttSwitches",
+            "tooltip": "Switch setup",
             "items": [
                 {
                     "type": "text",
                     "attr": "name",
                     "width": "20%",
-                    "title": "lblSwitchesName",
+                    "title": "stname",
                     "filter": true,
                     "sort": true,
                     "default": ""
@@ -95,7 +95,7 @@
                     "type": "text",
                     "attr": "on",
                     "width": "40%",
-                    "title": "lblOn",
+                    "title": "on",
                     "filter": false,
                     "sort": false,
                     "default": ""
@@ -104,7 +104,7 @@
                     "type": "text",
                     "attr": "off",
                     "width": "40%",
-                    "title": "lblOff",
+                    "title": "off",
                     "filter": false,
                     "sort": false,
                     "default": ""
