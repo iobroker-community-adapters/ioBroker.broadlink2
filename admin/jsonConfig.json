@@ -6,6 +6,7 @@
             "newLine": true,
             "label": "lblIpAddress",
             "type": "text",
+            "xs": 12,
             "sm": 12,
             "md": 3,
             "lg": 3
@@ -16,6 +17,7 @@
             "default": 300,
             "min": 0,
             "max": 65535,
+            "xs": 12,
             "sm": 12,
             "md": 3,
             "lg": 3
@@ -24,6 +26,7 @@
             "label": "lblNew",
             "type": "text",
             "help": "hlpNew",
+            "xs": 12,
             "sm": 12,
             "md": 6,
             "lg": 6
@@ -33,6 +36,7 @@
             "label": "lblRename",
             "type": "text",
             "help": "hlpRename",
+            "xs": 12,
             "sm": 12,
             "md": 6,
             "lg": 6
@@ -40,6 +44,7 @@
         "additional": {
             "label": "lblAdditional",
             "type": "text",
+            "xs": 12,
             "sm": 12,
             "md": 6,
             "lg": 6
@@ -48,6 +53,7 @@
             "newLine": true,
             "type": "table",
             "label": "lblScenes",
+            "xs": 12,
             "sm": 12,
             "md": 12,
             "lg": 12,
@@ -77,6 +83,7 @@
             "newLine": true,
             "type": "table",
             "label": "lblSwitches",
+            "xs": 12,
             "sm": 12,
             "md": 12,
             "lg": 12,
