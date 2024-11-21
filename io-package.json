@@ -173,6 +173,10 @@
   },
   "native": {
     "interface": "",
+    "poll": "30",
+    "new": "0xabcd=RM4",
+    "rename": "LB:hostName-aa-bb-cc=LB:SmartBulb",
+    "additional": "192.168.1.199",
     "scenes": [
       {
         "name": "Fernsehen",
@@ -194,17 +198,7 @@
         "on": "TVWZK0, TVWZK1, TVWZK2, TVWZK3, TVWZK4, TVWZK5, TVWZK6, TVWZK7, TVWZK8, TVWZK9",
         "off": "+"
       }
-    ],
-    "poll": "30",
-    "new": "0xabcd=RM4",
-    "rename": "LB:hostName-aa-bb-cc=LB:SmartBulb",
-    "additional": "192.168.1.199"
+    ]
   },
-  "objects": [],
-  "config": {
-    "minWidth": 800,
-    "width ": 1024,
-    "minHeight": 800,
-    "height": 900
-  }
+  "objects": []
 }
