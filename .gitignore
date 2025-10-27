@@ -2,3 +2,5 @@
 /node_modules
 /tmp
 /.vscode
+#ignore .commitinfo created by ioBroker release script
+.commitinfo
