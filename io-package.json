@@ -123,7 +123,8 @@
     },
     "authors": [
       "Frank Joke <frankjoke@hotmail.com>",
-      "mcm1957 <mcm57@gmx.at>"
+      "mcm1957 <mcm57@gmx.at>",
+      "iobroker-community-adapters <iobroker-community-adapters@gmx.de>"
     ],
     "keywords": [
       "Broadlink",
@@ -162,12 +163,12 @@
     },
     "dependencies": [
       {
-        "js-controller": ">=5.0.19"
+        "js-controller": ">=6.0.11"
       }
     ],
     "globalDependencies": [
       {
-        "admin": ">=6.13.16"
+        "admin": ">=7.6.17"
       }
     ]
   },
