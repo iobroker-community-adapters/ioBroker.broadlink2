@@ -6,10 +6,7 @@
   "contributors": [
     "Reinhard Hiebl <reinhard@hieblmedia.com>",
     "mcm1957 <mcm57@gmx.at>",
-    {
-      "name": "iobroker-community-adapters",
-      "email": "iobroker-community-adapters@gmx.de"
-    }
+    "iobroker-community-adapters <iobroker-community-adapters@gmx.de>"
   ],
   "homepage": "https://github.com/iobroker-community-adapters/ioBroker.broadlink2",
   "license": "MIT",
