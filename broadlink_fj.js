@@ -7,12 +7,12 @@
  * @licence MIT
  */
 // jshint node:true, esversion:6, strict:true, undef:true, unused:true, bitwise: false
-//var util = require('util');
-const EventEmitter = require("events"),
-  dgram = require("dgram"),
-  dns = require("dns"),
-  os = require("os"),
-  crypto = require("crypto"),
+//var util = require('node:util');
+const EventEmitter = require("node:events"),
+  dgram = require("node:dgram"),
+  dns = require("node:dns"),
+  os = require("node:os"),
+  crypto = require("node:crypto"),
   A = require("./fjadapter");
 
 class Udp extends EventEmitter {
